@@ -1,0 +1,8 @@
+.Rproj.user
+.Rhistory
+*.html
+!header.html
+*.tex
+!header.tex
+.~lock*
+*.tar.gz
