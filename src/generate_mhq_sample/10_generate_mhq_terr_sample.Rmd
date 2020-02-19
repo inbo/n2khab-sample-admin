@@ -1,0 +1,226 @@
+# Introduction
+
+
+
+
+# Overview of mhq schemes
+
+
+```{r schemes}
+
+types <- read_types() %>%
+    select(main_type, type, type_shortname, typeclass_name)
+
+schemes_mhq <- read_scheme_types() %>%
+    select(scheme, type) %>%
+    filter(str_sub(scheme, 1, 2) == "HQ") %>%
+    left_join(types, by = "type")
+
+schemes_mhq %>%
+    kable() %>%
+    kable_styling()
+
+```
+
+
+
+# Read original files with mhq samples for terrestial habitats
+
+## Data sources
+
+Where do we store the original data sources?
+
+## Habitat 6510
+
+```{r}
+sample_6510_orig <- st_read("../../data/data-orig/sample-locations/6510_hab", "steekproef_6510_versie20140506", crs =31370, quiet = TRUE) 
+
+sample_6510 <- sample_6510_orig %>%
+    st_drop_geometry() %>%
+    select(id = ID, polygon_id = Pol_ID, grts_ranking = Ranking, x, y, main_type = habt, type = habsubt, sac = SBZH, year_planned = year, description_orig = Pol_beschr) %>%
+    mutate(x = round(x, 1),
+           y = round(y, 1),
+           main_type = factor(main_type, levels = levels(types$main_type)),
+           type = factor(type, levels = levels(types$type)))
+           
+```
+
+## Heath habitats
+
+```{r}
+
+sample_heath_orig <- st_read("../../data/data-orig/sample-locations/heide_hab", "meetnet_heide_versie201400611", crs =31370, quiet = TRUE) 
+
+sample_heath <- sample_heath_orig %>%
+    st_drop_geometry() %>%
+    select(id = ID, polygon_id = Pol_ID, grts_ranking = Ranking, x, y, main_type = habt, type = habsubt, sac = SBZH, year_planned = year, description_orig = Pol_beschr) %>%
+    mutate(x = round(x, 1),
+           y = round(y, 1),
+           main_type = factor(main_type, levels = levels(types$main_type)),
+           type = factor(type, levels = levels(types$type)))
+
+```
+
+## Forest habitats
+
+## New samples
+
+```{r}
+
+sample_forest_orig <- st_read("../../data/data-orig/sample-locations/bos_hab", "meetnet_bos_versie20150303", crs =31370, quiet = TRUE) 
+
+sample_forest <- sample_forest_orig %>%
+    st_drop_geometry() %>%
+    select(id = ID, polygon_id = Pol_ID, grts_ranking = Ranking, x, y, main_type = habt, type = habsubt, sac = SBZH, year_planned = year, description_orig = Pol_beschr) %>%
+    mutate(x = round(x, 1),
+           y = round(y, 1),
+           main_type = factor(main_type, levels = levels(types$main_type)),
+           type = factor(type, levels = levels(types$type)))
+
+sample_forest_new <- sample_forest %>%
+    filter(!(type %in% c("2180", "91E0_sf")))
+
+```
+
+### MONEOS legacy sites for 91E0_sf
+
+```{r}
+sample_91E0_sf_orig <- st_read("../../data/data-orig/sample-locations/91E0_sf_hab", "PQ_91E0_sf_MONEOS_versie2018-04-16", crs =31370, quiet = TRUE) 
+
+test <- st_coordinates(sample_91E0_sf_orig)
+
+sample_91E0_sf <- sample_91E0_sf_orig %>%
+    st_drop_geometry() %>%
+    mutate(type = "91E0_sf",
+           main_type = "91E0",
+           legacy_site = TRUE,
+           x = st_coordinates(sample_91E0_sf_orig)[,1],
+           y = st_coordinates(sample_91E0_sf_orig)[,2]) %>%
+    select(id = NummerPQ,  x, y, main_type, type, legacy_site) %>%
+    mutate(x = round(x, 1),
+           y = round(y, 1),
+           main_type = factor(main_type, levels = levels(types$main_type)),
+           type = factor(type, levels = levels(types$type)))
+
+```
+
+
+### Legacy sites Flemish forest inventory
+
+```{r Bos selectieplots}
+
+habitatmap <- read_habitatmap_stdized()
+habitatmap_pol <- habitatmap$habitatmap_polygons
+habitatmap_type <- habitatmap$habitatmap_types
+
+
+### VBI-plots die opgemeten werden in 2de cyclus
+
+dbVBIMeetproces <- "../../data/data-orig/sample-locations/bos_hab_vbi/VBI_Meetproces_v2019-02-20.accdb"
+
+connectionMeetproces <- odbcConnectAccess2007(dbVBIMeetproces)
+
+recordsVBI2 <- sqlFetch(connectionMeetproces, "tblRecordsVBI2+")
+plotCordinates <- sqlFetch(connectionMeetproces,"tblCoordinaten")
+plotDetails <- sqlFetch(connectionMeetproces,"tblPlotDetails")
+
+odbcClose(connectionMeetproces)
+
+sample_vbi2 <- plotDetails %>%
+    filter(Periode == 2) %>%
+    left_join(plotCordinates, by = c("IDPlots")) %>%
+    mutate(x = ifelse(is.na(X_measuredVBI2), X_raster, X_measuredVBI2),
+           y = ifelse(is.na(Y_measuredVBI2), Y_raster, Y_measuredVBI2),
+           coord_measured = is.na(X_measuredVBI2)) %>% 
+    select(IDPlots, DateVeg, DateDendro, IDGroup, x, y, coord_measured) 
+
+sample_vbi2_sf <- st_as_sf(sample_vbi2, coords = c("x", "y"), crs = 31370)
+
+sample_vbi2_type <- sample_vbi2_sf %>%
+    st_join(habitatmap_pol) %>%
+    st_drop_geometry() %>%
+    left_join(habitatmap_type, by = "polygon_id") %>%
+    filter(!is.na(phab)) %>%
+    filter(phab >= 50) %>%
+    filter(str_sub(type, end = 1) == "9" | type == "2180") %>%
+    filter(type != "91E0_sf") %>%
+    left_join(plotCordinates, by = c("IDPlots")) %>%
+    mutate(x = ifelse(is.na(X_measuredVBI2), X_raster, X_measuredVBI2),
+           y = ifelse(is.na(Y_measuredVBI2), Y_raster, Y_measuredVBI2),
+           coord_measured = is.na(X_measuredVBI2),
+           legacy_site = TRUE,
+           id = str_c("VBI_",IDPlots, "_", type),
+           main_type = str_sub(type, end = 4),
+           main_type = factor(main_type, levels = levels(types$main_type)),
+           x = round(x, 1),
+           y = round(y, 1)) %>%
+    select(id,  polygon_id, phab, x, y, main_type, type, certain, description_orig, legacy_site)
+
+
+
+```
+
+
+
+## Grassland habitat (excluding 6510) and marshes
+
+```{r}
+
+sample_grassland_marshes_orig <- st_read("../../data/data-orig/sample-locations/grasland-moeras_hab", "meetnet_graslandEnCo_versie20150303", crs =31370, quiet = TRUE) 
+
+sample_grassland_marshes <- sample_grassland_marshes_orig %>%
+    st_drop_geometry() %>%
+    select(id = ID, polygon_id = Pol_ID, grts_ranking = Ranking, x, y, main_type = habt, type = habsubt, sac = SBZH, year_planned = year, description_orig = Pol_beschr) %>%
+    mutate(x = round(x, 1),
+           y = round(y, 1),
+           main_type = factor(main_type, levels = levels(types$main_type)),
+           type = factor(type, levels = levels(types$type)))
+
+```
+
+## Kustduinen
+
+```{r}
+
+sample_dunes_orig <- st_read("../../data/data-orig/sample-locations/kustduinen_hab", "Steekproef_duinen_versie2018-11-21", crs =31370, quiet = TRUE) 
+
+sample_dunes <- sample_dunes_orig %>%
+    st_drop_geometry() %>%
+    gather(starts_with("X2"), key = "type", value = "occurence") %>%
+    filter(occurence == 1) %>%
+    mutate(type = str_sub(type, start = 2),
+           main_type = str_sub(type, end = 4),
+           legacy_site = TypePQ == "PINK_PQ",
+           ID = ifelse(legacy_site, ID, str_c(Ranking, type, sep = "_"))) %>% 
+    select(id = ID, grts_ranking = Ranking, x = X, y = Y, main_type, type, sac = SBZH, year_planned = minJaar, legacy_site, description_orig = Pl_bsch) %>%
+    mutate(x = round(x, 1),
+           y = round(y, 1),
+           main_type = factor(main_type, levels = levels(types$main_type)),
+           type = factor(type, levels = levels(types$type))) 
+
+
+```
+
+## MONEOS legacy sites for 1330_da
+
+```{r}
+sample_1330_da_orig <- read.csv2("../../data/data-orig/sample-locations/1330_da_hab/Structuurgegevens_1330_da.csv", stringsAsFactors = FALSE)
+
+sample_1330_da <- sample_1330_da_orig %>%
+    gather( starts_with("ZSCPQ"), key = "IDPlots", value =  "Waarde") %>%
+    select(id = IDPlots, main_type = Habitattype, type = Habitatsubtype) %>%
+    distinct() %>%
+    mutate(main_type = factor(main_type, levels = levels(types$main_type)),
+           type = factor(type, levels = levels(types$type)),
+           legacy_site = TRUE)
+
+write.csv2(select(sample_1330_da, id), "../../output/meetpunten_1330_da.csv", row.names = FALSE)
+
+```
+
+# Combine files
+
+```{r}
+
+```
+
