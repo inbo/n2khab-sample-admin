@@ -37,6 +37,9 @@ output:
 ---
 
 ```{r setup, include=FALSE}
+
+#devtools::install_github("https://github.com/inbo/n2khab", ref ="crs")
+
 options(stringsAsFactors = FALSE,
         scipen = 999, 
         digits = 15)
@@ -48,6 +51,11 @@ library(n2khab)
 library(git2rdata)
 library(kableExtra)
 library(RODBC)
+library(odbc)
+library(DBI)
+library(inborutils)
+
+options(stringsAsFactors = FALSE)
 
 opts_chunk$set(
   echo = TRUE,
