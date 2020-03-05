@@ -47,11 +47,11 @@ segments <- header_mhq %>%
     group_by(grts_ranking, plot, date) %>%
     mutate(is_type_target_plot = sum(is_type_target) > 0,
            is_main_type_target_plot = sum(is_main_type_target) > 0,
-           cover_description = str_c(str_c(segment_weight, "% ", hab_observed), collapse =  " + ")) %>%
+           n_habtarget = n_distinct(type),
+           n_segments = n_distinct(hab_observed)) %>%
     ungroup() %>%
     group_by(sample_id, plot, date) %>%
-    mutate(cover_description = str_c(str_c(segment_weight, "% ", hab_observed), collapse =  " + "),
-           n_segments = n()) %>%
+    mutate(cover_description = str_c(str_c(segment_weight, "% ", hab_observed), collapse =  " + ")) %>%
     ungroup()
 
 segments_check <- segments %>%
@@ -76,20 +76,29 @@ write.csv2(segments_check, "../../output/pq_mixed_cover.csv", row.names = FALSE)
 
 write.csv2(segments_doubles_check, "../../output/pq_dubbels.csv", row.names = FALSE)
 
-plots <- segments %>%
+segments_center <- segments %>%
     filter(plot == "square") %>%
-    mutate(segment_center = ifelse(n_segments <= 1, TRUE,
-                                   ifelse(is_type_target_plot, is_type_target, 
-                                          ifelse(is_main_type_target_plot, is_main_type_target, 
-                                                 str_sub(hab_observed,1,1) == "6")))) %>%
-    group_by(plot, sample_id, date) %>%
-           mutate(n_center = sum(segment_center)) %>%
+    mutate(segment_center = ifelse(n_segments <= 1 , TRUE,
+                                   ifelse(is_type_target_plot, is_type_target, is_main_type_target))) %>%
+    distinct(date, grts_ranking, hab_observed,  segment_center) %>% 
+    group_by(grts_ranking, date) %>%
+           mutate(n_center = sum(segment_center, na.rm = TRUE)) %>%
     ungroup()
               
-assessment_square <- assessment %>%
-    filter(plot == "square")
+# assessment_square <- assessment %>%
+#     filter(plot == "square")
     
 ```
+
+
+```{r}
+
+```
+
+
+
+
+
 
 ```{r}
 sample_admin_grassland_marshes <- admin_inbo %>% 
