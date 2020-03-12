@@ -31,7 +31,7 @@ qualifiers_mhq <- bind_rows(inboveg_qualifiers(connection = connection_inboveg, 
                             inboveg_qualifiers(connection = connection_inboveg, survey_name = "N2000meetnet_Grasland_BHM", qualifier_type = "MQ"),
                             inboveg_qualifiers(connection = connection_inboveg, survey_name = "N2000meetnet_Moeras_BHM", qualifier_type = "MQ"))
 
-setwd("../../n2khab_mhq_data/10_raw/field-data/moeras-grasland")
+setwd("../../n2khab_mhq_data/original/field-data/moeras-grasland")
 dir.create(as.character(str_c("inboveg", as.character(Sys.Date(),"%Y-%m-%d"), sep = "_")))
 setwd(str_c("inboveg_", as.character(Sys.Date(),"%Y-%m-%d"), "/"))
 
