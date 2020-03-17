@@ -264,7 +264,7 @@ check <- sample_vbi2_type %>%
 
 ### MONEOS legacy sites for 1330_da
 
-To do: add coordinates
+For the plots with following id's only the coordinates of one of the corners is available: ZSCPQ303, ZSCPQ306, ZSCPQ307 en ZSCPQ314. The coordinates of the opposite corner will be measured soon so that we can calculate the coordinates of the plot center.
 
 ```{r}
 sample_1330_da_orig <- read.csv2("../../n2khab_mhq_data/original/sample/sample-locations/1330_da_hab/Structuurgegevens_1330_da.csv", stringsAsFactors = FALSE)
