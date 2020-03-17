@@ -269,6 +269,11 @@ To do: add coordinates
 ```{r}
 sample_1330_da_orig <- read.csv2("../../n2khab_mhq_data/original/sample/sample-locations/1330_da_hab/Structuurgegevens_1330_da.csv", stringsAsFactors = FALSE)
 
+coord_1330_da_orig <- read.csv2("../../n2khab_mhq_data/original/sample/sample-locations/1330_da_hab/coördinaten_1330_da.csv", stringsAsFactors = FALSE)
+
+coord_1330_da <- coord_1330_da_orig %>%
+    select(id, x = Lambert_X_mean, y = Lambert_Y_mean)
+
 sample_1330_da <- sample_1330_da_orig %>%
     gather( starts_with("ZSCPQ"), key = "IDPlots", value =  "Waarde") %>%
     select(id = IDPlots, main_type = Habitattype, type = Habitatsubtype) %>%
@@ -278,7 +283,19 @@ sample_1330_da <- sample_1330_da_orig %>%
            legacy_site = TRUE,
            phab = 100,
            sac = 1,
-           certain = TRUE)
+           certain = TRUE) %>%
+    left_join(coord_1330_da, by = "id")
+
+sample_1330_da_sf <- st_as_sf(sample_1330_da, coords = c("x", "y"), crs = 31370)
+
+sample_1330_da_grts <- sample_1330_da_sf %>%
+    mutate(grts_ranking = grts_master[as(., "Spatial")]) %>%
+    st_join(sac_map) %>%
+    st_join(habitatmap_pol) %>%
+    st_drop_geometry() %>%
+    left_join(coord_1330_da, by = "id") %>%
+    mutate(polygon_id = as.character(polygon_id)) %>%
+    select(id,  polygon_id, grts_ranking, phab, x, y, main_type, type, certain, description_orig, legacy_site, sac)
 
 #write.csv2(select(sample_1330_da, id), "../../output/meetpunten_1330_da.csv", row.names = FALSE)
 
@@ -295,7 +312,7 @@ samples <- bind_rows(
     sample_heath,
     sample_forest_new,
     sample_vbi2_type,
-    sample_1330_da
+    sample_1330_da_grts
 ) %>%
     arrange(type, grts_ranking) %>%
     rename(sample_id = id)
