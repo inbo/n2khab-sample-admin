@@ -12,27 +12,62 @@ admin_inbo <- admin_inbo_orig %>%
            sample_status = ifelse(NoAccess == 1 & !is.na(NoAccess), "inaccessable", sample_status),
            sample_status = ifelse(OrthoExclu == 1 & !is.na(OrthoExclu), "orthophoto assessment", sample_status),
            sample_status = factor(sample_status, levels = c("in situ assessment", "orthophoto assessment", "no assessment", "inaccessable")),
-           measured = !is.na(opname) & opname == "ja",
-           position_change = !is.na(verplaatst) & verplaatst == "ja",
+           measured = opname == "ja",
+           position_change = verplaatst == "ja",
            assessment_year = ifelse(sample_status %in% c("in situ assessment", "orthophoto assessment"), bezocht, NA),
            assessment_year = ifelse(assessment_year == 19, 2019, assessment_year),
            x_measured = ifelse(measured, round(POINT_X, 1), NA),
            y_measured = ifelse(measured, round(POINT_Y, 1), NA)) %>%
-    select(sample_id = ID, sample_status, assessment_year, measured, position_change, x_measured, y_measured)
+    select(sample_id = ID, grts_ranking = Ranking, sample_status, assessment_year, measured, position_change, x_measured, y_measured)
 
 check <- n_distinct(admin_inbo$sample_id) == nrow(admin_inbo)
 
+check_different_dates <- admin_inbo %>%
+    group_by(grts_ranking) %>%
+    mutate(n_assess = n_distinct(sample_status, assessment_year)) %>%
+    ungroup() %>%
+    filter(n_assess > 1) %>%
+    arrange(grts_ranking)
+    
+write.csv2(check_different_dates, "../../output/check_different_dates.csv", row.names = FALSE)
+
+```
+
+
+```{r}
+
+check_different_dates %>%
+    kable() %>%
+    kable_styling()
+    
+```
+
+
+
+```{r}
+#admin data for each location
+
+admin_inbo_location <- admin_inbo %>%
+    group_by(grts_ranking) %>%
+    mutate(sample_status_loc = ifelse("in situ assessment" %in% sample_status, "in situ assessment",
+                                      ifelse("orthophoto assessment" %in% sample_status, "orthophoto assessment",
+                                             ifelse("inaccessable" %in% sample_status, "inaccessable", "no asessment")))) %>%
+    ungroup() %>%
+    group_by(grts_ranking, sample_status_loc) %>%
+    summarise(assessment_year = min(assessment_year, na.rm = TRUE),
+              measured = sum(measured, na.rm = TRUE) > 0,
+              position_change = sum(position_change) > 0,
+              x_measured = x_measured[1],
+              y_measured = y_measured[1]) %>%
+    ungroup() %>%
+    mutate(assessment_year = ifelse(assessment_year == Inf, NA, assessment_year),
+           measured = ifelse(is.na(assessment_year), NA, measured))
 ```
 
 
 ## Read habitat cover in plots assessed by INBO
 
-The INBOVeg database contains assessment of habitat type cover within plots. The field protocol prescribes that a plot is only recorded when the plot center is located within (one of) the target habitat type(s). When a type different from (one of) the target type(s) is observed, the plot can be recorded when the GRTS ranking of the sample location is smaller than the largest GRTS ranking in the set of samples for the observed type. 
-Some recorded plots contain different habitat types or other cover types. However it is not explicitely recorded which of the cover types is located in the center of the plot. Yet this is essential information to determine for which type the recorded data should be used in an analysis. Therefore, when a plot contains different cover types we assume that the plot center is located in the type that corresponds to (one of) the target type(s). When none of the target habitat types are observed we assume that the plot center is located in the type that belongs to the same main type as (one of) the target habitat types. We apply these rules and check of we select one type for each plot this way.
-
-
 ```{r}
-
 classif_mhq <- read.csv2("../../n2khab_mhq_data/original/field-data/moeras-grasland/inboveg_2020-03-04/classif_mhq.csv")
 header_mhq <- read.csv2("../../n2khab_mhq_data/original/field-data/moeras-grasland/inboveg_2020-03-04/header_mhq.csv")
 recordings_mhq <- read.csv2("../../n2khab_mhq_data/original/field-data/moeras-grasland/inboveg_2020-03-04/header_mhq.csv")
@@ -41,6 +76,18 @@ classif_mhq_type <- classif_mhq %>%
   filter(classif_type == "N2k") %>%
   select(recording_givid, hab_observed = classif, segment_weight = cover) %>%
   mutate(segment_weight = as.numeric(segment_weight))
+```
+
+
+## Determine type in plot center and check if the observed type corresponds with the target type
+
+The INBOVeg database contains assessment of habitat type cover within both the square plot and the circle plot. The field protocol prescribes that a plot is only recorded when the plot center is located within (one of) the target habitat type(s). When the observed type is different from (one of) the target type(s), the plot can be recorded when the GRTS ranking of the sample location is smaller than the largest GRTS ranking in the set of samples for the observed type. 
+
+Some recorded plots contain different habitat types or other cover types. However it is not explicitely recorded which of the cover types is located in the center of the plot. Yet this is essential information to determine for which type the recorded data should be used in an analysis. Therefore, when a plot contains different cover types we assume that the plot center is located in the type recorded in the square plot that corresponds to (one of) the target type(s). When none of the target habitat types are observed we assume that the plot center is located in the type that belongs to the same main type as (one of) the target habitat types. We apply these rules and check of we select one type for each plot this way.
+
+
+
+```{r}
 
 samples_grts <- samples %>%
     filter(!is.na(grts_ranking))
@@ -57,6 +104,7 @@ segments <- header_mhq %>%
   ungroup() %>%
     mutate(hab_observed = ifelse(hab_observed == "6410" & main_type == "6410", as.character(type), hab_observed),
            hab_observed = ifelse(hab_observed == "6230" & main_type == "6230", as.character(type), hab_observed),
+           type = ifelse(type == "6230" & str_sub(hab_observed, 1, 4) == "6230", hab_observed, as.character(type)),
            is_type_target = hab_observed == type,
            is_main_type_target = str_sub(hab_observed, 1, 4) == main_type) %>%
     group_by(grts_ranking, plot, date) %>%
@@ -64,8 +112,9 @@ segments <- header_mhq %>%
            is_main_type_target_plot = sum(is_main_type_target) > 0,
            n_habtarget = n_distinct(type),
            n_segments = n_distinct(hab_observed)) %>%
-    ungroup()
+    ungroup() 
 
+# check plots with different observed types
 segments_check <- segments %>%
     filter(n_segments > 1,
            plot == "square",
@@ -75,6 +124,7 @@ segments_check <- segments %>%
     filter(hab_target != "6510_hu") %>%
     arrange(plot_bevat_doelhabitat) 
 
+# check plots that are recorded more than once
 segments_doubles_check <- segments %>%
     filter(plot == "square") %>%
     group_by(sample_id) %>%
@@ -85,67 +135,150 @@ segments_doubles_check <- segments %>%
     arrange(grts_ranking)
 
 # write.csv2(segments_check, "../../output/pq_mixed_cover.csv", row.names = FALSE)
-# 
+
 # write.csv2(segments_doubles_check, "../../output/pq_dubbels.csv", row.names = FALSE)
 
+# determine which segment contains the plot center
 segments_center <- segments %>%
     filter(plot == "square") %>%
     mutate(segment_center = ifelse(n_segments <= 1 , TRUE,
                                    ifelse(is_type_target_plot, is_type_target, is_main_type_target))) %>%
-    distinct(date, grts_ranking, hab_observed, segment_weight, segment_center) %>% 
+    distinct(date, grts_ranking, hab_observed, segment_weight, segment_center, n_segments, n_habtarget, is_type_target_plot) %>% 
     group_by(grts_ranking, date) %>%
            mutate(n_center = sum(segment_center, na.rm = TRUE)) %>%
     ungroup() %>%
+    mutate(date = as.Date(date, format = "%Y-%m-%d"),
+           assessment_year = as.numeric(format(date, "%Y"))) %>%
     filter(segment_center)
               
   
 ```
 
 
-
 ```{r}
 
+# cover description in square and circle plot
 cover_description_wide <- segments %>%
     distinct(date, grts_ranking, data_imported, plot, cover_description) %>%
     spread(key = plot, value = cover_description) %>%
-    rename(cover_square_plot = square, cover_circle_plot = circle)
+    rename(cover_square_plot = square, cover_circle_plot = circle) %>%
+    mutate(date = as.Date(date, format = "%Y-%m-%d"))
 
+#maximum grts_ranking in sample for each type
 max_ranking <- samples %>%
     group_by(type) %>%
     summarise(max_grts_ranking = max(grts_ranking)) %>%
     ungroup()
     
+#overview of assessed samples
+# samples_admin_inbo_summary <- samples %>%
+#     inner_join(admin_inbo, by = c("sample_id")) %>%
+#     select(sample_id, grts_ranking, x, y, type, phab, sac, year_planned, sample_status, assessment_year, measured, position_change, x_measured, y_measured) %>%
+#     arrange(type, year_planned)
+
 samples_admin_inbo <- samples %>%
-    inner_join(admin_inbo, by = c("sample_id")) %>%
-    left_join(segments_center, by = c("grts_ranking")) %>%
-    mutate(is_target_type = type == hab_observed) %>%
+    inner_join(admin_inbo_location, by = c("grts_ranking")) %>%
+    left_join(segments_center, by = c("grts_ranking", "assessment_year")) %>%
+    mutate(is_type_target = ifelse(measured, type == hab_observed, measured),
+           is_type_target = ifelse(sample_status_loc == "inaccessable", NA, is_type_target)) %>%
     left_join(cover_description_wide, by = c("date", "grts_ranking")) %>%
     left_join(max_ranking, by = "type") %>%
-    mutate(change_target_type = ifelse(is_target_type, NA, grts_ranking <= max_grts_ranking))
+    mutate(allow_other_type = ifelse(measured,
+                                     ifelse(is_type_target_plot, NA, grts_ranking <= max_grts_ranking),
+                                     NA),
+           active = ifelse(sample_status_loc == "inaccessable", FALSE, is_type_target),
+           in_database = ifelse(measured & is.na(data_imported), FALSE, data_imported)) %>%
+    select(sample_id, grts_ranking, x, y, type_target = type, phab, sac, year_planned, description_orig, legacy_site, certain, sample_status = sample_status_loc, assessment_year, measured, is_type_target, active, allow_other_type, in_database, type_observed = hab_observed, cover_type_observed = segment_weight, date_measurement = date, position_change, x_measured, y_measured, cover_circle_plot, cover_square_plot, n_center)
+
+n_samples <- n_distinct(samples_admin_inbo$sample_id)
+
+# only for location 3276198 multiple records --> to do 
 ```
 
+### Check type in plot center
 
-
+The plot with grts-ranking equal to 3276198 is selected for to target types and both target types are observed with each 50% cover, yet we do not know which of the types are located in the plot center. For all other plots only one type is selected as center based on the the assumptions described above.
 
 ```{r}
-segments_center %>%
+samples_admin_inbo %>%
     filter(n_center != 1) %>%
-    filter(segment_center == TRUE) %>%
+    distinct(sample_id, grts_ranking, type_target, type_observed, cover_type_observed, n_center) -> check_plot_center 
+
+write.csv2(check_plot_center, "../../output/check_plot_center.csv", row.names = FALSE)
+
+check_plot_center %>%
     kable() %>%
+    kable_styling() 
+
+```
+
+### Check cover of target type 
+
+```{r}
+samples_admin_inbo %>%
+    filter(cover_type_observed <= 30) %>%
+    distinct(sample_id,  type_target, type_observed, cover_type_observed, cover_square_plot, cover_circle_plot) %>%
+    arrange(cover_type_observed) -> check_cover_type_observed 
+
+write.csv2(check_cover_type_observed, "../../output/check_cover_type_observed.csv", row.names = FALSE)
+
+check_cover_type_observed %>%
+    kable() %>%
+    kable_styling() 
+```
+
+### Check measured plots not in database
+
+```{r}
+samples_admin_inbo %>%
+    filter(sample_status == "in situ assessment") %>%
+    filter(measured) %>%
+    filter(!in_database) %>%
+    filter(assessment_year < 2019) %>%
+    select(sample_id, grts_ranking,  type_target, assessment_year, in_database) %>%
+    arrange(assessment_year) -> check_not_in_database
+
+write.csv2(check_not_in_database, "../../output/check_not_in_database.csv", row.names = FALSE)
+
+check_not_in_database %>%
+    kable() %>%
+    kable_styling() 
+```
+
+### Samples for which the position was changed but that does not contain the target type 
+
+```{r}
+
+check_position_change <- samples_admin_inbo %>%
+    filter(measured) %>%
+    filter(allow_other_type) %>%
+    filter(position_change) %>%
+    select(sample_id, grts_ranking, type_target, type_observed, position_change) %>%
+    arrange(grts_ranking)
+
+check_position_change %>%
+    kable %>%
     kable_styling()
 
 ```
 
-
-
-
-
+### Samples for which the subtype of the observed type is unknown
 
 ```{r}
-sample_admin_grassland_marshes <- admin_inbo %>% 
-    left_join(assessment_square, by = "sample_id")
-```
 
+types <- types %>%
+    group_by(main_type) %>%
+    mutate(has_subtype = n() > 1) %>%
+    ungroup()
+
+subtypes <- types %>%
+    filter(has_subtype)
+
+check_subtype <- samples_admin_inbo %>%
+    filter(!is.na(type_observed)) %>%
+    filter(type_observed %in% types$main_type) %>%
+    filter(type_observed %in% subtypes$main_type)
+```
 
 
 
