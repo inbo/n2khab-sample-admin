@@ -5,8 +5,8 @@
   sorting:
   - type
   - sample_id
-  hash: 8fb3db84f5aa14692439a5234ef3edb0f6af90fb
-  data_hash: 4f534cb9a3ac3319b559f061f32b79cb4449be78
+  hash: d9394081ae296c9b42036dab58d80bf912342729
+  data_hash: faa269dd0a964f895f02c9747005824b25d2d7e6
 sample_id:
   class: character
 polygon_id:
@@ -387,3 +387,5 @@ legacy_site:
   class: logical
 certain:
   class: logical
+location_id:
+  class: character
