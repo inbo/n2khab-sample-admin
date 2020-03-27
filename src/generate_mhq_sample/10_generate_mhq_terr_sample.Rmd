@@ -140,9 +140,13 @@ sample_dunes_orig <- read.csv2("../../n2khab_mhq_data/original/sample/sample-loc
 
 sample_dunes <- sample_dunes_orig %>%
     filter(Steekproef == 1) %>%
+    group_by(Ranking, TypePQ) %>%
+    mutate(i = rank(Habsubt)) %>%
+    ungroup() %>%
     mutate(legacy_site = TypePQ == "PINK_PQ",
-           ID = ifelse(legacy_site, ID, str_c(Ranking, Habsubt, sep = "_"))) %>% 
-    select(id = ID, polygon_id = Pol_ID, grts_ranking = Ranking, x, y, main_type = Habt, type = Habsubt, phab = Phab, sac = SBZH, year_planned = Jaar, description_orig = Pol_beschrijving, legacy_site)  %>%
+           ID = ifelse(legacy_site, ID, str_c(Ranking, Habsubt, sep = "_")),
+           location_id = ifelse(TypePQ == "PINK_PQ", str_c(as.character(Ranking), "_reloc", i), as.character(Ranking))) %>% 
+    select(id = ID, location_id, polygon_id = Pol_ID, grts_ranking = Ranking, x, y, main_type = Habt, type = Habsubt, phab = Phab, sac = SBZH, year_planned = Jaar, description_orig = Pol_beschrijving, legacy_site)  %>%
     mutate(x = round(x, 1),
            y = round(y, 1),
            main_type = factor(main_type, levels = levels(types$main_type)),
@@ -309,14 +313,16 @@ check_unique_id <- nrow(sample_1330_da) == n_distinct(sample_1330_da$id)
 samples <- bind_rows(
     sample_6510,
     sample_grassland_marshes,
+    sample_dunes,
     sample_heath,
     sample_forest_new,
     sample_vbi2_type,
     sample_1330_da_grts
 ) %>%
+    mutate(location_id = ifelse(is.na(location_id), as.character(grts_ranking), location_id)) %>%
     arrange(type, grts_ranking) %>%
-    rename(sample_id = id)
+    select(sample_id = id, location_id, everything())
 
-write_vc(samples, file = "mhq_terr_samples", root = "../../n2khab_mhq_data", sorting = c("type", "sample_id"))
+write_vc(samples, file = "mhq_terr_samples", root = "../../n2khab_mhq_data", sorting = c("type", "sample_id"), strict = FALSE)
 
 ```
