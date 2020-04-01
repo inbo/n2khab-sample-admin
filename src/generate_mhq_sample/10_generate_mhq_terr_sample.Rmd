@@ -1,10 +1,35 @@
 # Introduction
 
-
+The original data files which are used the scripts are stored in [this google drive folder](https://drive.google.com/open?id=11rStbOup5DFmHP8FQOe_KCOSkXJIwXx0) which can be accessed within INBO.   
 
 # Generation of table with all mhq samples 
 
-## Overview of mhq schemes
+The mhq samples (ref) were stored in different files. Here we will generate one standardized table containing all mhq samples including legacy sites. Legacy sites are existing samples that were included in mhq.
+
+The table contains: 
+
+* characteristics of the sample:
+** sample_id
+** location_id
+** legacy_site: TRUE/FALSE
+** xy-coordinates in Lambert72 (crs = 31370)
+** type: the target type, i.e. the type for which the sample was drawn
+** main_type: the main type of the target type
+
+* characteristics of sample design
+** grts-ranking
+** year_planned: the monitoring cycle is 12 years and the sample is divided in 12 subsets according to the grts-ranking (one subset for each year in the monitoring cycle)
+** sac (special area of conservation): TRUE/FALSE; a stratefied sample design was used with a higher sample size within sac
+
+* charachteristics of the sample frame (see [n2khab-package](https://inbo.github.io/n2khab/reference/read_habitatmap_stdized.html) for explanation on the variables below)
+** polygon_id
+** phab
+** certain
+** description_orig
+
+Note that the mhq sample selection is based on an older version of the habitat map than the versions made available in [Zenodo](https://zenodo.org/record/3540576#.XoRkVYgzaUk). The sample frame which is derived from the older version of the habitat map is stored in [this google drive folder](https://drive.google.com/open?id=11rStbOup5DFmHP8FQOe_KCOSkXJIwXx0) which can be accessed within INBO.  
+
+Following table gives an overview of all mhq-schemes.
 
 ```{r schemes}
 
@@ -38,9 +63,7 @@ sampleframe_types <- sampleframe_types_orig %>%
 ```
 
 
-
 ## Read original files with mhq samples
-
 
 ### Habitat 6510
 
@@ -131,7 +154,11 @@ sample_grassland_marshes <- sample_grassland_marshes_orig %>%
 check_unique_id <- nrow(sample_grassland_marshes) == n_distinct(sample_grassland_marshes$id)
 ```
 
-### Kustduinen
+### Coastal dunes
+
+This sample set is a mix of legacy sites (with known types) and new samples. Legacy sites were uneavenly spread among regions and management types. Therefore an new grts-sample set was drawn and we allowed a new sample to be replaced with a legacy site (with the same type as the sample) within a unit with a unique combination of region and management type. This way we could partially use the available legacy sites and remain a spatially balanced sample as much as possible. When a grts-sample was replaced with a legacy site, the legacy site inherited the grts-ranking (but the legacy site might be located in an other grts grid cell). As sample selection is performed for each type separately, it occured that the same grts-location was selected as a sample for one type and replaced with a legacy site for another type. In this case both samples will have the same grts-ranking but will not be in the same location. To make a unique location id we added '_reloc1' or 'reloc2' to the grts-ranking when a sample was replaced with a legacy site. 
+
+Should we add an additional variable to explicitely that the grts-ranking does not correspond with the actual location but was inherited?
 
 ```{r}
 
@@ -162,23 +189,35 @@ check_unique_id <- nrow(sample_dunes) == n_distinct(sample_dunes$id)
 
 ### MONEOS legacy sites for 91E0_sf
 
+The sample for 91E0_sf currently only consist of legacy sites. The legacy sites were randomly selected and could therefore be used in mhq. For each legacy site the grts-ranking of the gric-cell in which it is located was determined based on the master grts. However, as for all legacy sites, the selection of the sample is not based on this grts-ranking as the selection was done before the master grts existed. Furthermore, the legacy sites are not located in the grid cell centers as is the case for most of the newly selected samples.
+
+Besides the legacys sites, a set of additional samples were selected based on the grts-ranking. However this selection still has to be evaluated in terms of accessability, as large parts of 91E0_sf are not accessable.
+
 ```{r}
+sac_map <- read_admin_areas(dsn = "sac") %>%
+    select(sac_code)
+
+grts_master <- read_GRTSmh()
+
 sample_91E0_sf_orig <- read_sf("../../n2khab_mhq_data/original/sample/sample-locations/91E0_sf_hab", "PQ_91E0_sf_MONEOS_versie2018-04-16", crs =31370, quiet = TRUE) 
 
 sample_91E0_sf <- sample_91E0_sf_orig %>%
+    mutate(grts_ranking = grts_master[as(., "Spatial")]) %>%
+        st_join(sac_map) %>%
     st_drop_geometry() %>%
     mutate(type = "91E0_sf",
            main_type = "91E0",
            legacy_site = TRUE,
            x = st_coordinates(sample_91E0_sf_orig)[,1],
            y = st_coordinates(sample_91E0_sf_orig)[,2]) %>%
-    select(id = NummerPQ,  x, y, main_type, type, legacy_site) %>%
     mutate(x = round(x, 1),
            y = round(y, 1),
            main_type = factor(main_type, levels = levels(types$main_type)),
            type = factor(type, levels = levels(types$type)),
            phab = 100,
-           certain = TRUE)
+           certain = TRUE,
+            sac = ifelse(is.na(sac_code), 0, 1)) %>%
+    select(id = NummerPQ,  x, y, main_type, type, legacy_site, sac, grts_ranking, phab, certain)
 
 check_unique_id <- nrow(sample_91E0_sf) == n_distinct(sample_91E0_sf$id)
 
@@ -187,18 +226,16 @@ check_unique_id <- nrow(sample_91E0_sf) == n_distinct(sample_91E0_sf$id)
 
 ### Legacy sites Flemish forest inventory
 
-VBI-Plot 138020 nakijken: heeft twee verschillende XY-coördinaten.
+The Flemish forest inventory (VBI) consists of random systematic sample on a 500m x 1000m grid covering the whole of Flanders. The VBI samples are measured in the same way as the mhq forest type samples and can therefore be used in mhq. However, until recently the habitat type of the VBI samples was not determined. Therefore we have to assume that the type corresponds to the habitatmap. We make an overlay between VBI samples an [habitatmap_terr](https://zenodo.org/record/3540740) and we select all VBI samples that are located in polygons with at least a phab >= 50 for a forest type. Since 2020 (the start of the 3rd monitoring cycle), the type of vbi samples are determined in situ.
+
 
 ```{r Bos selectieplots}
+
+#VBI-Plot 138020 nakijken: heeft twee verschillende XY-coördinaten.
 
 habitatmap <- read_habitatmap_terr()
 habitatmap_pol <- habitatmap$habitatmap_terr_polygons
 habitatmap_type <- habitatmap$habitatmap_terr_types
-
-sac_map <- read_admin_areas(dsn = "sac") %>%
-    select(sac_code)
-
-grts_master <- read_GRTSmh()
 
 ### VBI-plots die opgemeten werden in 2de cyclus
 
@@ -266,6 +303,10 @@ check <- sample_vbi2_type %>%
 
 ```
 
+```{r}
+
+```
+
 ### MONEOS legacy sites for 1330_da
 
 For the plots with following id's only the coordinates of one of the corners is available: ZSCPQ303, ZSCPQ306, ZSCPQ307 en ZSCPQ314. The coordinates of the opposite corner will be measured soon so that we can calculate the coordinates of the plot center.
@@ -317,6 +358,7 @@ samples <- bind_rows(
     sample_heath,
     sample_forest_new,
     sample_vbi2_type,
+    sample_91E0_sf,
     sample_1330_da_grts
 ) %>%
     mutate(location_id = ifelse(is.na(location_id), as.character(grts_ranking), location_id)) %>%
