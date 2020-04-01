@@ -1,13 +1,30 @@
-# Generate mhq sample admin table
+# Generate mhq sample administration table
 
+In the mhq sample adminstration table we want to document assessments and measurements of the mhq samples. An assessment of a mhq sample is seen as evaluation whether or not a sample is valid. A mhq sample is valid if the target type (= the type for which the sample was selected) corresponds with the observed type in the center of the grid cell. A location can contain different samples, with each sample having a different target type. This is the case when the sample frame of the different target types overlap. However, only one of the samples on a single location can be valid, as only one type can be observed in a location. Two types of assessments occur: in situ assessment and othophoto assessment. Based on othophoto assessment we can detect samples that are not valid (for example when a heath sample is located within a forest), but an in situ assessment is required to be sure that a sample is valid. In some cases locations are temporary or permanently inaccessable and assessments are not possible. We will summarise the assessment status using following categories:
 
-## read INBO sample admin data 
+* in situ assessment,
+* orthophoto assessment,
+* permanently inaccessable,
+* temporary inaccessable,
+* no assessment.
+
+After assessment, a location is measured when one of the samples which it contains is valid. The measurements consist of a vegetation composition in a square plot (of 3m x 3m for open types and 16m x 16m for forest types) and structure variables in a circle plot (with a radius of 18m). INBO also measures vegetation composition in the circle plot, but ANB does not do this. 
+
+In certain conditions, a location can also be measured when the observed type is different than one of the target types for this location (and consequently none of the samples are valid). This is allowed when the grts-ranking of the location is smaller than the maximum grts-ranking in the sample set for the observed type. It occurs when the sample frame of the observed type is not correct and excludes the location mentioned above. When this is the case we will create a new (valid) sample for this location with the appropriate target type. This new sample will replace the sample in the original sample set with the highest grts-ranking.                 
+
+The detection rate of some types is very low. Therefore in some cases we allow changing the location of a sample in the direct surrounding (based on a protocol) in order to make it a valid sample. The sample administration table will also document these location changes. Finally we will also document wether measurements are complete or wether some variables are missing in the database.  
+
+## Read INBO sample administration data 
+
+INBO documents the administration of mhq sample assessments in separate files. From this file we van determine the assessment status, the assessment year, wether a location is measured and wether a location is changed. There is one file for grassland (excluding 6510) and marsh types and one file for coastal dune types. Later we will propose a standardised file for all mhq samples.  
 
 ### Grassland habitat (excluding 6510) and marshes
 
-Voor sample 2388102_6230_hn moet NoAccess op 1 gezet worden en opname op nee.
+This file originally contains one record for each sample. However it is more convenient and it avoids conflicts when assessment status and measurement status is documented on the location level. It is a location can only have one assessment status or measurement status. Therefore we convert the file to a table with one record for each location (that contains samples). For this we create a location id which corresponds to the grts-ranking of the location.  
 
 ```{r}
+
+#Voor sample 2388102_6230_hn moet NoAccess op 1 gezet worden en opname op nee.
 
 admin_inbo_grassland_marshes_orig <- read.csv2("../../n2khab_mhq_data/original/admin/inbo/gras_moeras_2019.csv") 
 
@@ -17,27 +34,27 @@ admin_inbo_grassland_marshes_correct <- admin_inbo_grassland_marshes_orig %>%
 
 admin_inbo_grassland_marshes <- admin_inbo_grassland_marshes_correct %>%
     mutate(NoAccess = ifelse(ID == "2388102_6230_hn", 1, NoAccess)) %>%
-    mutate(sample_status = ifelse(bezocht > 1000, "in situ assessment", "no assessment"),
-           sample_status = ifelse(NoAccess == 1 & !is.na(NoAccess), "inaccessable", sample_status),
-           sample_status = ifelse(OrthoContr == 1 & !is.na(OrthoContr), "orthophoto assessment", sample_status),
-           sample_status = factor(sample_status, levels = c("in situ assessment", "orthophoto assessment", "no assessment", "inaccessable")),
+    mutate(assessment_status = ifelse(bezocht > 1000, "in situ assessment", "no assessment"),
+           assessment_status = ifelse(NoAccess == 1 & !is.na(NoAccess), "permanently inaccessable", assessment_status),
+           assessment_status = ifelse(OrthoContr == 1 & !is.na(OrthoContr), "orthophoto assessment", assessment_status),
+           assessment_status = factor(assessment_status, levels = c("in situ assessment", "orthophoto assessment", "no assessment", "inaccessable")),
            measured = opname == "ja",
-           position_change = verplaatst == "ja",
-           assessment_year = ifelse(sample_status %in% c("in situ assessment", "orthophoto assessment"), bezocht, NA),
+           location_change = verplaatst == "ja",
+           assessment_year = ifelse(assessment_status %in% c("in situ assessment", "orthophoto assessment"), bezocht, NA),
            # assessment_year = ifelse(assessment_year == 19, 2019, assessment_year),
            x_measured = ifelse(measured, round(POINT_X, 1), NA),
            y_measured = ifelse(measured, round(POINT_Y, 1), NA)) %>%
-    select(sample_id = ID, grts_ranking = Ranking, sample_status, assessment_year, measured, position_change, x_measured, y_measured)
+    select(sample_id = ID, grts_ranking = Ranking, assessment_status, assessment_year, measured, location_change, x_measured, y_measured)
 
 check <- n_distinct(admin_inbo_grassland_marshes$sample_id) == nrow(admin_inbo_grassland_marshes)
 
 check <- admin_inbo_grassland_marshes %>%
-    filter(sample_status == "in situ assessment" & is.na(measured))
+    filter(assessment_status == "in situ assessment" & is.na(measured))
 
 
 check_different_dates <- admin_inbo_grassland_marshes %>%
     group_by(grts_ranking) %>%
-    mutate(n_assess = n_distinct(sample_status, assessment_year)) %>%
+    mutate(n_assess = n_distinct(assessment_status, assessment_year)) %>%
     ungroup() %>%
     filter(n_assess > 1) %>%
     arrange(grts_ranking)
@@ -56,31 +73,32 @@ check_different_dates %>%
 ```
 
 
-
 ```{r}
 #admin data for each location
 
 admin_inbo_grassland_marshes_location <- admin_inbo_grassland_marshes %>%
     mutate(location_id = as.character(grts_ranking)) %>%
     group_by(location_id, grts_ranking) %>%
-    mutate(sample_status_loc = ifelse("inaccessable" %in% sample_status, "inaccessable",
-                                      ifelse("in situ assessment" %in% sample_status, "in situ assessment",
-                                             ifelse("orthophoto assessment" %in% sample_status, "orthophoto assessment","no asessment")))) %>%
+    mutate(assessment_status_loc = ifelse("inaccessable" %in% assessment_status, "inaccessable",
+                                      ifelse("in situ assessment" %in% assessment_status, "in situ assessment",
+                                             ifelse("orthophoto assessment" %in% assessment_status, "orthophoto assessment","no asessment")))) %>%
     ungroup() %>%
-    group_by(location_id, grts_ranking, sample_status_loc) %>%
+    group_by(location_id, grts_ranking, assessment_status_loc) %>%
     summarise(assessment_year = max(assessment_year, na.rm = TRUE),
               measured = any(measured),
-              position_change = sum(position_change) > 0,
+              location_change = sum(location_change) > 0,
               x_measured = x_measured[1],
               y_measured = y_measured[1]) %>%
     ungroup() %>%
     mutate(assessment_year = ifelse(assessment_year == -Inf, NA, assessment_year)) %>%
-    rename(sample_status = sample_status_loc) 
+    rename(assessment_status = assessment_status_loc) 
 
 n_distinct(admin_inbo_grassland_marshes_location$location_id) == nrow(admin_inbo_grassland_marshes_location)
 ```
 
 ### Coastal dunes
+
+This file contains one record for each location. However, the grts-ranking is not sufficient to uniquely identify each location. This can be explained as follows. 
 
 ```{r}
 admin_inbo_dunes_orig <- read.csv2("../../n2khab_mhq_data/original/admin/inbo/duinen_2019.csv") 
@@ -89,14 +107,14 @@ admin_inbo_dunes <- admin_inbo_dunes_orig %>%
     group_by(Ranking) %>%
     mutate(n = n()) %>%
     ungroup() %>%
-     mutate(sample_status = ifelse(bezocht %in% c(2010:2100), "in situ assessment", "no assessment"),
+     mutate(assessment_status = ifelse(bezocht %in% c(2010:2100), "in situ assessment", "no assessment"),
            measured = opname == "ja",
-           position_change = verplaatst == "ja",
+           location_change = verplaatst == "ja",
            x_measured = ifelse(measured, round(POINT_X, 1), NA),
            y_measured = ifelse(measured, round(POINT_Y, 1), NA),
-           assessment_year = ifelse(sample_status %in% c("in situ assessment", "orthophoto assessment"), bezocht, NA),
+           assessment_year = ifelse(assessment_status %in% c("in situ assessment", "orthophoto assessment"), bezocht, NA),
           ) %>%
-    select(TypePQ, grts_ranking = Ranking, sample_status, assessment_year, measured, position_change, x_measured, y_measured, starts_with("F")) %>%
+    select(TypePQ, grts_ranking = Ranking, assessment_status, assessment_year, measured, location_change, x_measured, y_measured, starts_with("F")) %>%
     gather(starts_with("F"), key = "Ftype", value = "target") %>%
     filter(target == 1) %>%
     group_by(grts_ranking, TypePQ) %>%
@@ -113,31 +131,6 @@ check_id <- admin_inbo_dunes %>%
     group_by(location_id) %>%
     mutate(n = n()) %>%
     ungroup()
-
-#location_id = grts-ranking
-# admin_inbo_dunes_single <- admin_inbo_dunes_temp %>%
-#     filter(n == 1) %>%
-#      select(TypePQ, grts_ranking = Ranking, sample_status, assessment_year, measured, position_change, x_measured, y_measured) %>%
-#      mutate(location_id = ifelse(TypePQ == "PINK_PQ", str_c(as.character(grts_ranking), "_reloc", 1), as.character(grts_ranking)),
-#             link_inboveg = as.character(grts_ranking)
-#             ) %>%
-#     select(-TypePQ)
-
-# different locations with equal grts-ranking due to redplacement of samples because of existing legacy sites in the direct surrounding; in inboveg the different locations with equal grts-ranking can be identified bij the target type
-     
-# admin_inbo_dunes_multiple <- admin_inbo_dunes_temp %>%
-#     # filter(n > 1) %>%
-#     
-#   
-# 
-# check <- n_distinct(admin_inbo_dunes_multiple$location_id) == nrow(admin_inbo_dunes_multiple) 
-# 
-# admin_inbo_dunes <- bind_rows(
-#     # admin_inbo_dunes_single,
-#     admin_inbo_dunes_multiple
-# ) %>%
-#     select(location_id, everything())
-
 
 ```
 
@@ -328,14 +321,15 @@ type_cover_wide <- segments %>%
 
 #maximum grts_ranking in sample for each type
 max_ranking <- samples_grts %>%
-    group_by(type) %>%
+    group_by(type, sac) %>%
     summarise(max_grts_ranking = max(grts_ranking)) %>%
-    ungroup()
+    ungroup() %>%
+    rename(type_observed = type)
     
 #overview of assessed samples
 # samples_admin_inbo_summary <- samples %>%
 #     inner_join(admin_inbo, by = c("sample_id")) %>%
-#     select(sample_id, grts_ranking, x, y, type, phab, sac, year_planned, sample_status, assessment_year, measured, position_change, x_measured, y_measured) %>%
+#     select(sample_id, grts_ranking, x, y, type, phab, sac, year_planned, assessment_status, assessment_year, measured, location_change, x_measured, y_measured) %>%
 #     arrange(type, year_planned)
 
 square_plots <- plots %>%
@@ -349,9 +343,9 @@ assessment_inbo <- samples_grts %>%
            is_type_target = type == type_observed,
            assessment_year = as.numeric(format(date, "%Y"))) %>%
     left_join(type_cover_wide, by = c("location_id", "date")) %>%
-    left_join(max_ranking, by = "type") %>%
+    left_join(max_ranking, by = c("type_observed", "sac")) %>%
     mutate(allow_other_type = ifelse(is_type_target_plot, NA, grts_ranking <= max_grts_ranking)) %>%
-    select(location_id, sample_id, grts_ranking, date_assessment = date, assessment_year, type_target = type, type_observed, type_observed_cover = type_cover, is_type_target, allow_other_type, type_cover_circle, type_cover_square, n_segments, n_habtarget, n_center)
+    select(location_id, sample_id, grts_ranking, date_assessment = date, assessment_year, type_target = type, type_observed, type_observed_cover = type_cover, is_type_target, allow_other_type, type_cover_circle, type_cover_square, n_segments, n_habtarget, n_center, max_grts_ranking)
 
 check_sample_id <- assessment_inbo %>%
     group_by(sample_id, date_assessment) %>%
@@ -399,7 +393,7 @@ check_cover_type_observed %>%
 ```{r}
 
 check_not_in_inboveg <- admin_inbo %>%
-    filter(sample_status == "in situ assessment") %>%
+    filter(assessment_status == "in situ assessment") %>%
     filter(measured) %>%
     filter(assessment_year < 2019) %>%
     filter(!(location_id %in% assessment_inbo$location_id )) %>%
@@ -421,7 +415,7 @@ check_not_in_inboveg %>%
 sample_admin <- samples_grts %>%
     select(-link_inboveg) %>%
     left_join(admin_inbo, by = c("location_id", "grts_ranking")) %>%
-    filter(!is.na(sample_status))
+    filter(!is.na(assessment_status))
 
 check <- n_distinct(sample_admin$sample_id) == nrow(sample_admin)
 
@@ -437,14 +431,14 @@ check <- n_distinct(sample_assessments$sample_id) == nrow(sample_assessments)
 
 ```{r}
 
-check_position_change <- sample_assessments %>%
+check_location_change <- sample_assessments %>%
     filter(measured) %>%
     filter(allow_other_type) %>%
-    filter(position_change) %>%
-    select(sample_id, grts_ranking, type_target, type_observed, position_change) %>%
+    filter(location_change) %>%
+    select(sample_id, grts_ranking, type_target, type_observed, location_change) %>%
     arrange(grts_ranking)
 
-check_position_change %>%
+check_location_change %>%
     kable %>%
     kable_styling()
 
@@ -499,14 +493,14 @@ completed <- admin_anb_orig %>%
 
 ```{r}
 
-export <- "export_fieldmap_2020-03-30"
+export <- "export_fieldmap_2020-03-31"
 
 cover_species <- read.csv2(str_c("../../n2khab_mhq_data/field-data/fieldmap/", export, "/cover_species.csv"), stringsAsFactors = FALSE)
 hab_observed <- read.csv2(str_c("../../n2khab_mhq_data/field-data/fieldmap/", export, "/hab_observed.csv"), stringsAsFactors = FALSE)
 measurements_6510_circle <- read.csv2(str_c("../../n2khab_mhq_data/field-data/fieldmap/", export, "/measurements_6510_circle.csv"), stringsAsFactors = FALSE)
 measurements_heath_circle <- read.csv2(str_c("../../n2khab_mhq_data/field-data/fieldmap/", export, "/measurements_heath_circle.csv"), stringsAsFactors = FALSE)
 measurements_square <- read.csv2(str_c("../../n2khab_mhq_data/field-data/fieldmap/", export, "/measurements_square.csv"), stringsAsFactors = FALSE)
-sample_status <- read.csv2(str_c("../../n2khab_mhq_data/field-data/fieldmap/", export, "/sample_status.csv"), stringsAsFactors = FALSE)
+assessment_status <- read.csv2(str_c("../../n2khab_mhq_data/field-data/fieldmap/", export, "/assessment_status.csv"), stringsAsFactors = FALSE)
 observer_date <- read.csv2(str_c("../../n2khab_mhq_data/field-data/fieldmap/", export, "/observer_date.csv"), stringsAsFactors = FALSE)
 
 ```
@@ -517,8 +511,20 @@ observer_date <- read.csv2(str_c("../../n2khab_mhq_data/field-data/fieldmap/", e
 
 heath_ortho_control_orig <- read_sf("../../n2khab_mhq_data/original/admin/anb", "meetnet_heide_versie20140611_orthocontrole") %>%
     st_drop_geometry()
+
+admin_ortho_control <- heath_ortho_control_orig %>%
+    filter(Orthocontr == 0) %>%
+    mutate(location_id = as.character(Ranking),
+           assessment_status = "orthophoto assessment",
+           assessment_year = "2014",
+           measured = FALSE) %>%
+    distinct(location_id, assessment_status, assessment_year, measured) 
+    
     
 ```
+
+
+
 
 ## Determine sample status
 
@@ -527,24 +533,108 @@ heath_ortho_control_orig <- read_sf("../../n2khab_mhq_data/original/admin/anb", 
 observer_date <- observer_date %>%
      mutate(date = as.Date(date, format = "%Y-%m-%d"),
             location_id = as.character(plot_id)) %>%
-    select(-plot_id)
-    
-admin_anb <- sample_status %>%
+    select(-plot_id) %>%
+    unique()
+   
+admin_anb <- assessment_status %>%
     mutate(location_id = as.character(grts_ranking)) %>%
     left_join(observer_date, by = "location_id") %>%
-    mutate(sample_status = ifelse(status_fieldwork == "ja", "in situ assessment",
+    mutate(assessment_status = ifelse(status_fieldwork == "ja", "in situ assessment",
                                   ifelse(status_fieldwork == "nee", "no assessment", NA)),
-           sample_status = ifelse(!is.na(info_status_fieldwork) & info_status_fieldwork == "Geen opname : tijdelijk nt toeg", "temporary inaccessable", 
-                                  ifelse(info_status_fieldwork %in% c("Geen opname : permanent nt toegankelijk", "Geen opname : geen toelating"), "permanently inaccessable", sample_status)),
-           sample_status = ifelse(!is.na(info_status_fieldwork) &  info_status_fieldwork == "Geen (volledig) terreinbezoek uitgevoerd", "no assessment", sample_status),
-           measured = ifelse(sample_status == "in situ assessment",
+           assessment_status = ifelse(!is.na(info_status_fieldwork) & info_status_fieldwork == "Geen opname : tijdelijk nt toeg", "temporary inaccessable", 
+                                  ifelse(info_status_fieldwork %in% c("Geen opname : permanent nt toegankelijk", "Geen opname : geen toelating"), "permanently inaccessable", assessment_status)),
+           measured = ifelse(assessment_status == "in situ assessment",
                                 ifelse(!is.na(info_status_fieldwork) & info_status_fieldwork == "Geen opname : geen doelhabitat", FALSE, TRUE),
                                 FALSE),
+           completed = ifelse(measured,
+                              ifelse(!is.na(info_status_fieldwork) &  info_status_fieldwork == "Geen (volledig) terreinbezoek uitgevoerd", FALSE, TRUE),
+                              NA),
            assessment_year = format(date, "%Y"),
-           position_change = ifelse(is.na(Remark), FALSE,
+           location_change = ifelse(is.na(Remark), FALSE,
                                     str_detect( Remark, "verlegd"))) %>%
-    select(sample_id, location_id, sample_status, measured, assessment_year, position_change) %>%
-    left_join(completed, by = "location_id")
-           
+    distinct(location_id, assessment_status,  assessment_year, measured, completed, location_change) 
+
+admin_ortho_control <- admin_ortho_control %>%
+    filter(!(location_id %in% admin_anb$location_id)) 
+
+admin_anb <- admin_anb %>%
+    bind_rows(admin_ortho_control)
+
+check <- n_distinct(admin_anb$location_id) == nrow(admin_anb)
+    
+check_n <- admin_anb %>%
+    group_by(location_id) %>%
+    mutate(n = n()) %>%
+    ungroup()
+
 ```
 
+
+## Type observed
+
+```{r}
+
+type_circle <- hab_observed %>% 
+    mutate(location_id = as.character(plot_id),
+           type_observed_circle = ifelse(type_observed_circle == "geen habitat (akker, houtkant, tuin,...)",
+                                         "gh",
+                                         type_observed_circle),
+        type_observed_cover_circle = 100 * type_observed_cover_circle) %>%
+    group_by(location_id) %>%
+    summarise(type_cover_circle = str_c(str_c(str_replace_na(type_observed_cover_circle), "% ", type_observed_circle), collapse =  " + ")) %>%
+    ungroup()
+
+type_square <- measurements_square %>%
+    mutate(location_id = as.character(plot_id),
+           type_observed_square = ifelse(type_observed_square == "geen habitat (akker, houtkant, tuin,...)",
+                                         "gh",
+                                         type_observed_square)) %>%
+    select(type_observed = type_observed_square, location_id) %>%
+    unique() %>%
+    mutate(type_cover_square = str_c("100% ", type_observed))
+    
+assessment_anb <- type_square %>%
+    left_join(type_circle, by = "location_id") %>%
+    left_join(select(samples_grts, sample_id, location_id, grts_ranking, type, sac), by = c("location_id")) %>%
+    left_join(max_ranking, by = c("type_observed", "sac")) %>%
+    rename(type_target = type) %>%
+    mutate(type_observed = ifelse(is.na(type_observed) & !is.na(type_cover_circle),
+                                  str_sub(type_cover_circle, start = 6),
+                                  type_observed),
+           is_type_target = type_target == type_observed,
+           type_cover = 100) %>%
+    filter(!is.na(type_observed)) %>%
+    group_by(location_id) %>%
+    mutate(is_type_target_plot = sum(is_type_target, na.rm = TRUE) > 0,
+           n_habtarget = n_distinct(type_target)) %>%
+    ungroup() %>%
+    mutate(allow_other_type = ifelse(is_type_target_plot, NA, grts_ranking <= max_grts_ranking)) %>%
+    select(location_id, sample_id, sac, grts_ranking, type_target, type_observed, type_observed_cover = type_cover, is_type_target, allow_other_type, type_cover_circle, type_cover_square, n_habtarget, max_grts_ranking)
+    
+check <- n_distinct(assessment_anb$sample_id) == nrow(assessment_anb)
+
+```
+
+## Combine admin and assessments
+
+```{r}
+
+main_type_anb <- c("6510", "4010", "4030", "2310", "2330")
+
+samples_anb <- samples_grts %>%
+    filter(main_type %in% main_type_anb)
+
+locations_anb <- samples_grts %>%
+    filter(location_id %in% samples_anb$location_id)
+
+sample_admin_anb <- locations_anb %>%
+    select(-link_inboveg) %>%
+    left_join(admin_anb, by = c("location_id")) 
+
+check <- n_distinct(sample_admin_anb$sample_id) == nrow(sample_admin_anb)
+
+sample_assessments_anb <- sample_admin_anb %>%
+    left_join(assessment_anb, by = c("sample_id", "location_id", "grts_ranking", "sac"))
+
+check <- n_distinct(sample_assessments$sample_id) == nrow(sample_assessments)
+```
