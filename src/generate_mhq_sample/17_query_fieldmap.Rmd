@@ -55,7 +55,7 @@ get_observed_hab <- function (db = db_fieldmap_open_hab){
     connectieDB <-   odbcConnectAccess2007(db)
   }
 
-  habObservedOrig <- sqlQuery(connectieDB, query_HabTypeObserved, stringsAsFactors = TRUE)
+  habObservedOrig <- sqlQuery(connectieDB, query_HabTypeObserved, stringsAsFactors = FALSE)
 
   odbcClose(connectieDB)
 
@@ -63,9 +63,11 @@ get_observed_hab <- function (db = db_fieldmap_open_hab){
     rename(plot_id = IDPlots,
            segment_id = ID,
            type_observed_code = HABITAT,
-           type_observed = Value1) %>%
-    mutate(type_observed = gsub(" ", "_", type_observed),
-           segment_weight = round(ifelse (is.na(Area_m2),1,Area_m2/(pi*18^2)), 2))
+           type_observed_circle = Value1) %>%
+    mutate(type_observed_circle = ifelse(nchar(type_observed_circle) %in% c(7, 8),
+                                         gsub(" ", "_", type_observed_circle),
+                                         type_observed_circle),
+           type_observed_cover_circle = round(ifelse (is.na(Area_m2),1,Area_m2/(pi*18^2)), 2))
 
   result <- habObserved
 
@@ -107,7 +109,9 @@ get_measurements_square <- function(db = db_fieldmap_open_hab){
     filter(ID == 1) %>%  # een vegetatieopname per plot
     gather(herblayer, shrublayer, treelayer, shrub_treelayer, litter, key = "layer", value = "cover")  %>%
     select(plot_id = IDPlots, type_observed_square, layer, cover) %>%
-    mutate(type_observed_square = sub(" ", "_", type_observed_square)) %>%
+    mutate(type_observed_square = ifelse(nchar(type_observed_square) %in% c(7, 8), #dus een habitatsubtype
+                                         sub(" ", "_", type_observed_square),
+                                         type_observed_square)) %>%
       arrange(plot_id)
 
   return(coverPlots)
