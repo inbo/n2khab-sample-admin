@@ -14,11 +14,13 @@ In certain conditions, a location can also be measured when the observed type is
 
 The detection rate of some types is very low. Therefore in some cases we allow changing the location of a sample in the direct surrounding (based on a protocol) in order to make it a valid sample. The sample administration table will also document these location changes. Finally we will also document wether measurements are complete or wether some variables are missing in the database.  
 
-## Read INBO sample administration data 
+## Samples assigned to INBO
+
+### Read INBO sample administration data 
 
 INBO documents the administration of mhq sample assessments in separate files. From this file we van determine the assessment status, the assessment year, wether a location is measured and wether a location is changed. There is one file for grassland (excluding 6510) and marsh types and one file for coastal dune types. Later we will propose a standardised file for all mhq samples.  
 
-### Grassland habitat (excluding 6510) and marshes
+#### Grassland habitat (excluding 6510) and marshes
 
 This file originally contains one record for each sample. However it is more convenient and it avoids conflicts when assessment status and measurement status is documented on the location level. It is a location can only have one assessment status or measurement status. Therefore we convert the file to a table with one record for each location (that contains samples). For this we create a location id which corresponds to the grts-ranking of the location.  
 
@@ -95,7 +97,7 @@ admin_inbo_grassland_marshes_location <- admin_inbo_grassland_marshes %>%
 n_distinct(admin_inbo_grassland_marshes_location$location_id) == nrow(admin_inbo_grassland_marshes_location)
 ```
 
-### Coastal dunes
+#### Coastal dunes
 
 This file contains one record for each location. However, the grts-ranking is not sufficient to uniquely identify each location, as was mentioned in \@ref(h:sampledunes). Therfore we construct the location_id by adding 'reloc1' to the grts-ranking of the legacy sites, so we can link the admin records to the sample table.  
 
@@ -147,7 +149,7 @@ admin_inbo <- bind_rows(
 ```
 
 
-## Read measurement data for plots assessed by INBO
+### Read measurement data for plots assessed by INBO
 
 We read an export from the INBOveg database with measurements in the circle and square plot. We use this data to determine the observered type and compare this to the target type. This way we can evaluate if a sample is valid. We also check if the measurements are complete, i.e. vegetation composition is measured in the square plot and structure variables are measured in the circle plot. We note that INBO also measures the vegetation compostion in the circle plot.   
 
@@ -191,9 +193,9 @@ plots <- header_mhq %>%
 ```
 
 
-## Check if measurements are complete
+### Check if measurements are complete
 
-### Check if circle plot and square plot is imported for each assessment
+#### Check if circle plot and square plot is imported for each assessment
 
 ```{r}
 
@@ -218,7 +220,7 @@ check_plots %>%
     kable_styling()
 ```
 
-### Check if vegetation records are imported for each plot and structure records are imported for the circle plot
+#### Check if vegetation records are imported for each plot and structure records are imported for the circle plot
 
 For following samples the vegetation composition or structure variables are missing in INBOveg.
 
@@ -237,7 +239,7 @@ check_plots_data_import %>%
 
 
 
-## Determine type in plot center and check if the observed type corresponds with the target type
+### Determine type in plot center and check if the observed type corresponds with the target type
 
 Vegetation type cover is measured both in the square plot and the circle plot. The field protocol prescribes that a plot is only recorded when the plot center is located within (one of) the target habitat type(s). When the observed type is different from (one of) the target type(s), the plot can be recorded when the GRTS ranking of the sample location is smaller than the largest GRTS ranking in the set of samples for the observed type. 
 
@@ -336,6 +338,15 @@ type_cover_wide <- plot_types %>%
     mutate(date = as.Date(date, format = "%Y-%m-%d"))
 ```
 
+```{r}
+measurement_completed <- plots %>%
+    mutate(veg_ok = plot == "square" & vegetation_rec_imported,
+           struct_ok = plot == "circle" & structure_rec_imported) %>%
+    group_by(location_id) %>%
+    summarise(completed = any(veg_ok) & any(struct_ok)) %>%
+    ungroup()
+    
+```
 
 Next, we evaluate if a sample is valid. We compare type_target and type_observed and create a variable 'is_type_target' (TRUE/FALSE). When a location does not contain a valid sample (for which is_type_target = TRUE), we check if the maximum grts-ranking in the sample set of the observed type is smaller than the grts-ranking of the location and create a variable 'allow_other_type'.  
 
@@ -359,8 +370,9 @@ assessment_inbo <- samples_grts %>%
            assessment_year = as.numeric(format(date, "%Y"))) %>%
     left_join(type_cover_wide, by = c("location_id", "date")) %>%
     left_join(max_ranking, by = c("type_observed", "sac")) %>%
+    left_join(measurement_completed, by = c("location_id")) %>%
     mutate(allow_other_type = ifelse(is_type_target_plot, NA, grts_ranking <= max_grts_ranking)) %>%
-    select(location_id, sample_id, grts_ranking, assessment_date = date, assessment_year, type_target = type, type_observed, type_observed_cover = type_cover, is_type_target, allow_other_type, type_cover_circle, type_cover_square, n_type_observed, n_habtarget, n_center, max_grts_ranking)
+    select(location_id, sample_id, grts_ranking, assessment_date = date, assessment_year,completed, type_target = type, type_observed, type_observed_cover = type_cover, is_type_target, allow_other_type, type_cover_circle, type_cover_square, n_type_observed, n_habtarget, n_center, max_grts_ranking)
 
 check_sample_id <- assessment_inbo %>%
     group_by(sample_id, assessment_date) %>%
@@ -372,7 +384,7 @@ check_sample_id <- assessment_inbo %>%
 
 
 
-### Check cover of observed type in plot 
+#### Check cover of observed type in plot 
 
 We check what the cover is of the type observed in the center of the plot. In the following table we show the samples with a cover lower than 50 %. These samples will be checked.
 
@@ -390,14 +402,33 @@ check_cover_type_observed %>%
     kable_styling() 
 ```
 
-## Combine sample table with admin data
+#### Check allow_other_type
 
-Next, we join the sample table and the admin data. We join by the location_id, because and assessment is done for all target types (samples) in a location. However we only select the samples for the types that were assigned to INBO field work team. 
+Some samples are measured altough the observed type is different than the target type and the grts-ranking is larger than the maximum grts-ranking in the sample set of the observed type (allow_other_type = FALSE).
 
 ```{r}
+check_allow_other_type <- assessment_inbo %>%
+    filter(!is_type_target) %>%
+    filter(!allow_other_type) %>%
+    select(sample_id, grts_ranking, type_target, type_observed, max_grts_ranking, allow_other_type)
 
+write.table(check_allow_other_type, "../../output/check_allow_other_type.txt")
+
+check_allow_other_type %>%
+    kable() %>%
+    kable_styling()
+```
+
+
+### Combine sample table with admin data
+
+```{r}
 types_inbo <- c("1330_hpr", "2120", "2130_had", "2130_hd", "2160", "2170", "2180", "2190", "2190_mp", "6120", "6230_hn","6230_hmo","6230_ha", "6230_hnk", "6230", "6410_mo" ,"6410_ve" , "7140_meso","7140_oli")
+```
 
+Next, we join the sample table and the admin data. We join by the location_id, because and assessment is done for all target types (samples) in a location. However we only select the samples for the types that were assigned to INBO field work team: `r types_inbo`. 
+
+```{r}
 sample_admin_inbo <- samples_grts %>%
     filter(type %in% types_inbo) %>%
     select(-link_inboveg) %>%
@@ -410,7 +441,7 @@ check <- n_distinct(sample_admin_inbo$sample_id) == nrow(sample_admin_inbo)
 
 
 
-## Combine sample admin data and assessments data
+### Combine sample admin data and assessments data
 
 When a sample is assessed but not measured according to the admin data, this is because the target type is not observed. However the observed cover class is not explicitely recorded. For such samples we set is_target_type to FALSE.
 
@@ -422,16 +453,16 @@ sample_assessments_inbo <- sample_admin_inbo %>%
                                    ifelse(!measured, FALSE, is_type_target),
                                    is_type_target),
            type_target = ifelse(is.na(type_target), as.character(type), type_target)) %>%
-    select(sample_id, type_target, location_id, grts_ranking, assessment_status, assessment_year, measured, location_change, is_type_target, type_target, type_observed,  allow_other_type, x_measured, y_measured, distance_from_sample)
+    select(sample_id, type_target, location_id, sac, grts_ranking, year_planned, assessment_status, assessment_year, measured, completed, location_change, is_type_target, type_observed,  allow_other_type, type_cover_circle, type_cover_square, x_measured, y_measured, distance_from_sample)
 
 check <- n_distinct(sample_assessments_inbo$sample_id) == nrow(sample_assessments_inbo)
 ```
 
 
 
-## Quality control
+### Additional checks
 
-### Check measured samples not in INBOveg database
+#### Check measured samples not in INBOveg database
 
 Normally all samples measured before 2019 should already have been imported in the INBOveg database. However the data from the following samples are still missing in the database.
 
@@ -460,7 +491,7 @@ coord_missing <- sample_assessments_inbo %>%
     filter(is.na(x_measured))
 ```
 
-### Check location change
+#### Check location change
 
 
 ```{r}
@@ -484,6 +515,8 @@ check_position_change_100 <- check_position_change %>%
     filter(distance_from_sample >= 100) %>%
     arrange(desc(distance_from_sample))
 
+write.table(check_position_change_100, "../../output/check_position_change.txt", row.names = FALSE)
+
 check_position_change_100 %>%
     kable() %>%
     kable_styling()
@@ -498,6 +531,8 @@ check_no_position_change <- check_position_change %>%
     filter(distance_from_sample > 1) %>%
     arrange(desc(distance_from_sample))
 
+write.table(check_no_position_change, "../../output/check_position_change2.txt", row.names = FALSE)
+
 check_no_position_change %>%
     kable() %>%
     kable_styling()
@@ -509,13 +544,11 @@ check_position_change_missing <- check_position_change %>%
     filter(is.na(location_change)) %>%
     arrange(desc(distance_from_sample))
 
-
-
 ```
 
 
 
-### Samples for which the position was changed but that does not contain the target type 
+#### Samples for which the position was changed but that does not contain the target type 
 
 For some samples the location was changed, yet the observed type in the location does not correspond with the target type. Most of the time the observed type is another subtype, but this not always the case. 
 
@@ -534,7 +567,7 @@ check_location_change %>%
 
 ```
 
-### Samples for which the subtype of the observed type is unknown
+#### Samples for which the subtype of the observed type is unknown
 
 ```{r}
 
@@ -552,50 +585,51 @@ check_subtype <- sample_assessments_inbo %>%
     filter(type_observed %in% subtypes$main_type)
 ```
 
+#### Observed type was not assigned to INBO or no sample set was drawn for observed type
 
-## Read ANB admin data
+Some samples were measured altough the observed type was not assigned to the INBO team (for example type 6510). 
+
+Some samples were measured altough there is no monitoring scheme for the observed type (for example type 1330_pol). 
 
 ```{r}
 
-admin_anb_orig <- read.csv2("../../n2khab_mhq_data/original/admin/anb/PlotsMetDataAFGEWERKT.csv")
+check_inbo_type <- assessment_inbo %>%
+    filter(! type_observed %in% types_inbo) %>%
+    select(sample_id, type_target, type_observed)
 
-completed <- admin_anb_orig %>%
-    select(location_id = IDPlots, afgewerkt = AFGEWERKT) %>%
-    mutate(location_id = as.character(location_id)) %>%
-    unique()
+write.table(check_inbo_type, "../../output/check_inbo_type.txt")
 
-
-# admin_anb <- admin_anb_orig %>%
-#     mutate(circleplot_measured = ifelse(!is.na(Sitedescr_6510), Sitedescr_6510,
-#                                         ifelse(!is.na(Sitedescr_heide), Sitedescr_heide, NA))) %>%
-#     select(id = SingleID, obs_circleplot = Hab_Standdesc, obs_vegplot = hab_VegPQ, vegplot_measured = VEGPQ, circleplot_measured, notes = opm_navplot) %>%
-#     mutate(obs_vegplot = ifelse(obs_vegplot != "geen habitat (akker, houtkant, tuin,...)", 
-#                                 str_replace(obs_vegplot, " ", "_"),
-#                                 obs_vegplot),
-#            obs_circleplot = ifelse(obs_circleplot != "geen habitat (akker, houtkant, tuin,...)", 
-#                                 str_replace(obs_circleplot, " ", "_"),
-#                                 obs_circleplot))
+check_inbo_type %>% 
+    kable() %>%
+    kable_styling()
 
 ```
 
 
-## Read recorded data in plots assessed by ANB
+## Samples assigned to ANB
+
+### Read assessment data of samples assigned to ANB
+
+ANB uses Fieldmap to store assessment data: both admin data on assessment status and measurement data. An Access databes is exported from Fieldmap and deliverd to INBO.  
 
 ```{r}
 
-export <- "export_fieldmap_2020-03-31"
+export <- "export_fieldmap_2020-04-07"
 
 cover_species <- read.csv2(str_c("../../n2khab_mhq_data/field-data/fieldmap/", export, "/cover_species.csv"), stringsAsFactors = FALSE)
 hab_observed <- read.csv2(str_c("../../n2khab_mhq_data/field-data/fieldmap/", export, "/hab_observed.csv"), stringsAsFactors = FALSE)
 measurements_6510_circle <- read.csv2(str_c("../../n2khab_mhq_data/field-data/fieldmap/", export, "/measurements_6510_circle.csv"), stringsAsFactors = FALSE)
 measurements_heath_circle <- read.csv2(str_c("../../n2khab_mhq_data/field-data/fieldmap/", export, "/measurements_heath_circle.csv"), stringsAsFactors = FALSE)
 measurements_square <- read.csv2(str_c("../../n2khab_mhq_data/field-data/fieldmap/", export, "/measurements_square.csv"), stringsAsFactors = FALSE)
-assessment_status <- read.csv2(str_c("../../n2khab_mhq_data/field-data/fieldmap/", export, "/assessment_status.csv"), stringsAsFactors = FALSE)
+sample_status <- read.csv2(str_c("../../n2khab_mhq_data/field-data/fieldmap/", export, "/sample_status.csv"), stringsAsFactors = FALSE)
 observer_date <- read.csv2(str_c("../../n2khab_mhq_data/field-data/fieldmap/", export, "/observer_date.csv"), stringsAsFactors = FALSE)
+coordinates <- read.csv2(str_c("../../n2khab_mhq_data/field-data/fieldmap/", export, "/coordinates.csv"), stringsAsFactors = FALSE)
 
 ```
 
-## Read orthocontrole heath 
+### Read orthocontrole heath 
+
+Before samples were assigned to ANB, INBO performed an orthophoto control to eliminate samples that were cleary not located in the target type. These eliminated samples were not imported in the Fieldmap database, so here we use to original shapefile with the results of the orthophoto control to identify the samples with assessment_status = orthophoto assessment.  
 
 ```{r}
 
@@ -610,13 +644,12 @@ admin_ortho_control <- heath_ortho_control_orig %>%
            measured = FALSE) %>%
     distinct(location_id, assessment_status, assessment_year, measured) 
     
-    
 ```
 
 
+### Determine assessment status
 
-
-## Determine sample status
+'assessment_status', 'measured' and 'completed' can be derived from the variables 'status_fieldwork' and 'info_status_fieldwork'. It is not explicetly recorded when the sample location is changed, however in some cases 'verlegd' is mentioned in the 'remark' field. If this is the case we set 'location_change' to TRUE.   
 
 ```{r}
 
@@ -625,30 +658,46 @@ observer_date <- observer_date %>%
             location_id = as.character(plot_id)) %>%
     select(-plot_id) %>%
     unique()
-   
-admin_anb <- assessment_status %>%
-    mutate(location_id = as.character(grts_ranking)) %>%
+
+date_overview <- hab_observed %>%
+     mutate(date_standdescription = as.Date(date_standdescription, format = "%Y-%m-%d"),
+            location_id = as.character(plot_id)) %>% 
+    select(location_id, date_standdescription) %>%
+    unique() %>%
     left_join(observer_date, by = "location_id") %>%
+    mutate(compare = date == date_standdescription,
+           date_new = ifelse(is.na(date) | date < "2014-01-01", format(date_standdescription, "%Y-%m-%d"), format(date, "%Y-%m-%d")),
+           assessment_date = as.Date(date_new),
+           assessment_year = as.numeric(format(assessment_date,  "%Y"))) %>%
+    select(location_id, assessment_date, assessment_year)
+
+admin_anb <- sample_status %>%
+    mutate(location_id = as.character(grts_ranking)) %>%
+    left_join(date_overview, by = "location_id") %>%
     mutate(assessment_status = ifelse(status_fieldwork == "ja", "in situ assessment",
                                   ifelse(status_fieldwork == "nee", "no assessment", NA)),
            assessment_status = ifelse(!is.na(info_status_fieldwork) & info_status_fieldwork == "Geen opname : tijdelijk nt toeg", "temporary inaccessable", 
                                   ifelse(info_status_fieldwork %in% c("Geen opname : permanent nt toegankelijk", "Geen opname : geen toelating"), "permanently inaccessable", assessment_status)),
            measured = ifelse(assessment_status == "in situ assessment",
                                 ifelse(!is.na(info_status_fieldwork) & info_status_fieldwork == "Geen opname : geen doelhabitat", FALSE, TRUE),
-                                FALSE),
+                                NA),
+           measured = ifelse(assessment_status %in% c("temporary inaccessable", "permanently inaccessable"), FALSE, measured),
            completed = ifelse(measured,
                               ifelse(!is.na(info_status_fieldwork) &  info_status_fieldwork == "Geen (volledig) terreinbezoek uitgevoerd", FALSE, TRUE),
                               NA),
-           assessment_year = format(date, "%Y"),
-           location_change = ifelse(is.na(Remark), FALSE,
-                                    str_detect( Remark, "verlegd"))) %>%
+           location_change = ifelse(measured & !is.na(measured),
+                                    ifelse(is.na(Remark), FALSE,str_detect( Remark, "verlegd")),
+                                    NA),
+           assessment_year = ifelse(assessment_status %in% c("permanently inaccessable", "no assessment"), NA, assessment_year)) %>%
     distinct(location_id, assessment_status,  assessment_year, measured, completed, location_change) 
 
 admin_ortho_control <- admin_ortho_control %>%
-    filter(!(location_id %in% admin_anb$location_id)) 
+    filter(!(location_id %in% admin_anb$location_id)) %>%
+    mutate(assessment_year = as.numeric(assessment_year))
 
 admin_anb <- admin_anb %>%
-    bind_rows(admin_ortho_control)
+    bind_rows(admin_ortho_control) %>%
+    arrange(location_id)
 
 check <- n_distinct(admin_anb$location_id) == nrow(admin_anb)
     
@@ -659,14 +708,17 @@ check_n <- admin_anb %>%
 
 ```
 
+### Type observed
 
-## Type observed
+In the circle plot all habitat types and other land cover classes are recorded and mapped. In the square plot only the habitat type/land cover class in the center of the plot is recorded. There is no data on the cover of the type in the square plot is the Access database, however we could derive this from the mapping in the circle plot.
+
+For some samples for main types 6510 and 2330, the observed subtype is not specified. When this is the case we assume that the subtype corresponds to the target type.
 
 ```{r}
 
 type_circle <- hab_observed %>% 
     mutate(location_id = as.character(plot_id),
-           type_observed_circle = ifelse(type_observed_circle == "geen habitat (akker, houtkant, tuin,...)",
+           type_observed_circle = ifelse(type_observed_circle %in% c("geen habitat (akker, houtkant, tuin,...)", "infrastructuur"),
                                          "gh",
                                          type_observed_circle),
         type_observed_cover_circle = 100 * type_observed_cover_circle) %>%
@@ -681,18 +733,20 @@ type_square <- measurements_square %>%
                                          type_observed_square)) %>%
     select(type_observed = type_observed_square, location_id) %>%
     unique() %>%
-    mutate(type_cover_square = str_c("100% ", type_observed))
+    mutate(type_cover_square = str_c(type_observed))
     
 assessment_anb <- type_square %>%
     left_join(type_circle, by = "location_id") %>%
-    left_join(select(samples_grts, sample_id, location_id, grts_ranking, type, sac), by = c("location_id")) %>%
+    left_join(select(samples_grts, sample_id, location_id, grts_ranking, main_type, type, sac), by = c("location_id")) %>%
     left_join(max_ranking, by = c("type_observed", "sac")) %>%
     rename(type_target = type) %>%
     mutate(type_observed = ifelse(is.na(type_observed) & !is.na(type_cover_circle),
                                   str_sub(type_cover_circle, start = 6),
                                   type_observed),
+           type_observed = ifelse(type_observed == "6510" & main_type == "6510", as.character(type_target), type_observed),
+           type_observed = ifelse(type_observed == "2330" & main_type == "2330", as.character(type_target), type_observed),
            is_type_target = type_target == type_observed,
-           type_cover = 100) %>%
+           type_cover = NA) %>%
     filter(!is.na(type_observed)) %>%
     group_by(location_id) %>%
     mutate(is_type_target_plot = sum(is_type_target, na.rm = TRUE) > 0,
@@ -705,40 +759,238 @@ check <- n_distinct(assessment_anb$sample_id) == nrow(assessment_anb)
 
 ```
 
-## Combine admin and assessments
+#### Check cover sum in circle plot
+
+For some circle plots the sum of the cover of the differen oberved habitat types/land cover classes is larger than 100%.
 
 ```{r}
 
+check_type_cover_circle <- hab_observed %>%
+    mutate(location_id = as.character(plot_id)) %>%
+    group_by(location_id) %>% 
+    mutate(sum_cover = sum(type_observed_cover_circle)) %>%
+    ungroup() %>%
+    filter(sum_cover != 1) %>%
+    select(location_id, segment_id, type_observed_circle, type_observed_cover_circle, sum_cover)
+
+check_type_cover_circle %>%
+    kable() %>%
+    kable_styling()
+
+
+```
+
+#### Check allow_other_type
+
+Some samples are measured altough the observed type is different than the target type and the grts-ranking is larger than the maximum grts-ranking in the sample set of the observed type (allow_other_type = FALSE).
+
+```{r}
+check_allow_other_type <- assessment_anb %>%
+    filter(!is_type_target) %>%
+    filter(!allow_other_type) %>%
+    select(sample_id, grts_ranking, type_target, type_observed, max_grts_ranking, allow_other_type)
+
+write.table(check_allow_other_type, "../../output/check_allow_other_type_anb.txt")
+
+check_allow_other_type %>%
+    kable() %>%
+    kable_styling()
+
+```
+
+
+
+
+### Combine sample table with admin data
+
+```{r}
 main_type_anb <- c("6510", "4010", "4030", "2310", "2330")
+```
 
-samples_anb <- samples_grts %>%
-    filter(main_type %in% main_type_anb)
+Next, we join the sample table and the admin data. We join by the location_id, because and assessment is done for all target types (samples) in a location. However we only select the samples for the types that were assigned to ANB field work team. These types belong to the following main types `r main_type_anb`. 
 
-locations_anb <- samples_grts %>%
-    filter(location_id %in% samples_anb$location_id)
 
-sample_admin_anb <- locations_anb %>%
+```{r}
+coordinates <- coordinates %>%
+    mutate(location_id = as.character(location_id))
+
+sample_admin_anb <- samples_grts %>%
     select(-link_inboveg) %>%
-    left_join(admin_anb, by = c("location_id")) 
+    filter(main_type %in% main_type_anb) %>%
+    left_join(admin_anb, by = c("location_id")) %>%
+    left_join(coordinates, by = "location_id") %>%
+    mutate(distance_from_sample = round(sqrt((x_measured - x)^2 + (y_measured - y)^2), 1)) 
 
 check <- n_distinct(sample_admin_anb$sample_id) == nrow(sample_admin_anb)
 
-sample_assessments_anb <- sample_admin_anb %>%
-    left_join(assessment_anb, by = c("sample_id", "location_id", "grts_ranking", "sac"))
+check_n <- sample_admin_anb %>%
+    group_by(sample_id) %>%
+    mutate(n = n()) %>%
+    ungroup()
 
-check <- n_distinct(sample_assessments$sample_id) == nrow(sample_assessments)
 ```
 
+#### Check coordinates
+
+Some samples have two different measured coordinates. For now, we select the measured coordinates that are closest to the original sample.
 
 ```{r}
-library(leaflet)
+check_coordinates_double <- check_n %>%
+    filter(n > 1) %>%
+    select(sample_id, location_id, assessment_status, measured, x, y, x_measured, y_measured, distance_from_sample)
 
-sample_grassland_marshes_orig %>%
-    st_transform(crs = 4326) %>%
-    leaflet() %>%
-    addTiles() %>%
-    addMarkers()
+write.table(check_coordinates_double, "../../output/check_coordinates_double.txt")
+
+check_coordinates_double %>%
+    kable() %>%
+    kable_styling()
+
+sample_admin_anb <- sample_admin_anb %>%
+    mutate(wt = ifelse(is.na(distance_from_sample), 0,  distance_from_sample)) %>%
+    group_by(sample_id) %>%
+    top_n(1, desc(wt)) %>%
+    ungroup()
+
+check <- n_distinct(sample_admin_anb$sample_id) == nrow(sample_admin_anb)
+```
+
+#### Check location change
+
+For some samples the measured location is more tha 100 meters away from the original sample. In some cases the distance is extremely large and probably the location_id in the database is incorrect.
+
+```{r}
+check_distance <-  check_n %>%
+    filter(distance_from_sample > 100) %>%
+    select(sample_id, location_id, assessment_status, measured, distance_from_sample, x, y, x_measured, y_measured) %>%
+    arrange(desc(distance_from_sample))
+
+write.table(check_distance, "../../output/check_distance.txt")
+
+check_distance %>%
+    kable() %>%
+    kable_styling()
+```
+
+
+
+### Combine sample admin data and assessments data
+
+ANB also records in most cases the observed habitat type/land cover class when a sample is not measured.
+
+```{r}
+
+sample_assessments_anb <- sample_admin_anb %>%
+    left_join(assessment_anb, by = c("sample_id", "location_id", "grts_ranking", "sac")) %>%
+    mutate(is_type_target = ifelse(assessment_status %in% c("in situ assessment", "orthophoto assessment"),
+                                   ifelse(!measured, FALSE, is_type_target),
+                                   is_type_target),
+           type_target = ifelse(is.na(type_target), as.character(type), as.character(type_target))) %>%
+    select(sample_id, type_target, location_id, sac, grts_ranking, year_planned, assessment_status, assessment_year, measured, completed, location_change, is_type_target, type_observed,  allow_other_type, type_cover_circle, type_cover_square, x_measured, y_measured, distance_from_sample)
+
+check <- n_distinct(sample_assessments_inbo$sample_id) == nrow(sample_assessments_inbo)
+
+
+```
+
+```{r}
+control <- read.csv2("../../n2khab_mhq_data/original/admin/anb/PlotsMetDataAFGEWERKT.csv", stringsAsFactors = FALSE) %>%
+    mutate(location_id = as.character(IDPlots)) %>%
+    select(location_id, completed_check = AFGEWERKT)
+
+check <- sample_assessments_anb %>%
+    left_join(control, by = "location_id") %>%
+    mutate(completed_check = ifelse(is.na(completed_check), "nee", completed_check))
+```
+
+
+### Additional checks
+
+#### Samples for which the subtype of the observed type is unknown
+
+```{r}
+
+check_subtype <- sample_assessments_anb %>%
+    filter(!is.na(type_observed)) %>%
+    filter(type_observed %in% types$main_type) %>%
+    filter(type_observed %in% subtypes$main_type)
+```
+
+#### Observed type was not assigned to ANB or no sample set was drawn for observed type
+
+```{r}
+
+check_anb_type <- sample_assessments_anb %>%
+    filter(assessment_status == "in situ assessment") %>%
+    filter(measured) %>%
+    filter(! str_sub(type_observed, 1 , 4) %in% main_type_anb) %>%
+    select(sample_id, type_target, type_observed)
+
+write.table(check_anb_type, "../../output/check_anb_type.txt")
+
+check_anb_type %>% 
+    kable() %>%
+    kable_styling()
+
+```
+
+## Combine ANB and INBO admin table
+
+```{r}
+sample_assessments <- bind_rows(
+    sample_assessments_anb,
+    sample_assessments_inbo
+)
+```
+
+## Create new samples when is_type_target = FALSE and allow_other_type = TRUE
+
+We still have to decide what to do with samples that were measured for another type than the target type and for which the location was changed.
+
+Do we have to document that these are new samples compared to the original set of samples? How?
+
+```{r}
+new_samples <- sample_assessments %>%
+    filter(assessment_status == "in situ assessment" & !is.na(assessment_status)) %>%
+    filter((!is_type_target) & allow_other_type) %>%
+    mutate(sample_id = str_c(location_id, "_", type_observed),
+           type_target = type_observed,
+           is_type_target = TRUE,
+           allow_other_type = NA) 
+
+```
+
+
+## Add new samples to sample admin table
+
+```{r}
+sample_assessments_update <- bind_rows(
+    sample_assessments,
+    new_samples
+) %>% 
+    arrange(type_target, sac, grts_ranking)
+
+
+```
+
+To do: check grts-ranking of dune samples.
+
+## Handle location changes
+
+How do we handle location changes? Do we create a new sample_id and do we set in the orignal sample_id is_type_target = FALSE? 
+
+## Export
+
+### Overview of all assessed samples
+
+```{r}
+mhq_assessments_summary <- sample_assessments_update %>%
+    filter(!is.na(assessment_status) & assessment_status != "no assessment") %>%
+    select(sample_id, grts_ranking, assessment_status, type_target, is_type_target, type_observed, location_change, distance_from_sample, x_measured, y_measured)
+    
+    
     
 ```
+
+
 
 
