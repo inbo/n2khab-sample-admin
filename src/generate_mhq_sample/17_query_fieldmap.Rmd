@@ -9,6 +9,7 @@ get_status <- function(db = db_fieldmap_open_hab){
 query_gridpoints <- "SELECT Grid_points.IDPlots
   , Grid_points.RANKING
   , Grid_points.ID
+  , Grid_points.Add_date
   , Grid_points.SingleID
   , Grid_points.Status_Fieldwork
   , YesNo.Value1
@@ -29,7 +30,7 @@ FROM ((Grid_points LEFT JOIN qFieldteam ON Grid_points.Fieldteam = qFieldteam.ID
 
  gridpointsOrig <- sqlQuery(connectieDB, query_gridpoints)
   gridPoint <- gridpointsOrig %>%
-    select(sample_id = SingleID, grts_ranking = RANKING, status_fieldwork = Value1, info_status_fieldwork = Value1.1, Remark) %>%
+    select(sample_id = SingleID, asses_date = Add_date, grts_ranking = RANKING, status_fieldwork = Value1, info_status_fieldwork = Value1.1, Remark) %>%
     filter(!is.na(status_fieldwork))
 
   odbcClose(connectieDB)
@@ -37,21 +38,22 @@ FROM ((Grid_points LEFT JOIN qFieldteam ON Grid_points.Fieldteam = qFieldteam.ID
   return(gridPoint)
 }
 
-get_observed_hab <- function (db = db_fieldmap_open_hab){
+get_observed_hab <- function(db = db_fieldmap_open_hab){
 
   query_HabTypeObserved <- "
   SELECT
   Standdescription.IDPlots,
   Standdescription.ID,
+  Standdescription.Add_date,
   Standdescription.Area_m2,
   Standdescription.HABITAT,
   qHABITAT.Value1
   FROM Standdescription LEFT JOIN qHABITAT ON Standdescription.HABITAT = qHABITAT.ID;
   "
 
-  if(substr(db,nchar(db)-3,nchar(db)) == ".mdb"){
+  if(substr(db,nchar(db) - 3,nchar(db)) == ".mdb"){
     connectieDB <-   odbcConnectAccess(db)
-  } else if (substr(db,nchar(db)-5,nchar(db)) == ".accdb") {
+  } else if (substr(db,nchar(db) - 5,nchar(db)) == ".accdb") {
     connectieDB <-   odbcConnectAccess2007(db)
   }
 
@@ -63,7 +65,8 @@ get_observed_hab <- function (db = db_fieldmap_open_hab){
     rename(plot_id = IDPlots,
            segment_id = ID,
            type_observed_code = HABITAT,
-           type_observed_circle = Value1) %>%
+           type_observed_circle = Value1,
+           date_standdescription = Add_date) %>%
     mutate(type_observed_circle = ifelse(nchar(type_observed_circle) %in% c(7, 8),
                                          gsub(" ", "_", type_observed_circle),
                                          type_observed_circle),
@@ -319,6 +322,29 @@ get_observation_date <- function(db = db_fieldmap_open_hab){
   return(observer_date)
 }
 
+get_coordinates <- function(db = db_fieldmap_open_hab){
+
+  query_coord <- "SELECT
+  GPS_REF.SingleID,
+  GPS_REF.X_m,
+  GPS_REF.Y_m
+  FROM GPS_REF"
+
+     if(substr(db,nchar(db)-3,nchar(db)) == ".mdb"){
+    connectieDB <-   odbcConnectAccess(db)
+  } else if (substr(db,nchar(db)-5,nchar(db)) == ".accdb") {
+    connectieDB <-   odbcConnectAccess2007(db)
+  }
+
+  coordinates <- sqlQuery(connectieDB, query_coord) %>%
+      select(location_id = SingleID, x_measured = X_m, y_measured = Y_m) %>%
+      filter(!is.na(location_id))
+
+  odbcClose(connectieDB)
+  
+  return(coordinates)
+}
+
 ```
 
 
@@ -332,6 +358,7 @@ cover_species <- get_cover_species()
 measurements_heath_circle <- get_measurements_heath_circle() 
 measurements_6510_circle <- get_measurements_6510_circle()
 observer_date <- get_observation_date()
+coordinates <- get_coordinates()
 
 
 setwd("../../n2khab_mhq_data/field-data/fieldmap/")
@@ -345,6 +372,7 @@ write.csv2(cover_species, "cover_species.csv", row.names = FALSE)
 write.csv2(measurements_heath_circle, "measurements_heath_circle.csv", row.names = FALSE)
 write.csv2(measurements_6510_circle, "measurements_6510_circle.csv", row.names = FALSE)
 write.csv2(observer_date, "observer_date.csv", row.names = FALSE)
+write.csv2(coordinates, "coordinates.csv", row.names = FALSE)
 
 ```
 
