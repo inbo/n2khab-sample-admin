@@ -82,7 +82,7 @@ admin_inbo_grassland_marshes_location <- admin_inbo_grassland_marshes %>%
     group_by(location_id, grts_ranking) %>%
     mutate(assessment_status_loc = ifelse("permanently inaccessable" %in% assessment_status, "permanently inaccessable",
                                       ifelse("in situ assessment" %in% assessment_status, "in situ assessment",
-                                             ifelse("orthophoto assessment" %in% assessment_status, "orthophoto assessment","no asessment")))) %>%
+                                             ifelse("orthophoto assessment" %in% assessment_status, "orthophoto assessment","no assessment")))) %>%
     ungroup() %>%
     group_by(location_id, grts_ranking, assessment_status_loc) %>%
     summarise(assessment_year = max(assessment_year, na.rm = TRUE),
@@ -453,7 +453,7 @@ sample_assessments_inbo <- sample_admin_inbo %>%
                                    ifelse(!measured, FALSE, is_type_target),
                                    is_type_target),
            type_target = ifelse(is.na(type_target), as.character(type), type_target)) %>%
-    select(sample_id, type_target, location_id, sac, grts_ranking, year_planned, assessment_status, assessment_year, measured, completed, location_change, is_type_target, type_observed,  allow_other_type, type_cover_circle, type_cover_square, x_measured, y_measured, distance_from_sample)
+    select(sample_id, type_target, location_id, sac, grts_ranking, year_planned, assessment_status, assessment_year, measured, completed, location_change, is_type_target, type_observed,  allow_other_type, type_cover_circle, type_cover_square, x_orig = x, y_orig = y, x_measured, y_measured, distance_from_sample)
 
 check <- n_distinct(sample_assessments_inbo$sample_id) == nrow(sample_assessments_inbo)
 ```
@@ -885,7 +885,7 @@ sample_assessments_anb <- sample_admin_anb %>%
                                    ifelse(!measured, FALSE, is_type_target),
                                    is_type_target),
            type_target = ifelse(is.na(type_target), as.character(type), as.character(type_target))) %>%
-    select(sample_id, type_target, location_id, sac, grts_ranking, year_planned, assessment_status, assessment_year, measured, completed, location_change, is_type_target, type_observed,  allow_other_type, type_cover_circle, type_cover_square, x_measured, y_measured, distance_from_sample)
+    select(sample_id, type_target, location_id, sac, grts_ranking, year_planned, assessment_status, assessment_year, measured, completed, location_change, is_type_target, type_observed,  allow_other_type, type_cover_circle, type_cover_square, x_orig = x, y_orig = y, x_measured, y_measured, distance_from_sample)
 
 check <- n_distinct(sample_assessments_inbo$sample_id) == nrow(sample_assessments_inbo)
 
@@ -939,7 +939,9 @@ check_anb_type %>%
 sample_assessments <- bind_rows(
     sample_assessments_anb,
     sample_assessments_inbo
-)
+) %>%
+    mutate(type_target = factor(type_target, levels= levels(types$type)),
+           assessment_status = factor(assessment_status, levels = c("in situ assessment", "orthophoto assessment", "temporary inaccessable", "permanently inaccesable", "no assessment")))
 ```
 
 ## Create new samples when is_type_target = FALSE and allow_other_type = TRUE
@@ -984,10 +986,9 @@ How do we handle location changes? Do we create a new sample_id and do we set in
 
 ```{r}
 mhq_assessments_summary <- sample_assessments_update %>%
-    filter(!is.na(assessment_status) & assessment_status != "no assessment") %>%
-    select(sample_id, grts_ranking, assessment_status, type_target, is_type_target, type_observed, location_change, distance_from_sample, x_measured, y_measured)
-    
-    
+    filter(!is.na(assessment_status)) %>%
+    filter(assessment_status != "no assessment") %>%
+    select(sample_id, grts_ranking, assessment_status, type_target, is_type_target, type_observed, location_change, distance_from_sample, x_orig, y_orig, x_measured, y_measured)
     
 ```
 
