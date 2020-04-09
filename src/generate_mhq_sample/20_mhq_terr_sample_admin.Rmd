@@ -941,7 +941,8 @@ sample_assessments <- bind_rows(
     sample_assessments_inbo
 ) %>%
     mutate(type_target = factor(type_target, levels= levels(types$type)),
-           assessment_status = factor(assessment_status, levels = c("in situ assessment", "orthophoto assessment", "temporary inaccessable", "permanently inaccesable", "no assessment")))
+           assessment_status = factor(assessment_status, levels = c("in situ assessment", "orthophoto assessment", "temporary inaccessable", "permanently inaccesable", "no assessment")),
+           sample_source = "habitatmap")
 ```
 
 ## Create new samples when is_type_target = FALSE and allow_other_type = TRUE
@@ -955,9 +956,12 @@ new_samples <- sample_assessments %>%
     filter(assessment_status == "in situ assessment" & !is.na(assessment_status)) %>%
     filter((!is_type_target) & allow_other_type) %>%
     mutate(sample_id = str_c(location_id, "_", type_observed),
-           type_target = type_observed,
+           type_target = factor(type_observed, levels = levels(types$type)),
            is_type_target = TRUE,
-           allow_other_type = NA) 
+           allow_other_type = NA,
+           sample_source = "mhq assessment") %>%
+    select(-year_planned) %>%
+    unique()
 
 ```
 
@@ -988,8 +992,18 @@ How do we handle location changes? Do we create a new sample_id and do we set in
 mhq_assessments_summary <- sample_assessments_update %>%
     filter(!is.na(assessment_status)) %>%
     filter(assessment_status != "no assessment") %>%
-    select(sample_id, grts_ranking, assessment_status, type_target, is_type_target, type_observed, location_change, distance_from_sample, x_orig, y_orig, x_measured, y_measured)
-    
+    filter(sample_source != "mhq_assessment") %>%
+    filter(!is.na(is_type_target)) %>% # sommige inbo measured plots zijn nog niet ingevoerd in inboveg
+    select(sample_id,  grts_ranking, assessment_status, type_target, is_type_target, type_observed, location_change, distance_from_sample, x_orig, y_orig, x_measured, y_measured)
+   
+check <- n_distinct(mhq_assessments_summary$sample_id) == nrow(mhq_assessments_summary)
+check_n <- mhq_assessments_summary %>%
+    group_by(sample_id) %>%
+    mutate(n = n()) %>%
+    ungroup()
+
+write_vc(mhq_assessments_summary, root = "../../n2khab_mhq_data" , file = "mhq_assessments", sorting = c("type_target", "grts_ranking"))
+ 
 ```
 
 
