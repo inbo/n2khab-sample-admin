@@ -18,7 +18,7 @@ The detection rate of some types is very low. Therefore in some cases we allow c
 
 ### Read INBO sample administration data 
 
-INBO documents the administration of mhq sample assessments in separate files. From this file we van determine the assessment status, the assessment year, wether a location is measured and wether a location is changed. There is one file for grassland (excluding 6510) and marsh types and one file for coastal dune types. Later we will propose a standardised file for all mhq samples.  
+INBO documents the administration of mhq sample assessments in separate files. From this file we can determine the assessment status, the assessment year, wether a location is measured and wether a location is changed. There is one file for grassland (excluding 6510) and marsh types and one file for coastal dune types. Later we will propose a standardised file for all mhq samples.  
 
 #### Grassland habitat (excluding 6510) and marshes
 
@@ -1005,7 +1005,6 @@ check_n <- mhq_assessments_summary %>%
 write_vc(mhq_assessments_summary, root = "../../n2khab_mhq_data" , file = "mhq_assessments", sorting = c("type_target", "grts_ranking"))
  
 ```
-
 
 
 
