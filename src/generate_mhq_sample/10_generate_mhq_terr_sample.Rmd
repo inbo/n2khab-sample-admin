@@ -4,7 +4,7 @@ The original data files which are used in the scripts are stored in [this google
 
 # Generation of table with all mhq samples 
 
-The mhq samples (ref) were stored in different files. Here we will generate one standardized table containing all mhq samples including legacy sites. Legacy sites are existing samples that were included in mhq.
+The mhq samples (ref) were stored in different files. Here we will generate one standardized table containing all mhq sampling units including legacy sites. Legacy sites are existing sampling units that were included in mhq.
 
 The table contains: 
 
