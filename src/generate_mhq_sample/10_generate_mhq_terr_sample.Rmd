@@ -1,6 +1,6 @@
 # Introduction
 
-The original data files which are used the scripts are stored in [this google drive folder](https://drive.google.com/open?id=11rStbOup5DFmHP8FQOe_KCOSkXJIwXx0) which can be accessed within INBO.   
+The original data files which are used the scripts are stored in [this google drive folder](https://drive.google.com/open?id=1JpYol4Fmv_a6tjm3CBZ4RFU_81f9Wr8G) which can be accessed within INBO.   
 
 # Generation of table with reference points for all mhq terrestial sampling units 
 
@@ -30,7 +30,7 @@ We also bring together some variables related to the sample selection. These var
     - certain
     - description_orig
 
-Note that the mhq sample selection is based on an older version of the habitat map than the versions made available in [Zenodo](https://zenodo.org/record/3540576#.XoRkVYgzaUk). The sample frame which is derived from the older version of the habitat map is stored in [this google drive folder](https://drive.google.com/open?id=11rStbOup5DFmHP8FQOe_KCOSkXJIwXx0) which can be accessed within INBO.  
+Note that the mhq sample selection is based on an older version of the habitat map than the versions made available in [Zenodo](https://zenodo.org/record/3540576#.XoRkVYgzaUk). The sample frame which is derived from the older version of the habitat map is stored in [this google drive folder](https://drive.google.com/open?id=1JpYol4Fmv_a6tjm3CBZ4RFU_81f9Wr8G) which can be accessed within INBO.  
 
 Following table gives an overview of all mhq-schemes.
 
