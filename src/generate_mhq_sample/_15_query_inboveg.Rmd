@@ -1,7 +1,10 @@
 # Query INBOVEG
 
+```{r}
+update <- FALSE
+```
 
-```{r connection and query}
+```{r connection and query, eval= update}
  
 connection_inboveg <- connect_inbo_dbase(database_name = "D0010_00_Cydonia")
 
@@ -44,7 +47,8 @@ qualifiers_mhq <- bind_rows(inboveg_qualifiers(connection = connection_inboveg, 
 
 ```
 
-```{r}
+```{r, eval= update}
+
 setwd("../../n2khab_mhq_data/field-data/inboveg")
 dir.create(as.character(str_c("export_inboveg", as.character(Sys.Date(),"%Y-%m-%d"), sep = "_")))
 setwd(str_c("export_inboveg_", as.character(Sys.Date(),"%Y-%m-%d"), "/"))
