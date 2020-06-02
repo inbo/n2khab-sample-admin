@@ -1,31 +1,34 @@
 # Introduction
 
-The original data files which are used in the scripts are stored in [this google drive folder](https://drive.google.com/open?id=11rStbOup5DFmHP8FQOe_KCOSkXJIwXx0) which can be accessed within INBO.   
+The original data files which are used the scripts are stored in [this google drive folder](https://drive.google.com/open?id=11rStbOup5DFmHP8FQOe_KCOSkXJIwXx0) which can be accessed within INBO.   
 
-# Generation of table with all mhq samples 
+# Generation of table with reference points for all mhq terrestial sampling units 
 
-The mhq samples (ref) were stored in different files. Here we will generate one standardized table containing all mhq sampling units including legacy sites. Legacy sites are existing sampling units that were included in mhq.
+The sampling units for the monitoring habitat quality (mhq) programme [Westra et al., 2014](https://pureportal.inbo.be/portal/files/4339795/Westra_etal_2014_MonitoringNatura2000Habitats.pdf) were drawn based on the grts-method. The mhq sampling units were stored in different files. Here we will generate one standardized table containing all mhq sampling units including legacy sites. Legacy sites are existing samples that were included in mhq.
 
-The table contains: 
+The table contains characteristics of the sampling unit:
 
-* characteristics of the sample:
-** sample_id
-** location_id
-** legacy_site: TRUE/FALSE
-** xy-coordinates in Lambert72 (crs = 31370)
-** type: the target type, i.e. the type for which the sample was drawn
-** main_type: the main type of the target type
+- scheme: the scheme for which the sampling unit was selected
+- sampling_unit_code: a unique code for each sampling unit
+- refpoint_code: a unique code for the reference point of each sampling unit; this is the point in which it is evaluated wether the target type is present or not 
+- legacy_site: TRUE/FALSE
+- xy-coordinates of the reference points in Lambert72 (crs = 31370)
+- type: the target type, i.e. the type for which the sample was drawn
+- grts_ranking: ranking number of the grts master grid cell in which the sampling_unit is located
+- grts_ranking_draw: ranking number which was used to select the sampling unit.
+    - in general grts_ranking_draw is equal to grts_ranking, however in some cases the sampling_unit is moved to another position and as a consequence the reference_point is located in another grts grid cell.
+    - for legacy sites that were not selected based on a grts sample, grts_ranking_draw is set to NA
+- is_centroid: is the reference point located in the center of a grts master grid cell
 
-* characteristics of sample design
-** grts-ranking
-** year_planned: the monitoring cycle is 12 years and the sample is divided in 12 subsets according to the grts-ranking (one subset for each year in the monitoring cycle)
-** sac (special area of conservation): TRUE/FALSE; a stratefied sample design was used with a higher sample size within sac
+We also bring together some variables related to the sample selection. These variables will only be used for quality contol within the mhq programme.
 
-* charachteristics of the sample frame (see [n2khab-package](https://inbo.github.io/n2khab/reference/read_habitatmap_stdized.html) for explanation on the variables below)
-** polygon_id
-** phab
-** certain
-** description_orig
+- year_planned: the monitoring cycle is 12 years and the sample is divided in 12 subsets according to the grts-ranking (one subset for each year in the monitoring cycle)
+- sac (special area of conservation): TRUE/FALSE; a stratefied sampling design was used with a higher sample size within sac
+- charachteristics of the sample frame (see [n2khab-package](https://inbo.github.io/n2khab/reference/read_habitatmap_stdized.html) for explanation on the variables below)
+    - polygon_id
+    - phab
+    - certain
+    - description_orig
 
 Note that the mhq sample selection is based on an older version of the habitat map than the versions made available in [Zenodo](https://zenodo.org/record/3540576#.XoRkVYgzaUk). The sample frame which is derived from the older version of the habitat map is stored in [this google drive folder](https://drive.google.com/open?id=11rStbOup5DFmHP8FQOe_KCOSkXJIwXx0) which can be accessed within INBO.  
 
@@ -53,37 +56,45 @@ schemes_mhq %>%
 
 ```{r}
 
-sampleframe_sf <- read_sf("../../n2khab_mhq_data/original/sample/sampleframe", "BWK_hab_ter_SBZH_versie20140324", crs = 31370) %>%
+sampleframe_sf <- read_sf("../../mhq_sample-admin_data/original/sample/sampleframe", "BWK_hab_ter_SBZH_versie20140324", crs = 31370) %>%
     select(Pol_ID)
 
-sampleframe_types_orig <- read.table("../../n2khab_mhq_data/original/sample/sampleframe/BWK_habsubt_versie20140324.txt", stringsAsFactors = FALSE)
+sampleframe_types_orig <- read.table("../../mhq_sample-admin_data/original/sample/sampleframe/BWK_habsubt_versie20140324.txt", stringsAsFactors = FALSE)
 
 sampleframe_types <- sampleframe_types_orig %>%
     select(Pol_ID, phab, habsubt)
+
+sac_map <- read_admin_areas(dsn = "sac") %>%
+    select(sac_code)
+
+grts_master <- read_GRTSmh()
 ```
 
 
-## Read original files with mhq samples
+## Read original files with mhq sampling units
 
 ### Habitat 6510
 
 ```{r}
 
-sample_6510_orig <- read_sf("../../n2khab_mhq_data/original/sample/sample-locations/6510_hab", "steekproef_6510_versie20140506", crs =31370, quiet = TRUE) 
+sample_6510_orig <- read_sf("../../mhq_sample-admin_data/original/sample/sample-locations/6510_hab", "steekproef_6510_versie20140506", crs =31370, quiet = TRUE) 
 
 sample_6510 <- sample_6510_orig %>%
     st_drop_geometry() %>%
     left_join(sampleframe_types, by = c("Pol_ID", "habsubt")) %>%
-    select(id = ID, polygon_id = Pol_ID, grts_ranking = Ranking, x, y, main_type = habt, type = habsubt, phab, sac = SBZH, year_planned = year, description_orig = Pol_beschr) %>%
+    select(sampling_unit_code = ID, polygon_id = Pol_ID, grts_ranking = Ranking, x, y, main_type = habt, type = habsubt, phab, sac = SBZH, year_planned = year, description_orig = Pol_beschr) %>%
     mutate(x = round(x, 1),
            y = round(y, 1),
            main_type = factor(main_type, levels = levels(types$main_type)),
            type = factor(type, levels = levels(types$type)),
            legacy_site = FALSE,
+           grts_ranking_draw = grts_ranking,
+           is_centroid = TRUE,
            polygon_id = as.character(polygon_id),
-           certain = !str_detect(description_orig, str_c(type,",")))
+           certain = !str_detect(description_orig, str_c(type,",")),
+           db_ref = as.character(grts_ranking))
            
-check_unique_id <- nrow(sample_6510) == n_distinct(sample_6510$id)
+check_unique_id <- nrow(sample_6510) == n_distinct(sample_6510$sampling_unit_code)
 
 ```
 
@@ -91,21 +102,24 @@ check_unique_id <- nrow(sample_6510) == n_distinct(sample_6510$id)
 
 ```{r}
 
-sample_heath_orig <- read_sf("../../n2khab_mhq_data/original/sample/sample-locations/heide_hab", "meetnet_heide_versie201400611", crs =31370, quiet = TRUE) 
+sample_heath_orig <- read_sf("../../mhq_sample-admin_data/original/sample/sample-locations/heide_hab", "meetnet_heide_versie201400611", crs =31370, quiet = TRUE) 
 
 sample_heath <- sample_heath_orig %>%
     st_drop_geometry() %>%
     left_join(sampleframe_types, by = c("Pol_ID", "habsubt")) %>%
-    select(id = ID, polygon_id = Pol_ID, grts_ranking = Ranking, x, y, main_type = habt, type = habsubt, phab, sac = SBZH, year_planned = year, description_orig = Pol_beschr) %>%
+    select(sampling_unit_code = ID, polygon_id = Pol_ID, grts_ranking = Ranking, x, y, main_type = habt, type = habsubt, phab, sac = SBZH, year_planned = year, description_orig = Pol_beschr) %>%
     mutate(x = round(x, 1),
            y = round(y, 1),
            main_type = factor(main_type, levels = levels(types$main_type)),
            type = factor(type, levels = levels(types$type)),
            legacy_site = FALSE,
+           grts_ranking_draw = grts_ranking,
+           is_centroid = TRUE,
            polygon_id = as.character(polygon_id),
-           certain = !str_detect(description_orig, str_c(type,",")))
+           certain = !str_detect(description_orig, str_c(type,",")),
+           db_ref = as.character(grts_ranking))
 
-check_unique_id <- nrow(sample_heath) == n_distinct(sample_heath$id)
+check_unique_id <- nrow(sample_heath) == n_distinct(sample_heath$sampling_unit_code)
 
 ```
 
@@ -113,93 +127,103 @@ check_unique_id <- nrow(sample_heath) == n_distinct(sample_heath$id)
 
 ```{r}
 
-sample_forest_orig <- read_sf("../../n2khab_mhq_data/original/sample/sample-locations/bos_hab", "meetnet_bos_versie20150303", crs =31370, quiet = TRUE) 
+sample_forest_orig <- read_sf("../../mhq_sample-admin_data/original/sample/sample-locations/bos_hab", "meetnet_bos_versie20150303", crs =31370, quiet = TRUE) 
 
 sample_forest <- sample_forest_orig %>%
     st_drop_geometry() %>%
     left_join(sampleframe_types, by = c("Pol_ID", "habsubt")) %>%
-    select(id = ID, polygon_id = Pol_ID, grts_ranking = Ranking, x, y, main_type = habt, type = habsubt, phab, sac = SBZH, year_planned = year, description_orig = Pol_beschr) %>%
+    select(sampling_unit_code = ID, polygon_id = Pol_ID, grts_ranking = Ranking, x, y, main_type = habt, type = habsubt, phab, sac = SBZH, year_planned = year, description_orig = Pol_beschr) %>%
     mutate(x = round(x, 1),
            y = round(y, 1),
            main_type = factor(main_type, levels = levels(types$main_type)),
            type = factor(type, levels = levels(types$type)),
+           grts_ranking_draw = grts_ranking,
+           is_centroid = TRUE,
            legacy_site = FALSE,
            polygon_id = as.character(polygon_id),
-           certain = !str_detect(description_orig, str_c(type,",")))
+           certain = !str_detect(description_orig, str_c(type,",")),
+           db_ref = as.character(grts_ranking))
 
 sample_forest_new <- sample_forest %>%
     filter(!(type %in% c("2180", "91E0_sf")))
 
-check_unique_id <- nrow(sample_forest_new) == n_distinct(sample_forest_new$id)
+check_unique_id <- nrow(sample_forest_new) == n_distinct(sample_forest_new$sampling_unit_code)
 ```
 
 ### Grassland habitat (excluding 6510) and marshes
 
 ```{r}
 
-sample_grassland_marshes_orig <- read_sf("../../n2khab_mhq_data/original/sample/sample-locations/grasland-moeras_hab", "meetnet_graslandEnCo_versie20150303", crs =31370, quiet = TRUE) 
+sample_grassland_marshes_orig <- read_sf("../../mhq_sample-admin_data/original/sample/sample-locations/grasland-moeras_hab", "meetnet_graslandEnCo_versie20150303", crs =31370, quiet = TRUE) 
 
 sample_grassland_marshes <- sample_grassland_marshes_orig %>%
     st_drop_geometry() %>%
     left_join(sampleframe_types, by = c("Pol_ID", "habsubt")) %>%
-    select(id = ID, polygon_id = Pol_ID, grts_ranking = Ranking, x, y, main_type = habt, type = habsubt, phab, sac = SBZH, year_planned = year, description_orig = Pol_beschr) %>%
+    select(sampling_unit_code = ID, polygon_id = Pol_ID, grts_ranking = Ranking, x, y, main_type = habt, type = habsubt, phab, sac = SBZH, year_planned = year, description_orig = Pol_beschr) %>%
     mutate(x = round(x, 1),
            y = round(y, 1),
            main_type = factor(main_type, levels = levels(types$main_type)),
            type = factor(type, levels = levels(types$type)),
+           grts_ranking_draw = grts_ranking,
+           is_centroid = TRUE,
            legacy_site = FALSE,
            polygon_id = as.character(polygon_id),
-           certain = !str_detect(description_orig, str_c(type,",")))
+           certain = !str_detect(description_orig, str_c(type,",")),
+           db_ref = as.character(grts_ranking))
 
-check_unique_id <- nrow(sample_grassland_marshes) == n_distinct(sample_grassland_marshes$id)
+check_unique_id <- nrow(sample_grassland_marshes) == n_distinct(sample_grassland_marshes$sampling_unit_code)
 ```
 
 ### Coastal dunes {h:sampledunes}
 
-This sample set is a mix of legacy sites (with known types) and new samples. Legacy sites were uneavenly spread among regions and management types. Therefore an new grts-sample set was drawn and we allowed a new sample to be replaced with a legacy site (with the same type as the sample) within a unit with a unique combination of region and management type. This way we could partially use the available legacy sites and remain a spatially balanced sample as much as possible. When a grts-sample was replaced with a legacy site, the legacy site inherited the grts-ranking (but the legacy site might be located in an other grts grid cell). As sample selection is performed for each type separately, it occured that the same grts-location was selected as a sample for one type and replaced with a legacy site for another type. In this case both samples will have the same grts-ranking but will not be in the same location. To make a unique location id we added '_reloc1' or 'reloc2' to the grts-ranking when a sample was replaced with a legacy site. 
+This sample is a mix of legacy sites (with known types) and new sampling units. Legacy sites were uneavenly spread among regions and management types. 
+Therefore an new grts-sample set was drawn and we allowed a new sampling unit to be replaced with a legacy site (with the same type as the sampling unit) within the same region and management type. 
+This way we could partially use the available legacy sites and remain a spatially balanced sample as much as possible. 
+When a sampling unit was replaced with a legacy site, grts_ranking_draw of the legacy site was set to the grts_ranking of the original sampling unit. Often these legacy sites are not located within the same grts-cell as the sampling unit it replaces. When this happens, the grts_ranking differs from grts_ranking_draw.
 
-Should we add an additional variable to explicitely that the grts-ranking does not correspond with the actual location but was inherited?
+
 
 ```{r}
 
-sample_dunes_orig <- read.csv2("../../n2khab_mhq_data/original/sample/sample-locations/kustduinen_hab/steekproef_duinen_tabel_versie2018-11-2018.csv",
-                               stringsAsFactors = FALSE) 
+sample_dunes_sf_orig <- read.csv2("../../mhq_sample-admin_data/original/sample/sample-locations/kustduinen_hab/steekproef_duinen_tabel_versie2020-05-28.csv",
+                               stringsAsFactors = FALSE) %>%
+    st_as_sf(coords =c("x", "y"), crs = 31370)
 
-sample_dunes <- sample_dunes_orig %>%
-    filter(Steekproef == 1) %>%
-    group_by(Ranking, TypePQ) %>%
-    mutate(i = rank(Habsubt)) %>%
-    ungroup() %>%
+sample_dunes <- sample_dunes_sf_orig %>%
+    filter(Steekproef == 1)  %>%
     mutate(legacy_site = TypePQ == "PINK_PQ",
-           ID = ifelse(legacy_site, ID, str_c(Ranking, Habsubt, sep = "_")),
-           location_id = ifelse(TypePQ == "PINK_PQ", str_c(as.character(Ranking), "_reloc", i), as.character(Ranking))) %>% 
-    select(id = ID, location_id, polygon_id = Pol_ID, grts_ranking = Ranking, x, y, main_type = Habt, type = Habsubt, phab = Phab, sac = SBZH, year_planned = Jaar, description_orig = Pol_beschrijving, legacy_site)  %>%
-    mutate(x = round(x, 1),
-           y = round(y, 1),
+           ID = ifelse(legacy_site, str_sub(ID, start = 6), str_c(Ranking, Habsubt, sep = "_")),
+           grts_ranking = grts_master[as(., "Spatial")],
+           is_centroid = !legacy_site,
+           db_ref = ifelse(grts_ranking_draw < 150, str_c(Ranking, "_", Habsubt), 
+                           ifelse(legacy_site, ID, as.character(grts_ranking)))) %>% 
+    select(sampling_unit_code = ID,  polygon_id = Pol_ID, grts_ranking, is_centroid, grts_ranking_draw, main_type = Habt, type = Habsubt, phab = Phab, sac = SBZH, year_planned = Jaar, description_orig = Pol_beschrijving, legacy_site, db_ref)  %>%
+    st_drop_geometry() %>%
+    mutate(x = round(st_coordinates(sample_dunes_sf_orig)[,1], 1),
+           y = round(st_coordinates(sample_dunes_sf_orig)[,2], 1),
            main_type = factor(main_type, levels = levels(types$main_type)),
            type = factor(type, levels = levels(types$type)),
            certain = ifelse(is.na(description_orig), 
                             TRUE,
                             !str_detect(description_orig, str_c(type,",")))) 
 
-check_unique_id <- nrow(sample_dunes) == n_distinct(sample_dunes$id)
+check_unique_id <- nrow(sample_dunes) == n_distinct(sample_dunes$sampling_unit_code)
 
+check <- sample_dunes %>%
+    filter(grts_ranking != db_ref)
 ```
+
 
 
 ### MONEOS legacy sites for 91E0_sf
 
-The sample for 91E0_sf currently only consist of legacy sites. The legacy sites were randomly selected and could therefore be used in mhq. For each legacy site the grts-ranking of the gric-cell in which it is located was determined based on the master grts. However, as for all legacy sites, the selection of the sample is not based on this grts-ranking as the selection was done before the master grts existed. Furthermore, the legacy sites are not located in the grid cell centers as is the case for most of the newly selected samples.
+The sample for 91E0_sf currently only consist of legacy sites. The legacy sites were randomly selected and could therefore be used in mhq. For each legacy site the grts-ranking of the grid-cell in which it is located was determined based on the master grts. However, as for all legacy sites, the selection of the sample is not based on this grts-ranking as the selection was done before the master grts existed. Therefore, grts_ranking_draw is set to NA. Furthermore, the legacy sites are not located in the grid cell centers as is the case for most of the newly selected samples. This is indicated by is_centroid = FALSE. 
 
 Besides the legacys sites, a set of additional samples were selected based on the grts-ranking. However this selection still has to be evaluated in terms of accessability, as large parts of 91E0_sf are not accessable.
 
 ```{r}
-sac_map <- read_admin_areas(dsn = "sac") %>%
-    select(sac_code)
 
-grts_master <- read_GRTSmh()
-
-sample_91E0_sf_orig <- read_sf("../../n2khab_mhq_data/original/sample/sample-locations/91E0_sf_hab", "PQ_91E0_sf_MONEOS_versie2018-04-16", crs =31370, quiet = TRUE) 
+sample_91E0_sf_orig <- read_sf("../../mhq_sample-admin_data/original/sample/sample-locations/91E0_sf_hab", "PQ_91E0_sf_MONEOS_versie2018-04-16", crs =31370, quiet = TRUE) 
 
 sample_91E0_sf <- sample_91E0_sf_orig %>%
     mutate(grts_ranking = grts_master[as(., "Spatial")]) %>%
@@ -216,17 +240,20 @@ sample_91E0_sf <- sample_91E0_sf_orig %>%
            type = factor(type, levels = levels(types$type)),
            phab = 100,
            certain = TRUE,
-            sac = ifelse(is.na(sac_code), 0, 1)) %>%
-    select(id = NummerPQ,  x, y, main_type, type, legacy_site, sac, grts_ranking, phab, certain)
+           grts_ranking_draw = NA,
+           is_centroid = FALSE,
+            sac = ifelse(is.na(sac_code), 0, 1),
+           db_ref = NummerPQ) %>%
+    select(sampling_unit_code = NummerPQ,  x, y, main_type, type, legacy_site, sac, grts_ranking, grts_ranking_draw, is_centroid, phab, certain, db_ref)
 
-check_unique_id <- nrow(sample_91E0_sf) == n_distinct(sample_91E0_sf$id)
+check_unique_id <- nrow(sample_91E0_sf) == n_distinct(sample_91E0_sf$sampling_unit_code)
 
 ```
 
 
 ### Legacy sites Flemish forest inventory
 
-The Flemish forest inventory (VBI) consists of random systematic sample on a 500m x 1000m grid covering the whole of Flanders. The VBI samples are measured in the same way as the mhq forest type samples and can therefore be used in mhq. However, until recently the habitat type of the VBI samples was not determined. Therefore we have to assume that the type corresponds to the habitatmap. We make an overlay between VBI samples an [habitatmap_terr](https://zenodo.org/record/3540740) and we select all VBI samples that are located in polygons with at least a phab >= 50 for a forest type. Since 2020 (the start of the 3rd monitoring cycle), the type of vbi samples are determined in situ.
+The Flemish forest inventory (VBI) consists of random systematic sample on a 500m x 1000m grid covering the whole of Flanders. The VBI sampling units are measured in the same way as the mhq forest type sampling units and can therefore be used in mhq. However, until recently the habitat type in the the VBI sampling unit was not determined. Therefore we have to assume that the type corresponds to the habitatmap. We make an overlay between the centroids of the VBI sampling untis and [habitatmap_terr](https://zenodo.org/record/3540740) and we select all VBI sampling units that are located in polygons with at least a phab >= 50 for a forest type. Since 2020 (the start of the 3rd monitoring cycle), the type in the centroid of VBI sampling units is determined during the field assessments.
 
 
 ```{r Bos selectieplots}
@@ -239,7 +266,7 @@ habitatmap_type <- habitatmap$habitatmap_terr_types
 
 ### VBI-plots die opgemeten werden in 2de cyclus
 
-dbVBIMeetproces <- "../../n2khab_mhq_data/original/sample/sample-locations/bos_hab_vbi/VBI_Meetproces_v2019-02-20.accdb"
+dbVBIMeetproces <- "../../mhq_sample-admin_data/original/sample/sample-locations/bos_hab_vbi/VBI_Meetproces_v2019-02-20.accdb"
 
 connectionMeetproces <- odbcConnectAccess2007(dbVBIMeetproces)
 
@@ -285,25 +312,24 @@ sample_vbi2_type <- sample_vbi2_sf %>%
            y = ifelse(is.na(Y_measuredVBI2), Y_raster, Y_measuredVBI2),
            coord_measured = is.na(X_measuredVBI2),
            legacy_site = TRUE,
-           id = str_c("VBI_",IDPlots, "_", type),
+           grts_ranking_draw = NA,
+           is_centroid = FALSE,
+           sampling_unit_code = str_c("VBI_",IDPlots, "_", type),
            main_type = str_sub(type, end = 4),
            main_type = factor(main_type, levels = levels(types$main_type)),
            x = round(x, 1),
            y = round(y, 1),
            polygon_id = as.character(polygon_id),
-           sac = ifelse(is.na(sac_code), 0, 1)) %>%
-    select(id,  polygon_id, grts_ranking, phab, x, y, main_type, type, certain, description_orig, legacy_site, sac)
+           sac = ifelse(is.na(sac_code), 0, 1),
+           db_ref = as.character(IDPlots)) %>%
+    select(sampling_unit_code,  polygon_id, grts_ranking, grts_ranking_draw, is_centroid, phab, x, y, main_type, type, certain, description_orig, legacy_site, sac, db_ref)
 
-check_unique_id <- nrow(sample_vbi2_type) == n_distinct(sample_vbi2_type$id)
+check_unique_id <- nrow(sample_vbi2_type) == n_distinct(sample_vbi2_type$sampling_unit_code)
 
 check <- sample_vbi2_type %>%
-    group_by(id) %>%
+    group_by(sampling_unit_code) %>%
     mutate(n = n()) %>%
     ungroup()
-
-```
-
-```{r}
 
 ```
 
@@ -312,24 +338,25 @@ check <- sample_vbi2_type %>%
 For the plots with following id's only the coordinates of one of the corners is available: ZSCPQ303, ZSCPQ306, ZSCPQ307 en ZSCPQ314. The coordinates of the opposite corner will be measured soon so that we can calculate the coordinates of the plot center.
 
 ```{r}
-sample_1330_da_orig <- read.csv2("../../n2khab_mhq_data/original/sample/sample-locations/1330_da_hab/Structuurgegevens_1330_da.csv", stringsAsFactors = FALSE)
+sample_1330_da_orig <- read.csv2("../../mhq_sample-admin_data/original/sample/sample-locations/1330_da_hab/Structuurgegevens_1330_da.csv", stringsAsFactors = FALSE)
 
-coord_1330_da_orig <- read.csv2("../../n2khab_mhq_data/original/sample/sample-locations/1330_da_hab/coördinaten_1330_da.csv", stringsAsFactors = FALSE)
+coord_1330_da_orig <- read.csv2("../../mhq_sample-admin_data/original/sample/sample-locations/1330_da_hab/coördinaten_1330_da.csv", stringsAsFactors = FALSE)
 
 coord_1330_da <- coord_1330_da_orig %>%
-    select(id, x = Lambert_X_mean, y = Lambert_Y_mean)
+    select(sampling_unit_code = id, x = Lambert_X_mean, y = Lambert_Y_mean)
 
 sample_1330_da <- sample_1330_da_orig %>%
     gather( starts_with("ZSCPQ"), key = "IDPlots", value =  "Waarde") %>%
-    select(id = IDPlots, main_type = Habitattype, type = Habitatsubtype) %>%
+    select(sampling_unit_code = IDPlots, main_type = Habitattype, type = Habitatsubtype) %>%
     distinct() %>%
     mutate(main_type = factor(main_type, levels = levels(types$main_type)),
            type = factor(type, levels = levels(types$type)),
            legacy_site = TRUE,
            phab = 100,
            sac = 1,
-           certain = TRUE) %>%
-    left_join(coord_1330_da, by = "id")
+           certain = TRUE,
+           db_ref = sampling_unit_code) %>%
+    left_join(coord_1330_da, by = "sampling_unit_code")
 
 sample_1330_da_sf <- st_as_sf(sample_1330_da, coords = c("x", "y"), crs = 31370)
 
@@ -338,17 +365,22 @@ sample_1330_da_grts <- sample_1330_da_sf %>%
     st_join(sac_map) %>%
     st_join(habitatmap_pol) %>%
     st_drop_geometry() %>%
-    left_join(coord_1330_da, by = "id") %>%
-    mutate(polygon_id = as.character(polygon_id)) %>%
-    select(id,  polygon_id, grts_ranking, phab, x, y, main_type, type, certain, description_orig, legacy_site, sac)
+    left_join(coord_1330_da, by = "sampling_unit_code") %>%
+    mutate(polygon_id = as.character(polygon_id),
+           grts_ranking_draw = NA,
+           is_centroid = FALSE
+           ) %>%
+    select(sampling_unit_code,  polygon_id, grts_ranking, grts_ranking_draw, is_centroid, phab, x, y, main_type, type, certain, description_orig, legacy_site, sac, db_ref)
 
 #write.csv2(select(sample_1330_da, id), "../../output/meetpunten_1330_da.csv", row.names = FALSE)
 
-check_unique_id <- nrow(sample_1330_da) == n_distinct(sample_1330_da$id)
+check_unique_id <- nrow(sample_1330_da) == n_distinct(sample_1330_da$sampling_unit_code)
 
 ```
 
 ### Combine files
+
+Finally, we combine all samples and create a unique point_code for each point location. The point code is created by adding a number to grts_ranking_draw for every point in the sampling unit starting with 1. If grts_ranking_draw is missing (when a sampling unit is not selected based on grts sampling) we us grts_ranking instead of grts_ranking_draw.
 
 ```{r}
 samples <- bind_rows(
@@ -359,12 +391,30 @@ samples <- bind_rows(
     sample_forest_new,
     sample_vbi2_type,
     sample_91E0_sf,
-    sample_1330_da_grts
-) %>%
-    mutate(location_id = ifelse(is.na(location_id), as.character(grts_ranking), location_id)) %>%
-    arrange(type, grts_ranking) %>%
-    select(sample_id = id, location_id, everything())
+    sample_1330_da_grts) %>%
+    mutate(ranking_code = ifelse(is.na(grts_ranking_draw), grts_ranking, grts_ranking_draw))
 
-write_vc(samples, file = "mhq_terr_samples", root = "../../n2khab_mhq_data", sorting = c("type", "sample_id"), strict = FALSE)
+point_codes <- samples %>%
+    distinct(ranking_code, x, y) %>%
+    group_by(ranking_code) %>%
+    mutate(n = n(),
+           point_code = str_c(ranking_code, "_", rank(x,y))) %>%
+    ungroup()
+   
+mhq_terr_samples_details <- samples %>%
+    left_join(point_codes, by = c("ranking_code", "x", "y")) %>%
+    select(-ranking_code) %>%
+    inner_join(distinct(schemes_mhq, scheme, main_type), by = "main_type") %>%
+    select(scheme, sampling_unit_code, point_code, type, grts_ranking, is_centroid, grts_ranking_draw,  legacy_site, x, y, phab, sac, certain, description_orig, year_planned, db_ref) %>%
+    arrange(scheme, type, grts_ranking)
+
+mhq_terr_samples <- mhq_terr_samples_details %>%
+    select(scheme, sampling_unit_code, point_code, type, grts_ranking, is_centroid, grts_ranking_draw,  legacy_site, x, y)
+
+write_vc(mhq_terr_samples, file = "mhq_terr_refpoints", root = "../../data", sorting = c("type", "sampling_unit_code"), strict = FALSE)
+
+write_vc(mhq_terr_samples_details, file = "mhq_terr_refpoints_details", root = "../../data", sorting = c("type", "sampling_unit_code"), strict = FALSE)
+
+
 
 ```
