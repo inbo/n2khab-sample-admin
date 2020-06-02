@@ -1,5 +1,5 @@
 ---
-title: "Generating mhq_sample"
+title: "Generating mhq_terr_refpoint, mhq_terr_refpoint_validity and mhq_terr_assessments"
 # subtitle: "x"
 date: "`r lubridate::now()`"
 link-citations: true
@@ -23,8 +23,6 @@ output:
     toc_float:
       collapsed: FALSE
       smooth_scroll: FALSE
-    includes:
-        in_header: ../header.html
   bookdown::pdf_document2:
     fig_caption: yes
     keep_tex: yes
@@ -38,7 +36,7 @@ output:
 
 ```{r setup, include=FALSE}
 
-#devtools::install_github("https://github.com/inbo/n2khab", ref ="crs")
+#devtools::install_github("https://github.com/inbo/n2khab", ref ="rc0.2")
 
 options(stringsAsFactors = FALSE,
         scipen = 999, 
