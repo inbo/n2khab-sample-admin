@@ -418,3 +418,15 @@ write_vc(mhq_terr_samples_details, file = "mhq_terr_refpoints_details", root = "
 
 
 ```
+
+### Export results
+
+The final result is a table with the reference points of all mhq sampling units. See table below for some example records.
+
+```{r}
+mhq_terr_samples %>%
+    slice(1000:1005)
+```
+
+The table is exported as 'mhq_terr_samples'.
+

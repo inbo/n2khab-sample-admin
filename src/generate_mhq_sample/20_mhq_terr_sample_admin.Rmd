@@ -1107,6 +1107,8 @@ sample_assessments_update2 <- sample_assessments_update %>%
 
 ### Update mhq_terr_refpoints
 
+The new sampling units/reference points are added to the file 'mhq_terr_refpoints'. For now, we give the updated file a new name: 'mhq_terr_refpoints_check_update'.   
+
 ```{r}
 mhq_terr_refpoint <- read_vc(file = "mhq_terr_refpoints", root = "../../data")
 
@@ -1149,6 +1151,8 @@ The table mhq_terr_refpoints_validity contains following variables:
 
 The variabe is_valid determines if a sampling unit is valid for mhq at the location corresponding to point_code.
 
+The table below shows some records as an example.
+
 ```{r}
 mhq_refpoints_validity <- sample_assessments_update2 %>%
     filter(!is.na(is_valid)) %>%
@@ -1158,10 +1162,23 @@ mhq_refpoints_validity <- sample_assessments_update2 %>%
 write_vc(mhq_refpoints_validity, file = "mhq_terr_refpoints_validity", root = "../../data", sorting = c("scheme", "sampling_unit_code", "point_code"))
 ```
 
+```{r}
+mhq_refpoints_validity %>%
+    slice(1000:1009)
+```
+
+
 ### Create mhq_refpoints_assessments
+
+The table mhq_refpoints_assessments gives an overview of all assessments (see below for example records). 
 
 ```{r}
 mhq_refpoints_assessments <- sample_assessments_update2 %>%
     select(point_code, type_target, is_type_target, type_observed, inaccessable, assessment_date = assessment_year, assessment_source, x, y)
 ```
 
+```{r}
+mhq_refpoints_assessments %>%
+    filter(!is.na(assessment_date)) %>%
+    slice(1000:1009)
+```
