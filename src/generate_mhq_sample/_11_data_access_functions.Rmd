@@ -262,8 +262,8 @@ SiteDescription_HEIDE.Edit_date as date_sitedescription,
   
   coverscales <- read_vc(file = "coverscales_mhq", root = "../../data")
 
-# uitgezonderd bedekking van struik+boomlaag worden alle bedekkingen via Tansley-schaal bepaald
-  structure_var_tansley <- structure_vars %>%
+# uitgezonderd bedekking van struik+boomlaag worden alle bedekkingen via BMS-schaal bepaald
+  structure_var_bms <- structure_vars %>%
     select(-Shrub_and_Treelayer_18m) %>%
     gather(-plot_id, -date_sitedescription, key = "structure_var", value = "class_id") %>%
     mutate(coverscale_name = "Beheermonitoringsschaal") %>%
@@ -273,7 +273,64 @@ SiteDescription_HEIDE.Edit_date as date_sitedescription,
   
   structure_var_cover <- structure_vars %>%
       mutate(structure_var = "shrub_treelayer") %>%
-      select(plot_id, structure_var, cover_mean = Shrub_and_Treelayer_18m)
+      select(plot_id, structure_var, cover = Shrub_and_Treelayer_18m)
+      
+
+# alle records als bedekking uitgedrukt
+  structure_vars_long <- bind_rows(structure_var_bms,
+                                   structure_var_cover) %>%
+      arrange(plot_id, structure_var)
+
+  return(structure_vars_long)
+
+}
+
+
+get_measurements_heath_circle_old <- function(db = db_fieldmap_openhab){
+
+  query_structurevar_heath<- "SELECT
+  SiteDescription_HEIDE.IDPlots as plot_id,
+  SiteDescription_HEIDE.Shrub_and_Treelayer_18m,
+  SiteDescription_HEIDE.Sphagnumlayer,
+  SiteDescription_HEIDE.Campylopus_introflexus,
+  SiteDescription_HEIDE.LowShrublayer,
+  SiteDescription_HEIDE.Brushwood,
+  SiteDescription_HEIDE.Herbs,
+  SiteDescription_HEIDE.Calluna_phase_pioneer,
+  SiteDescription_HEIDE.Calluna_phase_devel,
+  SiteDescription_HEIDE.Calluna_phase_climax,
+  SiteDescription_HEIDE.Calluna_phase_degen,
+  SiteDescription_HEIDE.Pioneer_phase_open_soil,
+  SiteDescription_HEIDE.Pioneer_Coryn_Aira,
+  SiteDescription_HEIDE.Pioneer_Mos,
+  SiteDescription_HEIDE.Pioneer_Lichenen
+  FROM SiteDescription_HEIDE;"
+  
+
+  if(substr(db,nchar(db)-3,nchar(db)) == ".mdb"){
+    connect_db <-   odbcConnectAccess(db)
+  } else if (substr(db,nchar(db)-5,nchar(db)) == ".accdb") {
+    connect_db <-   odbcConnectAccess2007(db)
+  }
+
+  structure_vars <- sqlQuery(connect_db, query_structurevar_heath, stringsAsFactors = FALSE)
+
+  odbcClose(connect_db)
+  
+  coverscales <- read_vc(file = "coverscales_mhq", root = "../../data")
+  
+# uitgezonderd bedekking van struik+boomlaag worden alle bedekkingen via BMS-schaal bepaald
+  structure_var_tansley <- structure_vars %>%
+    select(plot_id, LowShrublayer, starts_with("Calluna")) %>%
+    gather(-plot_id, key = "structure_var", value = "class_id") %>%
+    mutate(coverscale_name = "Tansley") %>%
+    left_join(coverscales, by = c("coverscale_name","class_id")) %>%
+    select(plot_id, structure_var, coverscale_name, cover_description, cover_mean) %>%
+    mutate(structure_var = tolower(structure_var))
+  
+  structure_var_cover <- structure_vars %>%
+    select(-LowShrublayer, -starts_with("Calluna")) %>%
+    gather(-plot_id, key = "structure_var", value = "cover")
       
 
 # alle records als bedekking uitgedrukt
@@ -284,6 +341,7 @@ SiteDescription_HEIDE.Edit_date as date_sitedescription,
   return(structure_vars_long)
 
 }
+
 
 get_measurements_6510_circle <- function(db = db_fieldmap_openhab){
 
@@ -311,7 +369,7 @@ get_date_openhab <- function(db = db_fieldmap_openhab){
 
   query_date <- "SELECT
   Observer_date.IDPlots as plot_id,
-  Observer_date.Starting_time as date
+  Observer_date.Add_date as date_assessment
   FROM Observer_date"
 
      if(substr(db,nchar(db)-3,nchar(db)) == ".mdb"){
@@ -320,8 +378,9 @@ get_date_openhab <- function(db = db_fieldmap_openhab){
     connect_db <-   odbcConnectAccess2007(db)
   }
 
-  observer_date <- sqlQuery(connect_db, query_date)
-
+  observer_date <- sqlQuery(connect_db, query_date) %>%
+      mutate(date_assessment = as.Date(date_assessment, format = "%Y-%m-%d"))
+  
   odbcClose(connect_db)
   
   return(observer_date)
@@ -547,7 +606,7 @@ get_date_foresthab <- function(db = db_fieldmap_foresthab){
       group_by(plot_id) %>%
       summarise(date_vegetation = min(date_vegetation, na.rm = TRUE),
                 date_dendro = min(date_dendro, na.rm = TRUE)) %>%
-      ungroup()
+      ungroup() 
   
   return(observer_date_1)
 }

@@ -51,43 +51,41 @@ cover_species <- combine_db(get_cover_species_openhab(db_fieldmap_openhab_new),
                                     get_cover_species_openhab(db_fieldmap_openhab_old)) %>%
     bind_rows(get_cover_species_foresthab())
 
+# structure_vars
+
+structure_vars_heath <-combine_db(get_measurements_heath_circle(db_fieldmap_openhab_new),
+                                    get_measurements_heath_circle_old(db_fieldmap_openhab_old))
+structure_vars_6510 <-combine_db(get_measurements_6510_circle(db_fieldmap_openhab_new),
+                                    get_measurements_6510_circle(db_fieldmap_openhab_old))
+
+structure_vars <- bind_rows(structure_vars_heath, structure_vars_6510)
+
+# date
+
+date_assessment_forest <- get_date_foresthab() %>%
+    mutate(date_assessment = pmin(date_vegetation, date_dendro))
+
+date_assessment <- combine_db(get_date_openhab(db_fieldmap_openhab_new),
+                                    get_date_openhab(db_fieldmap_openhab_old)) %>%
+    bind_rows(date_assessment_forest)
+
+# coordinates
+
+coordinates  <- combine_db(get_coordinates_openhab(db_fieldmap_openhab_new),
+                                    get_coordinates_openhab(db_fieldmap_openhab_old)) %>%
+    bind_rows(get_coordinates_foresthab())
 
 
-measurements_heath_circle_new  <- get_measurements_heath_circle() 
-measurements_6510_circle_new  <- get_measurements_6510_circle()
-observer_date_new  <- get_observation_date()
-coordinates_new  <- get_coordinates()
-
-
-
-sample_status_all <- get_status(db = db_fieldmap_open_hab_old) %>%
-    anti_join(sample_status_new, by = "sample_id") %>%
-    rbind(sample_status_new)
-
-hab_observed_old <- get_observed_hab()
-measurements_square_old  <- get_measurements_square()
-cover_species_old  <- get_cover_species()
-measurements_heath_circle_old  <- get_measurements_heath_circle() 
-measurements_6510_circle_old  <- get_measurements_6510_circle()
-observer_date_old  <- get_observation_date()
-coordinates_old  <- get_coordinates()
-
-#combine
-
-sample_status <- rbind
-
-
-setwd("../../n2khab_mhq_data/field-data/fieldmap/")
+setwd("../../mhq_sample-admin_data/field-data/fieldmap/")
 dir.create(as.character(str_c("export_fieldmap", as.character(Sys.Date(),"%Y-%m-%d"), sep = "_")))
 setwd(str_c("export_fieldmap_", as.character(Sys.Date(),"%Y-%m-%d"), "/"))
 
 write.csv2(sample_status, "sample_status.csv", row.names = FALSE)
-write.csv2(hab_observed, "hab_observed.csv", row.names = FALSE)
-write.csv2(measurements_square, "measurements_square.csv", row.names = FALSE)
+write.csv2(type_observed, "type_observed.csv", row.names = FALSE)
+write.csv2(cover_veglayers, "cover_veglayers.csv", row.names = FALSE)
 write.csv2(cover_species, "cover_species.csv", row.names = FALSE)
-write.csv2(measurements_heath_circle, "measurements_heath_circle.csv", row.names = FALSE)
-write.csv2(measurements_6510_circle, "measurements_6510_circle.csv", row.names = FALSE)
-write.csv2(observer_date, "observer_date.csv", row.names = FALSE)
+write.csv2(structure_vars, "structure_vars.csv", row.names = FALSE)
+write.csv2(date_assessment, "date_assessment.csv", row.names = FALSE)
 write.csv2(coordinates, "coordinates.csv", row.names = FALSE)
 
 ```
