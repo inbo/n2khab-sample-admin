@@ -1168,17 +1168,19 @@ mhq_refpoints_validity %>%
 ```
 
 
-### Create mhq_refpoints_assessments
+### Create mhq_terr_assessments
 
-The table mhq_refpoints_assessments gives an overview of all assessments (see below for example records). 
+The table mhq_terr_assessments gives an overview of all assessments (see below for example records). 
 
 ```{r}
-mhq_refpoints_assessments <- sample_assessments_update2 %>%
+mhq_terr_assessments <- sample_assessments_update2 %>%
     select(point_code, type_target, is_type_target, type_observed, inaccessable, assessment_date = assessment_year, assessment_source, x, y)
+
+write_vc(mhq_terr_assessments, file = "mhq_terr_assessments", root = "../../data", sorting = c( "point_code", "type_target"))
 ```
 
 ```{r}
-mhq_refpoints_assessments %>%
+mhq_terr_assessments %>%
     filter(!is.na(assessment_date)) %>%
     slice(1000:1009)
 ```

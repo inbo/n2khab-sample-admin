@@ -174,7 +174,7 @@ sample_grassland_marshes <- sample_grassland_marshes_orig %>%
 check_unique_id <- nrow(sample_grassland_marshes) == n_distinct(sample_grassland_marshes$sampling_unit_code)
 ```
 
-### Coastal dunes {h:sampledunes}
+### Coastal dunes
 
 This sample is a mix of legacy sites (with known types) and new sampling units. Legacy sites were uneavenly spread among regions and management types. 
 Therefore an new grts-sample set was drawn and we allowed a new sampling unit to be replaced with a legacy site (with the same type as the sampling unit) within the same region and management type. 
@@ -378,7 +378,7 @@ check_unique_id <- nrow(sample_1330_da) == n_distinct(sample_1330_da$sampling_un
 
 ```
 
-### Combine files
+## Combine files
 
 Finally, we combine all samples and create a unique point_code for each point location. The point code is created by adding a number to grts_ranking_draw for every point in the sampling unit starting with 1. If grts_ranking_draw is missing (when a sampling unit is not selected based on grts sampling) we us grts_ranking instead of grts_ranking_draw.
 
@@ -419,7 +419,7 @@ write_vc(mhq_terr_samples_details, file = "mhq_terr_refpoints_details", root = "
 
 ```
 
-### Export results
+## Generate table mhq_terr_refpoints
 
 The final result is a table with the reference points of all mhq sampling units. See table below for some example records.
 
@@ -428,5 +428,5 @@ mhq_terr_samples %>%
     slice(1000:1005)
 ```
 
-The table is exported as 'mhq_terr_samples'.
+The table is exported as 'mhq_terr_refpoints'.
 
