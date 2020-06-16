@@ -1,31 +1,31 @@
 # Generate mhq sample administration table
 
-In the mhq sample adminstration table we want to document assessments and measurements of the mhq samples. 
-An assessment of a mhq sample is seen as evaluation whether or not a sample is valid. 
-A mhq sample is valid if the target type (= the type for which the sample was selected) corresponds with the observed type in the center of the grid cell. 
-A location can contain different samples, with each sample having a different target type. 
-This is the case when the sample frame of the different target types overlap. 
-However, only one of the samples on a single location can be valid, as only one type can be observed in a location. 
+In the mhq sample adminstration table we want to document assessments and measurements of the mhq sampling units. 
+An assessment of a mhq sampling unit is seen as evaluation whether or not a sampling unit is valid. 
+A mhq sampling unit is valid if the target type (= the type for which the sampling unit was selected) corresponds with the observed type in the reference point. 
+A reference point can contain different sampling units, with each sampling unit having a different target type. 
+This is the case when the sampling frame of the different target types overlap. 
+However, only one of the sampling units in a reference point can be valid, as only one type can be observed in a a reference point. 
 
 Two types of assessments occur: field assessment and othophoto assessment. 
-Based on othophoto assessment we can detect samples that are not valid (for example when a heath sample is located within a forest), but an field assessment is required to be sure that a sample is valid.
+Based on othophoto assessment we can detect sampling units that are not valid (for example when a heath sampling unit is located within a forest), but a field assessment is required to be sure that a sampling unit is valid.
 The variable 'assessment_source' indicates the type of assessment. If NA no assessment has taken place yet. 
 
-In some cases locations are temporary or permanently inaccessable and assessments are not possible. 
-This indicated by the variable 'inaccessable'. We distinguish 'short term' inaccessability and 'long term' inaccessability.
+In some cases reference points are temporary or permanently inaccessible and assessments are not possible. 
+This indicated by the variable 'inaccessible'. We distinguish 'short term' inaccessability and 'long term' inaccessability.
 
-After assessment, a location is measured when one of the samples which it contains is valid. 
+When sampling unit is valid, it is measured.
 The measurements consist of a vegetation composition in a square plot (of 3m x 3m for open types and 16m x 16m for forest types) and structure variables in a circle plot (with a radius of 18m). 
 INBO also measures vegetation composition in the circle plot, but ANB does not do this. 
 
-In certain conditions, a location can also be lsvi_measurement when the observed type is different than one of the target types for this location (and consequently none of the samples are valid). 
-This is allowed when the grts-ranking of the location is smaller than the maximum grts-ranking in the sample set for the observed type. 
-It occurs when the sample frame of the observed type is not correct and excludes the location mentioned above. 
-When this is the case we will create a new (valid) sample for this location with the appropriate target type. 
-This new sample will replace the sample in the original sample set with the highest grts-ranking.                 
+In certain conditions, a location can also be measured when the observed type is different than one of the target types in the reference point (and consequently none of the sampling units are valid). 
+This is allowed when the grts_ranking_draw of the reference_point is smaller than the maximum grts-ranking in the sample of the observed type. 
+It occurs when the sampling frame of the observed type is not correct and excludes the reference point mentioned above. 
+When this is the case we will create a new (valid) sampling unit for this reference point with the appropriate target type. 
+This new sampling unit will replace the sampling unit in the original sample with the highest grts-ranking.                 
 
 The detection rate of some types is very low. 
-Therefore in some cases we allow changing the location of a sample in the direct surrounding (based on a protocol) in order to make it a valid sample. The sample administration table will also document these location changes. 
+Therefore in some cases we allow changing the reference point of a sampling unit in the direct surrounding (based on a protocol) in order to make it a valid sampling unit. The sample administration table will also document these location changes. 
 Finally we will also document wether measurements are complete or wether some variables are missing in the database. 
 
 
@@ -34,21 +34,21 @@ samples_grts <- read_vc(file = "mhq_terr_refpoints", root = "../../data")
 ```
 
 
-## Samples assigned to INBO
+## Sampling units assigned to INBO
 
 ### Read INBO sample administration data 
 
-INBO documents the administration of mhq sample assessments in separate files. From this file we van determine the assessment status, the assessment year, wether a location is lsvi_measurement and wether a location is changed. 
+INBO documents the administration of mhq sample assessments in separate files. From this file we van determine the assessment status, the assessment year, wether a location is measured and wether a reference point is changed. 
 There is one file for grassland (excluding 6510) and marsh types and one file for coastal dune types. 
 Later we will propose a standardised file for all mhq samples.  
 
 #### Grassland habitat (excluding 6510) and marshes
 
-This file originally contains one record for each sample. 
-However it is more convenient and it avoids conflicts when assessment status and measurement status is documented on the location level. 
-That is because a location can only have one assessment status or measurement status. 
-Therefore we convert the file to a table with one record for each location (that contains samples). 
-For this we use the point_code of the location.  
+This file originally contains one record for each sampling unit. 
+However it is more convenient and it avoids conflicts when assessment status and measurement status is documented for each reference point. 
+That is because a reference point can only have one assessment status or measurement status. 
+Therefore we convert the file to a table with one record for each reference point (that contains sampling units). 
+For this we use the point_code of the reference point.  
 
 ```{r}
 
@@ -64,8 +64,8 @@ admin_inbo_grassland_marshes_correct <- admin_inbo_grassland_marshes_orig %>%
 
 admin_inbo_grassland_marshes <- admin_inbo_grassland_marshes_correct %>%
     mutate(NoAccess = ifelse(ID == "2388102_6230_hn", 1, NoAccess)) %>%
-    mutate(inaccessable = ifelse(NoAccess == 1 & !is.na(NoAccess), "long term", NA),
-           assessment_source = ifelse(bezocht > 1000 & is.na(inaccessable), "field assessment", NA),
+    mutate(inaccessible = ifelse(NoAccess == 1 & !is.na(NoAccess), "long term", NA),
+           assessment_source = ifelse(bezocht > 1000 & is.na(inaccessible), "field assessment", NA),
            assessment_source = ifelse(OrthoContr == 1 & !is.na(OrthoContr), "orthophoto", assessment_source),
            lsvi_measurement = opname == "ja",
            location_change = verplaatst == "ja",
@@ -73,7 +73,7 @@ admin_inbo_grassland_marshes <- admin_inbo_grassland_marshes_correct %>%
            # assessment_year = ifelse(assessment_year == 19, 2019, assessment_year),
            x_assessment = round(POINT_X, 2),
            y_assessment = round(POINT_Y, 2)) %>%
-    select(sampling_unit_code = ID, grts_ranking_draw = Ranking, assessment_source, assessment_year, inaccessable, lsvi_measurement, location_change, x_assessment, y_assessment)
+    select(sampling_unit_code = ID, grts_ranking_draw = Ranking, assessment_source, assessment_year, inaccessible, lsvi_measurement, location_change, x_assessment, y_assessment)
 
 check <- n_distinct(admin_inbo_grassland_marshes$sampling_unit_code) == nrow(admin_inbo_grassland_marshes)
 
@@ -91,7 +91,7 @@ write.table(check_different_dates, "../../output/check_different_dates.txt", row
 
 ```
 
-- check: one location is assessed twice
+- check: one reference point is assessed twice
 
 ```{r}
 
@@ -109,9 +109,9 @@ admin_inbo_grassland_marshes_location <- admin_inbo_grassland_marshes %>%
     group_by(grts_ranking_draw) %>%
     mutate(assessment_source_loc = ifelse("field assessment" %in% assessment_source, "field assessment",
                                           ifelse("orthophoto" %in% assessment_source, "orthophoto", NA)),
-            inaccessable_loc = ifelse("long term" %in% inaccessable, "long term", NA)) %>%
+            inaccessible_loc = ifelse("long term" %in% inaccessible, "long term", NA)) %>%
     ungroup() %>%
-    group_by(grts_ranking_draw, assessment_source_loc, inaccessable_loc) %>%
+    group_by(grts_ranking_draw, assessment_source_loc, inaccessible_loc) %>%
     summarise(assessment_year = max(assessment_year, na.rm = TRUE),
               lsvi_measurement = any(lsvi_measurement),
               location_change = any(location_change),
@@ -123,7 +123,7 @@ admin_inbo_grassland_marshes_location <- admin_inbo_grassland_marshes %>%
            #lsvi_measurement = ifelse(is.na(assessment_source_loc), NA, lsvi_measurement),
            location_change = ifelse(lsvi_measurement & is.na(location_change), FALSE, location_change),
            point_code = str_c(grts_ranking_draw, "_1")) %>%
-    rename(assessment_source = assessment_source_loc, inaccessable = inaccessable_loc)
+    rename(assessment_source = assessment_source_loc, inaccessible = inaccessible_loc)
 
 n_distinct(admin_inbo_grassland_marshes_location$grts_ranking_draw) == nrow(admin_inbo_grassland_marshes_location)
 ```
@@ -131,9 +131,9 @@ n_distinct(admin_inbo_grassland_marshes_location$grts_ranking_draw) == nrow(admi
 #### Coastal dunes
 
 
-The admin file for coastal dunes contains one record for each location. 
-The file does not contain a unique code for each location. 
-However we can create the variable 'db_ref' which can be used to link the location to the mhq_sample_refpoints and to the INBOveg data.
+The admin file for coastal dunes contains one record for each reference point. 
+The file does not contain a unique code for each reference point. 
+However we can create the variable 'db_ref' which can be used to link the reference point to the mhq_sample_refpoints and to the INBOveg data.
 
 ```{r}
 admin_inbo_dunes_orig <- read_sf("../../mhq_sample-admin_data/original/admin/inbo/versie_2020-04-01",
@@ -149,7 +149,7 @@ admin_inbo_dunes <- admin_inbo_dunes_orig %>%
      mutate(assessment_source = ifelse(bezocht %in% c(2010:2100), "field assessment", NA),
            lsvi_measurement = opname == "ja",
            location_change = verplaatst == "ja",
-           inaccessable = NA,
+           inaccessible = NA,
            x_assessment= ifelse(lsvi_measurement, round(x_assessment, 1), NA),
            y_assessment= ifelse(lsvi_measurement, round(y_assessment, 1), NA),
            assessment_year = ifelse(assessment_source %in% c("field assessment", "orthophoto"), bezocht, NA),
@@ -189,8 +189,8 @@ admin_inbo <- bind_rows(
 
 We read an export from the INBOveg database with measurements in the circle and square plot. 
 We use this data to determine the observered type and compare this to the target type. 
-This way we can evaluate if a sample is valid. 
-We also check if the measurements are complete, i.e. vegetation composition is lsvi_measurement in the square plot and structure variables are lsvi_measurement in the circle plot. 
+This way we can evaluate if a sampling unit is valid. 
+We also check if the measurements are complete, i.e. vegetation composition is measured in the square plot and structure variables are measured in the circle plot. 
 Note that INBO also measures the vegetation compostion in the circle plot.   
 
 ```{r}
@@ -259,7 +259,7 @@ check_plots %>%
 
 #### Check if vegetation records are imported for each plot and structure records are imported for the circle plot
 
-For following samples the vegetation composition or structure variables are missing in INBOveg.
+For following sampling units the vegetation composition or structure variables are missing in INBOveg.
 
 ```{r}
 
@@ -280,15 +280,15 @@ check_plots_data_import %>%
 
 Vegetation type cover is measured both in the square plot and the circle plot. 
 The field protocol prescribes that a plot is only recorded when the plot center is located within (one of) the target habitat type(s). 
-When the observed type is different from (one of) the target type(s), the plot can be recorded when the GRTS ranking of the sample location is smaller than the largest GRTS ranking in the set of samples for the observed type. 
+When the observed type is different from (one of) the target type(s), the sampling unit can be measured when grts_ranking_draw of the reference point is smaller than the largest rts_ranking_draw in the sample of the observed type. 
 
 In some cases the subtype is not specified. When this is the case, we assume that the subtype of the observed type corresponds to the target type.
 
-Some recorded plots contain different habitat types or other cover types. 
-However it is not explicitely recorded which of the cover types is located in the center of the plot. 
-Yet this is essential information to determine if a sample is valid. 
-Therefore, when a plot contains different cover types we assume that the plot center is located in the type recorded in the square plot that corresponds to (one of) the target type(s). 
-When none of the target habitat types are observed we assume that the plot center is located in the type that belongs to the same main type as (one of) the target habitat types. We apply these rules and check of we select one type for each plot this way.
+Some measured sampling units contain different habitat types or other cover types. 
+However it is not explicitely recorded which of the cover types is located in the reference point. 
+Yet this is essential information to determine if a sampling unit is valid. 
+Therefore, when a plot contains different cover types we assume that the reference point is located in the type observed in the square plot that corresponds to (one of) the target type(s). 
+When none of the target habitat types are observed we assume that the reference point is located in the type that belongs to the same main type as (one of) the target habitat types. We apply these rules and check of we select one type for each reference point this way.
 
 To summarise the observed habitat types or other cover types we create following variables:
 
@@ -392,7 +392,7 @@ measurement_completed <- plots %>%
     
 ```
 
-Next, we evaluate if a sample is valid. We compare type_target and type_observed and create a variable 'is_type_target' (TRUE/FALSE). When a location does not contain a valid sample (for which is_type_target = TRUE), we check if the maximum grts-ranking in the sample set of the observed type is smaller than the grts-ranking of the location and create a variable 'allow_other_type'.  
+Next, we evaluate if a sampling unit is valid. We compare type_target and type_observed and create a variable 'is_type_target' (TRUE/FALSE). When a reference point does not contain a valid sampling unit (for which is_type_target = TRUE), we check if the maximum grts_ranking_draw in the sample of the observed type is smaller than the grts_ranking_draw of the reference point and create a variable 'allow_other_type'.  
 
 ```{r}
 #maximum grts_ranking_draw in sample for each type
@@ -430,7 +430,7 @@ check_sampling_unit_code <- assessment_inbo %>%
 
 #### Check cover of observed type in plot 
 
-We check what the cover is of the type observed in the center of the plot. In the following table we show the samples with a cover lower than 50 %. These samples will be checked.
+We check what the cover is of the type observed in the center of the plot. In the following table we show the sampling units with a cover lower than 50 %. These ssampling units will be checked.
 
 ```{r}
 assessment_inbo %>%
@@ -448,7 +448,7 @@ check_cover_type_observed %>%
 
 #### Check allow_other_type
 
-Some samples are lsvi_measurement altough the observed type is different than the target type and the grts-ranking is larger than the maximum grts-ranking in the sample set of the observed type (allow_other_type = FALSE).
+Some sampling units are measured altough the observed type is different than the target type and the grts_ranking_draw is larger than the maximum grts_ranking_draw in the sample of the observed type (allow_other_type = FALSE).
 
 ```{r}
 check_allow_other_type <- assessment_inbo %>%
@@ -471,7 +471,7 @@ types_inbo <- c("1330_hpr", "2120", "2130_had", "2130_hd", "2160", "2170", "2180
 ```
 
 Next, we join the sample table and the admin data. 
-We join by the point_code, because and assessment is done for all target types (samples) in a location. However we only select the samples for the types that were assigned to INBO field work team: `r types_inbo`. 
+We join by the point_code, because and assessment is done for all target types (sampling units) in a reference point. However we only select the sampling units for the types that were assigned to the INBO field work team: `r types_inbo`. 
 
 ```{r}
 sample_admin_inbo <- samples_grts %>%
@@ -493,7 +493,7 @@ check <- sample_admin_inbo %>%
 
 ### Combine sample admin data and assessments data
 
-When a sample is assessed but not measured according to the admin data, this is because the target type is not observed. However the observed cover class is not explicitely recorded. For such samples we set is_target_type to FALSE.
+When a sampling unit is assessed but not measured according to the admin data, this is because the target type is not observed. However the observed cover class is not explicitely recorded. For such sampling units we set is_target_type to FALSE.
 
 ```{r}
 
@@ -504,7 +504,7 @@ sample_assessments_inbo <- sample_admin_inbo %>%
                                    is_type_target),
            type_target = ifelse(is.na(type_target), as.character(type), type_target),
            fieldwork_team = "inbo") %>%
-    select(scheme, sampling_unit_code, type_target, point_code, sac, grts_ranking, grts_ranking_draw, year_planned, assessment_source, assessment_year, inaccessable, lsvi_measurement, completed, location_change, is_type_target, type_observed,  allow_other_type, type_cover_circle, type_cover_square, x_orig = x, y_orig = y, x_assessment, y_assessment, distance_from_refpoint, fieldwork_team, db_ref, is_centroid, legacy_site)
+    select(scheme, sampling_unit_code, type_target, point_code, sac, grts_ranking, grts_ranking_draw, year_planned, assessment_source, assessment_year, inaccessible, lsvi_measurement, completed, location_change, is_type_target, type_observed,  allow_other_type, type_cover_circle, type_cover_square, x_orig = x, y_orig = y, x_assessment, y_assessment, distance_from_refpoint, fieldwork_team, db_ref, is_centroid, legacy_site)
 
 check <- n_distinct(sample_assessments_inbo$sampling_unit_code) == nrow(sample_assessments_inbo)
 ```
@@ -558,7 +558,7 @@ check_position_change <- sample_admin_inbo %>%
 
 ```
 
-According to the protocol locations can only be changed within a distance of 100 meters. For following samples, the distance from the lsvi_measurement location to the original sample location is larger than 100 meters.
+According to the protocol reference points can only be changed within a distance of 100 meters. For following sampling units, the distance from the measured location to the original reference point is larger than 100 meters.
 
 ```{r}
 check_position_change_100 <- check_position_change %>%
@@ -573,7 +573,7 @@ check_position_change_100 %>%
     kable_styling()
 ```
 
-When no position change is mentioned inthe admin table, we expect the lsvi_measurement location to be close to the original sample location. However, the following locations show a distance larger than 1 meter. Which is the tolerated location error? From which distance we should set 'location_change' to TRUE?
+When no position change is mentioned in the admin table, we expect the measured location to be close to the reference point. However, the following assessments show a distance larger than 1 meter. Which is the tolerated location error? From which distance we should set 'location_change' to TRUE?
 
 ```{r}
 check_no_position_change <- check_position_change %>%
@@ -599,9 +599,9 @@ check_position_change_missing <- check_position_change %>%
 
 
 
-#### Samples for which the position was changed but that does not contain the target type 
+#### Sampling units for which the position was changed but that does not contain the target type 
 
-For some samples the location was changed, yet the observed type in the location does not correspond with the target type. Most of the time the observed type is another subtype, but this not always the case. 
+For some sampling units the location was changed, yet the observed type in the changed location does not correspond with the target type. Most of the time the observed type is another subtype, but this not always the case. 
 
 ```{r}
 
@@ -618,7 +618,7 @@ check_location_change %>%
 
 ```
 
-#### Samples for which the subtype of the observed type is unknown
+#### Sampling units for which the subtype of the observed type is unknown
 
 ```{r}
 
@@ -636,11 +636,11 @@ check_subtype <- sample_assessments_inbo %>%
     filter(type_observed %in% subtypes$main_type)
 ```
 
-#### Observed type was not assigned to INBO or no sample set was drawn for observed type
+#### Observed type was not assigned to INBO or no sample was drawn for observed type
 
-Some samples were measured altough the observed type was not assigned to the INBO team (for example type 6510). 
+Some sampling units were measured altough the observed type was not assigned to the INBO team (for example type 6510). 
 
-Some samples were measured altough there is no monitoring scheme for the observed type (for example type 1330_pol). 
+Some sampling units were measured altough there is no monitoring scheme for the observed type (for example type 1330_pol). 
 
 ```{r}
 
@@ -657,11 +657,11 @@ check_inbo_type %>%
 ```
 
 
-## Samples assigned to ANB
+## Sampling units assigned to ANB
 
-### Read assessment data of samples assigned to ANB
+### Read assessment data of Sampling units assigned to ANB
 
-ANB uses Fieldmap to store assessment data: both admin data on assessment status and measurement data. An Access databes is exported from Fieldmap and deliverd to INBO.  
+ANB uses Fieldmap to store assessment data: both admin data on assessment status and measurement data. A Firebird database is exported from Fieldmap and deliverd to INBO.  
 
 ```{r}
 
@@ -680,7 +680,7 @@ coordinates <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/
 
 ### Read orthocontrole heath 
 
-Before samples were assigned to ANB, INBO performed an orthophoto control to eliminate samples that were cleary not located in the target type. These eliminated samples were not imported in the Fieldmap database, so here we use to original shapefile with the results of the orthophoto control to identify the samples with assessment_source = orthophoto.  
+Before sampling units were assigned to ANB, INBO performed an orthophoto control to eliminate sampling units that were cleary not located in the target type. These eliminated sampling units were not imported in the Fieldmap database, so here we use to original shapefile with the results of the orthophoto control to identify the sampling units with assessment_source = orthophoto.  
 
 ```{r}
 
@@ -700,7 +700,7 @@ admin_ortho_control <- heath_ortho_control_orig %>%
 
 ### Determine assessment status
 
-'assessment_source', 'lsvi_measurement' and 'completed' can be derived from the variables 'status_fieldwork' and 'info_status_fieldwork'. It is not explicetly recorded when the sample location is changed, however in some cases 'verlegd' is mentioned in the 'remark' field. If this is the case we set 'location_change' to TRUE.   
+'assessment_source', 'lsvi_measurement' and 'completed' can be derived from the variables 'status_fieldwork' and 'info_status_fieldwork'. It is not explicetly recorded when the reference point is changed, however in some cases 'verlegd' is mentioned in the 'remark' field. If this is the case we set 'location_change' to TRUE.   
 
 ```{r}
 
@@ -727,20 +727,20 @@ admin_anb <- sample_status %>%
     left_join(date_overview, by = "point_code") %>%
     mutate(assessment_source = ifelse(status_fieldwork == "ja", "field assessment",
                                   ifelse(status_fieldwork == "nee", NA, NA)),
-           inaccessable = ifelse(!is.na(info_status_fieldwork) & info_status_fieldwork == "Geen opname : tijdelijk nt toeg", "short term", 
+           inaccessible = ifelse(!is.na(info_status_fieldwork) & info_status_fieldwork == "Geen opname : tijdelijk nt toeg", "short term", 
                                   ifelse(info_status_fieldwork %in% c("Geen opname : permanent nt toegankelijk", "Geen opname : geen toelating"), "long term", NA)),
            lsvi_measurement = ifelse(assessment_source == "field assessment",
                                 ifelse(!is.na(info_status_fieldwork) & info_status_fieldwork == "Geen opname : geen doelhabitat", FALSE, TRUE),
                                 NA),
-           lsvi_measurement = ifelse(inaccessable %in% c("short term", "long term"), FALSE, lsvi_measurement),
-           assessment_source = ifelse(inaccessable %in% c("short term", "long term"), NA, assessment_source),
+           lsvi_measurement = ifelse(inaccessible %in% c("short term", "long term"), FALSE, lsvi_measurement),
+           assessment_source = ifelse(inaccessible %in% c("short term", "long term"), NA, assessment_source),
            completed = ifelse(lsvi_measurement,
                               ifelse(!is.na(info_status_fieldwork) &  info_status_fieldwork == "Geen (volledig) terreinbezoek uitgevoerd", FALSE, TRUE),
                               NA),
            location_change = ifelse(lsvi_measurement & !is.na(lsvi_measurement),
                                     ifelse(is.na(Remark), FALSE,str_detect( Remark, "verlegd")),
                                     NA)) %>%
-    distinct(point_code, assessment_source, inaccessable, assessment_year, lsvi_measurement, completed, location_change) 
+    distinct(point_code, assessment_source, inaccessible, assessment_year, lsvi_measurement, completed, location_change) 
 
 admin_ortho_control <- admin_ortho_control %>%
     filter(!(point_code %in% admin_anb$point_code)) %>%
@@ -834,7 +834,6 @@ check_type_cover_circle %>%
 
 #### Check allow_other_type
 
-Some samples are lsvi_measurement altough the observed type is different than the target type and the grts-ranking is larger than the maximum grts-ranking in the sample set of the observed type (allow_other_type = FALSE).
 
 ```{r}
 check_allow_other_type <- assessment_anb %>%
@@ -859,7 +858,7 @@ check_allow_other_type %>%
 main_type_anb <- c("6510", "4010", "4030", "2310", "2330")
 ```
 
-Next, we join the sample table and the admin data. We join by the point_code, because and assessment is done for all target types (samples) in a location. However we only select the samples for the types that were assigned to ANB field work team. These types belong to the following main types `r main_type_anb`. 
+Next, we join the sample table and the admin data. We join by the point_code, because and assessment is done for all target types (sampling units) in a reference point. However we only select the sampling units for the types that were assigned to ANB field work team. These types belong to the following main types `r main_type_anb`. 
 
 
 ```{r}
@@ -888,7 +887,7 @@ check_n <- sample_admin_anb %>%
 
 #### Check coordinates
 
-Some samples have two different lsvi_measurement coordinates. For now, we select the lsvi_measurement coordinates that are closest to the original sample.
+Some sampling units have two different measured coordinates. For now, we select the measured coordinates that are closest to the original reference point.
 
 ```{r}
 check_coordinates_double <- check_n %>%
@@ -912,7 +911,7 @@ check <- n_distinct(sample_admin_anb$sampling_unit_code) == nrow(sample_admin_an
 
 #### Check location change
 
-For some samples the lsvi_measurement location is more tha 100 meters away from the original sample. In some cases the distance is extremely large and probably the point_code in the database is incorrect.
+For some sampling units the measured location is more tha 100 meters away from the reference point. In some cases the distance is extremely large and probably the point_code in the database is incorrect.
 
 ```{r}
 check_distance <-  check_n %>%
@@ -931,7 +930,7 @@ check_distance %>%
 
 ### Combine sample admin data and assessments data
 
-ANB also records in most cases the observed habitat type/land cover class when a sample is not lsvi_measurement.
+ANB also records in most cases the observed habitat type/land cover class when a sampling unit is not measured.
 
 ```{r}
 
@@ -942,7 +941,7 @@ sample_assessments_anb <- sample_admin_anb %>%
                                    is_type_target),
            type_target = ifelse(is.na(type_target), as.character(type), as.character(type_target)),
            fieldwork_team = "anb") %>%
-    select(scheme, sampling_unit_code, type_target, point_code, sac, grts_ranking_draw, grts_ranking, year_planned, assessment_source, inaccessable, assessment_year, lsvi_measurement, completed, location_change, is_type_target, type_observed,  allow_other_type, type_cover_circle, type_cover_square, x_orig = x, y_orig = y, x_assessment, y_assessment, distance_from_refpoint, fieldwork_team, db_ref, is_centroid, legacy_site) 
+    select(scheme, sampling_unit_code, type_target, point_code, sac, grts_ranking_draw, grts_ranking, year_planned, assessment_source, inaccessible, assessment_year, lsvi_measurement, completed, location_change, is_type_target, type_observed,  allow_other_type, type_cover_circle, type_cover_square, x_orig = x, y_orig = y, x_assessment, y_assessment, distance_from_refpoint, fieldwork_team, db_ref, is_centroid, legacy_site) 
 
 check <- n_distinct(sample_assessments_inbo$sampling_unit_code) == nrow(sample_assessments_inbo)
 
@@ -962,7 +961,7 @@ check <- sample_assessments_anb %>%
 
 ### Additional checks
 
-#### Samples for which the subtype of the observed type is unknown
+#### Sampling units for which the subtype of the observed type is unknown
 
 ```{r}
 
@@ -972,7 +971,7 @@ check_subtype <- sample_assessments_anb %>%
     filter(type_observed %in% subtypes$main_type)
 ```
 
-#### Observed type was not assigned to ANB or no sample set was drawn for observed type
+#### Observed type was not assigned to ANB or no sampl was drawn for observed type
 
 ```{r}
 
@@ -1003,7 +1002,7 @@ sample_assessments <- bind_rows(
     mutate(type_target = factor(type_target, levels= levels(types$type)),
            assessment_source = factor(assessment_source, levels = c("field assessment", "orthophoto")),
            sample_source = "habitatmap",
-           is_valid = is_type_target & (distance_from_refpoint <= 110) & is.na(inaccessable))
+           is_valid = is_type_target & (distance_from_refpoint <= 110) & is.na(inaccessible))
 ```
 
 
@@ -1163,7 +1162,7 @@ The table mhq_terr_assessments gives an overview of all assessments (see below f
 
 ```{r}
 mhq_terr_assessments <- sample_assessments_update2 %>%
-    select(point_code, type_target, is_type_target, type_observed, inaccessable, assessment_date = assessment_year, assessment_source, x, y)
+    select(point_code, type_target, is_type_target, type_observed, inaccessible, assessment_date = assessment_year, assessment_source, x, y)
 
 write_vc(mhq_terr_assessments, file = "mhq_terr_assessments", root = "../../data", sorting = c( "point_code", "type_target"), optimize = FALSE, strict = FALSE)
 ```
