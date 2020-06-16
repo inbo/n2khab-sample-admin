@@ -30,7 +30,7 @@ Finally we will also document wether measurements are complete or wether some va
 
 
 ```{r}
-samples_grts <- read_vc(file = "mhq_terr_refpoints_details", root = "../../data") 
+samples_grts <- read_vc(file = "mhq_terr_refpoints", root = "../../data") 
 ```
 
 
@@ -504,7 +504,7 @@ sample_assessments_inbo <- sample_admin_inbo %>%
                                    is_type_target),
            type_target = ifelse(is.na(type_target), as.character(type), type_target),
            fieldwork_team = "inbo") %>%
-    select(scheme, sampling_unit_code, type_target, point_code, sac, grts_ranking, grts_ranking_draw, year_planned, phab, description_orig, certain, assessment_source, assessment_year, inaccessable, lsvi_measurement, completed, location_change, is_type_target, type_observed,  allow_other_type, type_cover_circle, type_cover_square, x_orig = x, y_orig = y, x_assessment, y_assessment, distance_from_refpoint, fieldwork_team, db_ref, is_centroid, legacy_site)
+    select(scheme, sampling_unit_code, type_target, point_code, sac, grts_ranking, grts_ranking_draw, year_planned, assessment_source, assessment_year, inaccessable, lsvi_measurement, completed, location_change, is_type_target, type_observed,  allow_other_type, type_cover_circle, type_cover_square, x_orig = x, y_orig = y, x_assessment, y_assessment, distance_from_refpoint, fieldwork_team, db_ref, is_centroid, legacy_site)
 
 check <- n_distinct(sample_assessments_inbo$sampling_unit_code) == nrow(sample_assessments_inbo)
 ```
@@ -942,7 +942,7 @@ sample_assessments_anb <- sample_admin_anb %>%
                                    is_type_target),
            type_target = ifelse(is.na(type_target), as.character(type), as.character(type_target)),
            fieldwork_team = "anb") %>%
-    select(scheme, sampling_unit_code, type_target, point_code, sac, grts_ranking_draw, grts_ranking, year_planned, phab, description_orig, certain, assessment_source, inaccessable, assessment_year, lsvi_measurement, completed, location_change, is_type_target, type_observed,  allow_other_type, type_cover_circle, type_cover_square, x_orig = x, y_orig = y, x_assessment, y_assessment, distance_from_refpoint, fieldwork_team, db_ref, is_centroid, legacy_site) 
+    select(scheme, sampling_unit_code, type_target, point_code, sac, grts_ranking_draw, grts_ranking, year_planned, assessment_source, inaccessable, assessment_year, lsvi_measurement, completed, location_change, is_type_target, type_observed,  allow_other_type, type_cover_circle, type_cover_square, x_orig = x, y_orig = y, x_assessment, y_assessment, distance_from_refpoint, fieldwork_team, db_ref, is_centroid, legacy_site) 
 
 check <- n_distinct(sample_assessments_inbo$sampling_unit_code) == nrow(sample_assessments_inbo)
 
@@ -1114,7 +1114,7 @@ mhq_terr_refpoint <- read_vc(file = "mhq_terr_refpoints", root = "../../data")
 
 mhq_terr_refpoint_new <- sample_assessments_update2 %>%
     anti_join(mhq_terr_refpoint, by = c("sampling_unit_code", "point_code")) %>%
-    select(scheme, sampling_unit_code, point_code, type = type_target, grts_ranking, is_centroid, grts_ranking_draw, legacy_site, x, y)
+    select(scheme, sampling_unit_code, point_code, type = type_target, sac, grts_ranking, is_centroid, grts_ranking_draw, legacy_site, x, y, db_ref, year_planned)
 
 mhq_terr_refpoint_update <- mhq_terr_refpoint %>%
     bind_rows(mhq_terr_refpoint_new) %>%
@@ -1127,17 +1127,6 @@ check <- sample_assessments_update2 %>%
 
 write_vc(mhq_terr_refpoint_update, file = "mhq_terr_refpoints_check_update", root = "../../data", sorting = c("scheme", "sampling_unit_code", "point_code"), strict = FALSE, optimize = FALSE)
 
-mhq_terr_refpoint_details <- read_vc(file = "mhq_terr_refpoints_details", root = "../../data")
-
-mhq_terr_refpoint_details_new <- sample_assessments_update2 %>%
-    anti_join(mhq_terr_refpoint_details, by = c("sampling_unit_code", "point_code")) %>%
-    select(scheme, sampling_unit_code, point_code, type = type_target, grts_ranking, is_centroid, grts_ranking_draw, legacy_site, x, y, phab, sac, certain, description_orig, year_planned, db_ref)
-
-mhq_terr_refpoint_details_update <- mhq_terr_refpoint_details %>%
-    bind_rows(mhq_terr_refpoint_details_new) %>%
-    arrange(type, sampling_unit_code)
-
-write_vc(mhq_terr_refpoint_update, file = "mhq_terr_refpoints_details_check_update", root = "../../data", sorting = c("type", "sampling_unit_code", "point_code"), strict = FALSE, optimize = FALSE)
 ```
 
 ### Create mhq_terr_refpoints_validity
@@ -1159,7 +1148,7 @@ mhq_refpoints_validity <- sample_assessments_update2 %>%
     filter(!is.na(scheme)) %>%
     select(scheme, sampling_unit_code, point_code, date = assessment_year, is_valid)
 
-write_vc(mhq_refpoints_validity, file = "mhq_terr_refpoints_validity", root = "../../data", sorting = c("scheme", "sampling_unit_code", "point_code"), optimize = FALSE)
+write_vc(mhq_refpoints_validity, file = "mhq_terr_refpoints_validity", root = "../../data", sorting = c("scheme", "sampling_unit_code", "point_code"), optimize = FALSE, strict = FALSE)
 ```
 
 ```{r}
@@ -1176,7 +1165,7 @@ The table mhq_terr_assessments gives an overview of all assessments (see below f
 mhq_terr_assessments <- sample_assessments_update2 %>%
     select(point_code, type_target, is_type_target, type_observed, inaccessable, assessment_date = assessment_year, assessment_source, x, y)
 
-write_vc(mhq_terr_assessments, file = "mhq_terr_assessments", root = "../../data", sorting = c( "point_code", "type_target"), optimize = FALSE)
+write_vc(mhq_terr_assessments, file = "mhq_terr_assessments", root = "../../data", sorting = c( "point_code", "type_target"), optimize = FALSE, strict = FALSE)
 ```
 
 ```{r}

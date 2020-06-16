@@ -1,13 +1,13 @@
 ..generic:
   git2rdata: 0.2.0
-  optimize: yes
+  optimize: no
   NA string: NA
   sorting:
   - scheme
   - sampling_unit_code
   - point_code
-  hash: a97e2681da4d92b8969124e5a4bae534540ec165
-  data_hash: d6e1fa7941f9a5339d37b7ed86764a3f52f01e2c
+  hash: e70ec56bf321af8cee625da2cc88bac1a1f46f12
+  data_hash: 5f65a9d0a8644af8ca0ec49a181cb56d61187c7f
 scheme:
   class: factor
   labels:
@@ -381,4 +381,10 @@ legacy_site:
 x:
   class: numeric
 'y':
+  class: numeric
+sac:
+  class: numeric
+db_ref:
+  class: character
+year_planned:
   class: numeric

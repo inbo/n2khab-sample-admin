@@ -19,11 +19,11 @@ The table contains characteristics of the sampling unit:
     - in general grts_ranking_draw is equal to grts_ranking, however in some cases the sampling_unit is moved to another position and as a consequence the reference_point is located in another grts grid cell.
     - for legacy sites that were not selected based on a grts sample, grts_ranking_draw is set to NA
 - is_centroid: is the reference point located in the center of a grts master grid cell
-
-We also bring together some variables related to the sample selection. These variables will only be used for quality contol within the mhq programme.
-
 - year_planned: the monitoring cycle is 12 years and the sample is divided in 12 subsets according to the grts-ranking (one subset for each year in the monitoring cycle)
 - sac (special area of conservation): TRUE/FALSE; a stratefied sampling design was used with a higher sample size within sac
+
+We also bring together some variables related to the sampling frame. These variables will only be used for quality contol within the mhq programme.
+
 - charachteristics of the sample frame (see [n2khab-package](https://inbo.github.io/n2khab/reference/read_habitatmap_stdized.html) for explanation on the variables below)
     - polygon_id
     - phab
@@ -409,12 +409,14 @@ mhq_terr_samples_details <- samples %>%
     arrange(scheme, type, grts_ranking)
 
 mhq_terr_samples <- mhq_terr_samples_details %>%
-    select(scheme, sampling_unit_code, point_code, type, grts_ranking, is_centroid, grts_ranking_draw,  legacy_site, x, y)
+    select(scheme, sampling_unit_code, point_code, type, sac, grts_ranking, is_centroid, grts_ranking_draw,  legacy_site, x, y, db_ref, year_planned)
+
+mhq_terr_details_samplingframe <- mhq_terr_samples_details %>%
+    select(scheme, sampling_unit_code, phab, certain, description_orig)
 
 write_vc(mhq_terr_samples, file = "mhq_terr_refpoints", root = "../../data", sorting = c("type", "sampling_unit_code"), strict = FALSE, optimize = FALSE)
 
-write_vc(mhq_terr_samples_details, file = "mhq_terr_refpoints_details", root = "../../data", sorting = c("type", "sampling_unit_code"), strict = FALSE, optimize = FALSE)
-
+write_vc(mhq_terr_details_samplingframe, file = "mhq_terr_details_samplingframe", root = "../../data", sorting = c("type", "sampling_unit_code"), strict = FALSE, optimize = FALSE)
 
 
 ```
