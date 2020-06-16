@@ -1125,7 +1125,7 @@ check <- sample_assessments_update2 %>%
     mutate(n = n()) %>%
     ungroup()
 
-write_vc(mhq_terr_refpoint_update, file = "mhq_terr_refpoints_check_update", root = "../../data", sorting = c("scheme", "sampling_unit_code", "point_code"), strict = FALSE)
+write_vc(mhq_terr_refpoint_update, file = "mhq_terr_refpoints_check_update", root = "../../data", sorting = c("scheme", "sampling_unit_code", "point_code"), strict = FALSE, optimize = FALSE)
 
 mhq_terr_refpoint_details <- read_vc(file = "mhq_terr_refpoints_details", root = "../../data")
 
@@ -1137,7 +1137,7 @@ mhq_terr_refpoint_details_update <- mhq_terr_refpoint_details %>%
     bind_rows(mhq_terr_refpoint_details_new) %>%
     arrange(type, sampling_unit_code)
 
-write_vc(mhq_terr_refpoint_update, file = "mhq_terr_refpoints_details_check_update", root = "../../data", sorting = c("type", "sampling_unit_code", "point_code"), strict = FALSE)
+write_vc(mhq_terr_refpoint_update, file = "mhq_terr_refpoints_details_check_update", root = "../../data", sorting = c("type", "sampling_unit_code", "point_code"), strict = FALSE, optimize = FALSE)
 ```
 
 ### Create mhq_terr_refpoints_validity
@@ -1159,7 +1159,7 @@ mhq_refpoints_validity <- sample_assessments_update2 %>%
     filter(!is.na(scheme)) %>%
     select(scheme, sampling_unit_code, point_code, date = assessment_year, is_valid)
 
-write_vc(mhq_refpoints_validity, file = "mhq_terr_refpoints_validity", root = "../../data", sorting = c("scheme", "sampling_unit_code", "point_code"))
+write_vc(mhq_refpoints_validity, file = "mhq_terr_refpoints_validity", root = "../../data", sorting = c("scheme", "sampling_unit_code", "point_code"), optimize = FALSE)
 ```
 
 ```{r}
@@ -1176,7 +1176,7 @@ The table mhq_terr_assessments gives an overview of all assessments (see below f
 mhq_terr_assessments <- sample_assessments_update2 %>%
     select(point_code, type_target, is_type_target, type_observed, inaccessable, assessment_date = assessment_year, assessment_source, x, y)
 
-write_vc(mhq_terr_assessments, file = "mhq_terr_assessments", root = "../../data", sorting = c( "point_code", "type_target"))
+write_vc(mhq_terr_assessments, file = "mhq_terr_assessments", root = "../../data", sorting = c( "point_code", "type_target"), optimize = FALSE)
 ```
 
 ```{r}

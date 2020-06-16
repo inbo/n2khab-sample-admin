@@ -411,9 +411,9 @@ mhq_terr_samples_details <- samples %>%
 mhq_terr_samples <- mhq_terr_samples_details %>%
     select(scheme, sampling_unit_code, point_code, type, grts_ranking, is_centroid, grts_ranking_draw,  legacy_site, x, y)
 
-write_vc(mhq_terr_samples, file = "mhq_terr_refpoints", root = "../../data", sorting = c("type", "sampling_unit_code"), strict = FALSE)
+write_vc(mhq_terr_samples, file = "mhq_terr_refpoints", root = "../../data", sorting = c("type", "sampling_unit_code"), strict = FALSE, optimize = FALSE)
 
-write_vc(mhq_terr_samples_details, file = "mhq_terr_refpoints_details", root = "../../data", sorting = c("type", "sampling_unit_code"), strict = FALSE)
+write_vc(mhq_terr_samples_details, file = "mhq_terr_refpoints_details", root = "../../data", sorting = c("type", "sampling_unit_code"), strict = FALSE, optimize = FALSE)
 
 
 
