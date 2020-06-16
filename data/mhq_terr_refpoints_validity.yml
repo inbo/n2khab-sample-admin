@@ -1,12 +1,12 @@
 ..generic:
   git2rdata: 0.2.0
-  optimize: yes
+  optimize: no
   NA string: NA
   sorting:
   - scheme
   - sampling_unit_code
   - point_code
-  hash: 48af407c58fb9c56c9994e3565b866d7317faf85
+  hash: aa8666debdd76c170f05dcf9ded6ed0191d69b97
   data_hash: d979458480c6cd4e53dcf32b410b2b1a45e71030
 scheme:
   class: factor
