@@ -665,15 +665,14 @@ ANB uses Fieldmap to store assessment data: both admin data on assessment status
 
 ```{r}
 
-export <- "export_fieldmap_2020-04-07"
+export <- "export_fieldmap_2020-06-10"
 
 cover_species <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/cover_species.csv"), stringsAsFactors = FALSE)
-hab_observed <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/hab_observed.csv"), stringsAsFactors = FALSE)
-measurements_6510_circle <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/measurements_6510_circle.csv"), stringsAsFactors = FALSE)
-measurements_heath_circle <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/measurements_heath_circle.csv"), stringsAsFactors = FALSE)
-measurements_square <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/measurements_square.csv"), stringsAsFactors = FALSE)
+type_observed <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/type_observed.csv"), stringsAsFactors = FALSE)
+structure_vars <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/structure_vars.csv"), stringsAsFactors = FALSE)
+cover_veglayers <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/cover_veglayers.csv"), stringsAsFactors = FALSE)
 sample_status <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/sample_status.csv"), stringsAsFactors = FALSE)
-observer_date <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/observer_date.csv"), stringsAsFactors = FALSE)
+date_assessments <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/date_assessment.csv"), stringsAsFactors = FALSE)
 coordinates <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/coordinates.csv"), stringsAsFactors = FALSE)
 
 ```
@@ -704,27 +703,26 @@ admin_ortho_control <- heath_ortho_control_orig %>%
 
 ```{r}
 
-observer_date <- observer_date %>%
-     mutate(date = as.Date(date, format = "%Y-%m-%d"),
+date_assessments <- date_assessments %>%
+     mutate(assessment_date = as.Date(date_assessment, format = "%Y-%m-%d"),
             point_code = str_c(as.character(plot_id), "_1")) %>%
-    select(-plot_id) %>%
-    unique()
+    select(point_code, assessment_date) %>%
+    group_by(point_code) %>%
+    summarise(assessment_date = min(assessment_date)) %>%
+    ungroup()
 
-date_overview <- hab_observed %>%
-     mutate(date_standdescription = as.Date(date_standdescription, format = "%Y-%m-%d"),
-            point_code = str_c(as.character(plot_id), "_1")) %>% 
-    select(point_code, date_standdescription) %>%
-    unique() %>%
-    left_join(observer_date, by = "point_code") %>%
-    mutate(compare = date == date_standdescription,
-           date_new = ifelse(is.na(date) | date < "2014-01-01", format(date_standdescription, "%Y-%m-%d"), format(date, "%Y-%m-%d")),
-           assessment_date = as.Date(date_new),
-           assessment_year = as.numeric(format(assessment_date,  "%Y"))) %>%
-    select(point_code, assessment_date, assessment_year)
+check <- nrow(date_assessments)  == n_distinct(date_assessments$point_code)
+check_n <- date_assessments %>%
+    group_by(point_code) %>%
+    mutate(n = n()) %>%
+    ungroup() %>%
+    filter(n > 1)
+
 
 admin_anb <- sample_status %>%
-    mutate(point_code = str_c(as.character(grts_ranking), "_1")) %>%
-    left_join(date_overview, by = "point_code") %>%
+    mutate(point_code = str_c(as.character(plot_id), "_1"),
+           date_status = as.Date(date_status,  format = "%Y-%m-%d")) %>%
+    left_join(date_assessments, by = "point_code") %>%
     mutate(assessment_source = ifelse(status_fieldwork == "ja", "field assessment",
                                   ifelse(status_fieldwork == "nee", NA, NA)),
            inaccessable = ifelse(!is.na(info_status_fieldwork) & info_status_fieldwork == "Geen opname : tijdelijk nt toeg", "short term", 
@@ -738,9 +736,12 @@ admin_anb <- sample_status %>%
                               ifelse(!is.na(info_status_fieldwork) &  info_status_fieldwork == "Geen (volledig) terreinbezoek uitgevoerd", FALSE, TRUE),
                               NA),
            location_change = ifelse(lsvi_measurement & !is.na(lsvi_measurement),
-                                    ifelse(is.na(Remark), FALSE,str_detect( Remark, "verlegd")),
-                                    NA)) %>%
-    distinct(point_code, assessment_source, inaccessable, assessment_year, lsvi_measurement, completed, location_change) 
+                                    ifelse(is.na(remark), FALSE,str_detect( remark, "verlegd")),
+                                    NA),
+           assessment_year = ifelse(is.na(assessment_date), 
+                                    as.numeric(format(date_status, "%Y")), 
+                                    as.numeric(format(assessment_date, "%Y")))) %>%
+    distinct(point_code, assessment_source, inaccessable, assessment_date, assessment_year, lsvi_measurement, completed, location_change) 
 
 admin_ortho_control <- admin_ortho_control %>%
     filter(!(point_code %in% admin_anb$point_code)) %>%
@@ -765,49 +766,110 @@ In the circle plot all habitat types and other land cover classes are recorded a
 
 For some samples for main types 6510 and 2330, the observed subtype is not specified. When this is the case we assume that the subtype corresponds to the target type.
 
+
+```{r}
+# correction!! -> landuse geeft aan dat het een poel is --> dus 91E0_vc veranderen naar 'geen habitat'
+
+type_observed_corr <- type_observed %>%
+    mutate(type_observed_circle = ifelse(plot_id == 201689 & segment_id == 2, "geen habitat", type_observed_circle))
+
+
+```
+
+
+
 ```{r}
 
-type_circle <- hab_observed %>% 
+plot_types <- type_observed_corr %>% 
+    filter(!(is.na(type_observed_circle) & is.na(type_observed_square))) %>%
     mutate(point_code = str_c(as.character(plot_id), "_1"),
-           type_observed_circle = ifelse(type_observed_circle %in% c("geen habitat (akker, houtkant, tuin,...)", "infrastructuur"),
+           type_observed_circle = ifelse(type_observed_circle %in% c("geen habitat (akker, houtkant, tuin,...)", "infrastructuur", "geen habitat"),
                                          "gh",
                                          type_observed_circle),
-        type_observed_cover_circle = 100 * type_observed_cover_circle) %>%
-    group_by(point_code) %>%
-    summarise(type_cover_circle = str_c(str_c(str_replace_na(type_observed_cover_circle), "% ", type_observed_circle), collapse =  " + ")) %>%
-    ungroup()
-
-type_square <- measurements_square %>%
-    mutate(point_code = str_c(as.character(plot_id), "_1"),
-           type_observed_square = ifelse(type_observed_square == "geen habitat (akker, houtkant, tuin,...)",
+           type_observed_square = ifelse(type_observed_square %in% c("geen habitat (akker, houtkant, tuin,...)", "geen habitat", "infrastructuur"),
                                          "gh",
-                                         type_observed_square)) %>%
-    select(type_observed = type_observed_square, point_code) %>%
-    unique() %>%
-    mutate(type_cover_square = str_c(type_observed))
-    
-assessment_anb <- type_square %>%
-    left_join(type_circle, by = "point_code") %>%
+                                         type_observed_square),
+        type_observed_cover_circle = 100 * type_observed_cover_circle,
+        type_cover_square = type_observed_square) %>%
+    group_by(point_code) %>%
+    mutate(n_type_observed = n(),
+           # type_square_assessed = sum(!is.na(type_observed_square)) > 0,
+           # type_circle_assessed = sum(!is.na(type_observed_circle)) > 0,
+           match_type = (type_observed_square[1] %in% type_observed_circle) | (is.na(type_observed_square[1])),
+        type_cover_circle = str_c(str_c(str_replace_na(type_observed_cover_circle), "% ", type_observed_circle), collapse =  " + ")) %>%
+    ungroup() %>%
+    mutate(type_observed = ifelse(is.na(type_observed_circle), type_observed_square, type_observed_circle)) %>%
     left_join(select(samples_grts, sampling_unit_code, point_code, grts_ranking_draw, type, sac), by = c("point_code")) %>%
-    left_join(max_ranking, by = c("type_observed", "sac")) %>%
     rename(type_target = type) %>%
     mutate(main_type = str_sub(type_target, 1, 4),
-          type_observed = ifelse(is.na(type_observed) & !is.na(type_cover_circle),
-                                  str_sub(type_cover_circle, start = 6),
-                                  type_observed),
            type_observed = ifelse(type_observed == "6510" & main_type == "6510", as.character(type_target), type_observed),
            type_observed = ifelse(type_observed == "2330" & main_type == "2330", as.character(type_target), type_observed),
            is_type_target = type_target == type_observed,
-           type_cover = NA) %>%
-    filter(!is.na(type_observed)) %>%
+           type_cover = type_observed_cover_circle) %>%
     group_by(point_code) %>%
     mutate(is_type_target_plot = sum(is_type_target, na.rm = TRUE) > 0,
+           is_main_type_target_plot = sum(str_c(type_observed, 1, 4) == main_type) > 0,
            n_habtarget = n_distinct(type_target)) %>%
+    ungroup()
+
+check_match_type <- plot_types %>%
+    select(plot_id, point_code, segment_id, type_observed_circle, type_observed_square, match_type) %>%
+    filter(!match_type) %>%
+    filter(type_observed_circle %in% c(as.character(types$type), as.character(types$main_type)) | type_observed_square %in%  c(as.character(types$type), as.character(types$main_type))) %>%
+    filter(segment_id == 1) %>%
+    left_join(select(admin_anb, point_code, lsvi_measurement), by = "point_code")
+
+write.csv2(check_match_type, "type_match_heide6510.csv", row.names = FALSE)
+
+# determine which type is located in the plot center
+plot_types_center <- plot_types %>%
+    mutate(type_in_center = ifelse(n_type_observed <= 1 , TRUE,
+                                   ifelse(is_type_target_plot, is_type_target, 
+                                          ifelse(is_main_type_target_plot, is_main_type_target,
+                                                 type_cover > 50)))) %>%
+    distinct( point_code, type_observed, type_cover, type_cover_square, type_cover_circle, type_in_center, n_type_observed, n_habtarget, is_type_target_plot) %>% 
+    filter(type_in_center) %>%
+    group_by(point_code, type_observed, type_cover_square, type_cover_circle, type_in_center, n_type_observed, n_habtarget, is_type_target_plot) %>%
+    summarise(type_cover = sum(type_cover)) %>%
     ungroup() %>%
-    mutate(allow_other_type = ifelse(is_type_target_plot, NA, (grts_ranking_draw <= max_grts_ranking_draw) & !is.na(max_grts_ranking_draw))) %>%
-    select(point_code, sampling_unit_code, sac, grts_ranking_draw, type_target, type_observed, type_observed_cover = type_cover, is_type_target, allow_other_type, type_cover_circle, type_cover_square, n_habtarget, max_grts_ranking_draw)
-    
-check <- n_distinct(assessment_anb$sampling_unit_code) == nrow(assessment_anb)
+    group_by(point_code) %>%
+           mutate(n_center = sum(type_in_center, na.rm = TRUE),
+                  match = sum(type_observed == type_cover_square, na.rm = TRUE) > 0) %>%
+    ungroup() %>%
+    filter(!(n_center == 2 & match & type_observed != type_cover_square)) %>%
+        group_by(point_code) %>%
+           mutate(n_center_filter = sum(type_in_center, na.rm = TRUE)) %>%
+    ungroup()
+```
+
+```{r}
+  
+assessment_anb <- samples_grts %>%
+    select(-db_ref) %>%
+    filter(point_code %in% plot_types$point_code) %>%
+    left_join(plot_types_center, by = c("point_code")) %>%
+    left_join(max_ranking, by = c("type_observed", "sac")) %>%
+   # left_join(measurement_completed, by = c("point_code")) %>%
+    mutate(is_type_target = type_observed == type,
+        allow_other_type = ifelse(is_type_target_plot, NA, (grts_ranking_draw <= max_grts_ranking_draw) & !is.na(max_grts_ranking_draw))) %>%
+    select( point_code, sampling_unit_code, grts_ranking_draw, type_target = type, type_observed, type_observed_cover = type_cover, is_type_target, allow_other_type, type_cover_circle, type_cover_square, n_type_observed, n_habtarget, n_center, max_grts_ranking_draw)
+
+  
+check_sampling_unit_code <- assessment_anb %>%
+    group_by(sampling_unit_code) %>%
+    mutate(n = n()) %>%
+    ungroup() %>%
+    filter(n> 1)
+
+#two locations with two possible type_observed --> check
+# 643970: 6510_hu or 6510_huk
+# 53561: 91E0_vc or 9130_end
+# for now we assume that the assessment can be used for both types
+
+assessment_anb <- assessment_anb %>%
+    filter(!(point_code %in% c("643970_1", "53561_1")) |
+               is_type_target)
+
 
 ```
 
@@ -817,12 +879,12 @@ For some circle plots the sum of the cover of the different oberved habitat type
 
 ```{r}
 
-check_type_cover_circle <- hab_observed %>%
+check_type_cover_circle <- type_observed %>%
     mutate(point_code = as.character(plot_id)) %>%
     group_by(point_code) %>% 
     mutate(sum_cover = sum(type_observed_cover_circle)) %>%
     ungroup() %>%
-    filter(sum_cover != 1) %>%
+    filter(abs(sum_cover - 1) > 0.2) %>%
     select(point_code, segment_id, type_observed_circle, type_observed_cover_circle, sum_cover)
 
 check_type_cover_circle %>%
@@ -838,9 +900,11 @@ Some samples are lsvi_measurement altough the observed type is different than th
 
 ```{r}
 check_allow_other_type <- assessment_anb %>%
+    left_join(select(admin_anb, point_code, lsvi_measurement)) %>%
+    filter(lsvi_measurement) %>%
     filter(!is_type_target) %>%
     filter(!allow_other_type) %>%
-    select(sampling_unit_code, grts_ranking_draw, type_target, type_observed, max_grts_ranking_draw, allow_other_type)
+    select(point_code, sampling_unit_code, grts_ranking_draw, type_target, type_observed, max_grts_ranking_draw, allow_other_type)
 
 write.table(check_allow_other_type, "../../output/check_allow_other_type_anb.txt")
 

@@ -1,17 +1,20 @@
 # Scales used for vegetation assessments
 
-```{r}
-# scales_orig <- read.csv2("../../mhq_sample-admin_data/original/scales/Schalen.csv", stringsAsFactors = FALSE)
-# 
-# scales <- scales_orig %>%
-#     rename(coverscale_name = Schaal,
-#            class_id = KlasseID,
-#            class_code = KlasseCode,
-#            cover_description = KlasseBeschrijving,
-#            cover_mean = BedekkingGem,
-#            cover_min = BedekkingMin,
-#            cover_max = BedekkingMax) %>%
-#     mutate(class_code = ifelse(class_code == "", NA, class_code))
+```{r, eval=FALSE}
+
+# only run when original file changes
+
+scales_orig <- read.csv2("../../mhq_sample-admin_data/original/scales/Schalen.csv", stringsAsFactors = FALSE)
+
+scales <- scales_orig %>%
+    rename(coverscale_name = Schaal,
+           class_id = KlasseID,
+           class_code = KlasseCode,
+           cover_description = KlasseBeschrijving,
+           cover_mean = BedekkingGem,
+           cover_min = BedekkingMin,
+           cover_max = BedekkingMax) %>%
+    mutate(class_code = ifelse(class_code == "", NA, class_code))
 
 #write_vc(scales, file = "coverscales_mhq", root = "../../data", sorting = c("coverscale_name", "class_id"), strict = FALSE)
 ```
@@ -36,10 +39,12 @@ FROM ((Grid_points LEFT JOIN qFieldteam ON Grid_points.Fieldteam = qFieldteam.ID
   LEFT JOIN [YesNo] ON Grid_points.Status_Fieldwork = YesNo.ID
 ;"
 
-  if(substr(db,nchar(db)-3,nchar(db)) == ".mdb"){
+  if (str_sub(db, nchar(db) - 3, nchar(db)) == ".mdb") {
     connect_db <-   odbcConnectAccess(db)
-  } else if (substr(db,nchar(db)-5,nchar(db)) == ".accdb") {
+  } else if (str_sub(db, nchar(db) - 5, nchar(db)) == ".accdb") {
     connect_db <-   odbcConnectAccess2007(db)
+  } else if (str_sub(db, nchar(db) - 3, nchar(db)) == ".FDB") {
+    connect_db <-   odbcDriverConnect(paste("DRIVER={Firebird/InterBase(r) driver};UID=SYSDBA;PWD=masterkey; DBNAME=", db))
   }
 
  gridpoints_orig <- sqlQuery(connect_db, query_gridpoints)
@@ -66,15 +71,16 @@ get_type_observed_openhab <- function(db = db_fieldmap_openhab){
   query_type_observed_square <- "
   SELECT
   VegPQ.IDPlots as plot_id,
-  VegPQ.ID as segment_id,
   qHABITAT.Value1 as type_observed_square
   FROM VegPQ LEFT JOIN qHABITAT ON VegPQ.HAB1 = qHABITAT.ID;
   "
 
-  if(substr(db, nchar(db) - 3,nchar(db)) == ".mdb"){
+  if (str_sub(db, nchar(db) - 3, nchar(db)) == ".mdb") {
     connect_db <-   odbcConnectAccess(db)
-  } else if (substr(db,nchar(db) - 5,nchar(db)) == ".accdb") {
+  } else if (str_sub(db, nchar(db) - 5, nchar(db)) == ".accdb") {
     connect_db <-   odbcConnectAccess2007(db)
+  } else if (str_sub(db, nchar(db) - 3, nchar(db)) == ".FDB") {
+    connect_db <-   odbcDriverConnect(paste("DRIVER={Firebird/InterBase(r) driver};UID=SYSDBA;PWD=masterkey; DBNAME=", db))
   }
 
   type_observed_circle_orig <- sqlQuery(connect_db, query_type_observed_circle, stringsAsFactors = FALSE)
@@ -82,8 +88,11 @@ get_type_observed_openhab <- function(db = db_fieldmap_openhab){
   
   odbcClose(connect_db)
 
+  type_observed_square <- type_observed_square_orig %>%
+      filter(!is.na(type_observed_square))
+  
   type_observed <- type_observed_circle_orig %>%
-    full_join(type_observed_square_orig, by = c("plot_id", "segment_id")) %>%
+    full_join(type_observed_square, by = c("plot_id")) %>%
     mutate(type_observed_circle = ifelse(nchar(type_observed_circle) %in% c(7, 8),
                                          gsub(" ", "_", type_observed_circle),
                                          type_observed_circle),
@@ -113,10 +122,12 @@ get_cover_veglayers_openhab <- function(db = db_fieldmap_openhab){
   VegPQ.Litter
   FROM VegPQ;"
 
-   if(substr(db,nchar(db)-3,nchar(db)) == ".mdb"){
+  if (str_sub(db, nchar(db) - 3, nchar(db)) == ".mdb") {
     connect_db <-   odbcConnectAccess(db)
-  } else if (substr(db,nchar(db)-5,nchar(db)) == ".accdb") {
+  } else if (str_sub(db, nchar(db) - 5, nchar(db)) == ".accdb") {
     connect_db <-   odbcConnectAccess2007(db)
+  } else if (str_sub(db, nchar(db) - 3, nchar(db)) == ".FDB") {
+    connect_db <-   odbcDriverConnect(paste("DRIVER={Firebird/InterBase(r) driver};UID=SYSDBA;PWD=masterkey; DBNAME=", db))
   }
 
   cover_veglayers_orig <- sqlQuery(connect_db, query_cover_veglayers, stringsAsFactors = FALSE)
@@ -190,10 +201,12 @@ get_cover_species_openhab <- function(db = db_fieldmap_openhab){
   LEFT JOIN qLondo ON Mosslayer.Coverage = qLondo.ID;
   "
 
-  if(substr(db,nchar(db)-3,nchar(db)) == ".mdb"){
+  if (str_sub(db, nchar(db) - 3, nchar(db)) == ".mdb") {
     connect_db <-   odbcConnectAccess(db)
-  } else if (substr(db,nchar(db)-5,nchar(db)) == ".accdb") {
+  } else if (str_sub(db, nchar(db) - 5, nchar(db)) == ".accdb") {
     connect_db <-   odbcConnectAccess2007(db)
+  } else if (str_sub(db, nchar(db) - 3, nchar(db)) == ".FDB") {
+    connect_db <-   odbcDriverConnect(paste("DRIVER={Firebird/InterBase(r) driver};UID=SYSDBA;PWD=masterkey; DBNAME=", db))
   }
 
   herblayer_orig <- sqlQuery(connect_db, query_herblayer, stringsAsFactors = FALSE)
@@ -250,10 +263,12 @@ SiteDescription_HEIDE.Edit_date as date_sitedescription,
   FROM SiteDescription_HEIDE;"
   
 
-  if(substr(db,nchar(db)-3,nchar(db)) == ".mdb"){
+  if (str_sub(db, nchar(db) - 3, nchar(db)) == ".mdb") {
     connect_db <-   odbcConnectAccess(db)
-  } else if (substr(db,nchar(db)-5,nchar(db)) == ".accdb") {
+  } else if (str_sub(db, nchar(db) - 5, nchar(db)) == ".accdb") {
     connect_db <-   odbcConnectAccess2007(db)
+  } else if (str_sub(db, nchar(db) - 3, nchar(db)) == ".FDB") {
+    connect_db <-   odbcDriverConnect(paste("DRIVER={Firebird/InterBase(r) driver};UID=SYSDBA;PWD=masterkey; DBNAME=", db))
   }
 
   structure_vars <- sqlQuery(connect_db, query_structurevar_heath, stringsAsFactors = FALSE)
@@ -307,10 +322,12 @@ get_measurements_heath_circle_old <- function(db = db_fieldmap_openhab){
   FROM SiteDescription_HEIDE;"
   
 
-  if(substr(db,nchar(db)-3,nchar(db)) == ".mdb"){
+  if (str_sub(db, nchar(db) - 3, nchar(db)) == ".mdb") {
     connect_db <-   odbcConnectAccess(db)
-  } else if (substr(db,nchar(db)-5,nchar(db)) == ".accdb") {
+  } else if (str_sub(db, nchar(db) - 5, nchar(db)) == ".accdb") {
     connect_db <-   odbcConnectAccess2007(db)
+  } else if (str_sub(db, nchar(db) - 3, nchar(db)) == ".FDB") {
+    connect_db <-   odbcDriverConnect(paste("DRIVER={Firebird/InterBase(r) driver};UID=SYSDBA;PWD=masterkey; DBNAME=", db))
   }
 
   structure_vars <- sqlQuery(connect_db, query_structurevar_heath, stringsAsFactors = FALSE)
@@ -350,10 +367,12 @@ get_measurements_6510_circle <- function(db = db_fieldmap_openhab){
   SiteDescription_6510.Shrub_and_Treelayer_18m
   FROM SiteDescription_6510"
 
-     if(substr(db,nchar(db)-3,nchar(db)) == ".mdb"){
+   if (str_sub(db, nchar(db) - 3, nchar(db)) == ".mdb") {
     connect_db <-   odbcConnectAccess(db)
-  } else if (substr(db,nchar(db)-5,nchar(db)) == ".accdb") {
+  } else if (str_sub(db, nchar(db) - 5, nchar(db)) == ".accdb") {
     connect_db <-   odbcConnectAccess2007(db)
+  } else if (str_sub(db, nchar(db) - 3, nchar(db)) == ".FDB") {
+    connect_db <-   odbcDriverConnect(paste("DRIVER={Firebird/InterBase(r) driver};UID=SYSDBA;PWD=masterkey; DBNAME=", db))
   }
 
   structure_vars <- sqlQuery(connect_db, query_StructurePlot6510) %>%
@@ -372,10 +391,12 @@ get_date_openhab <- function(db = db_fieldmap_openhab){
   Observer_date.Add_date as date_assessment
   FROM Observer_date"
 
-     if(substr(db,nchar(db)-3,nchar(db)) == ".mdb"){
+   if (str_sub(db, nchar(db) - 3, nchar(db)) == ".mdb") {
     connect_db <-   odbcConnectAccess(db)
-  } else if (substr(db,nchar(db)-5,nchar(db)) == ".accdb") {
+  } else if (str_sub(db, nchar(db) - 5, nchar(db)) == ".accdb") {
     connect_db <-   odbcConnectAccess2007(db)
+  } else if (str_sub(db, nchar(db) - 3, nchar(db)) == ".FDB") {
+    connect_db <-   odbcDriverConnect(paste("DRIVER={Firebird/InterBase(r) driver};UID=SYSDBA;PWD=masterkey; DBNAME=", db))
   }
 
   observer_date <- sqlQuery(connect_db, query_date) %>%
@@ -394,10 +415,12 @@ get_coordinates_openhab <- function(db = db_fieldmap_openhab){
   GPS_REF.Y_m as y_measured
   FROM GPS_REF"
 
-     if(substr(db,nchar(db)-3,nchar(db)) == ".mdb"){
+    if (str_sub(db, nchar(db) - 3, nchar(db)) == ".mdb") {
     connect_db <-   odbcConnectAccess(db)
-  } else if (substr(db,nchar(db)-5,nchar(db)) == ".accdb") {
+  } else if (str_sub(db, nchar(db) - 5, nchar(db)) == ".accdb") {
     connect_db <-   odbcConnectAccess2007(db)
+  } else if (str_sub(db, nchar(db) - 3, nchar(db)) == ".FDB") {
+    connect_db <-   odbcDriverConnect(paste("DRIVER={Firebird/InterBase(r) driver};UID=SYSDBA;PWD=masterkey; DBNAME=", db))
   }
 
   coordinates <- sqlQuery(connect_db, query_coord) %>%
@@ -432,13 +455,15 @@ query_status <- "SELECT G.idplots,
         LEFT JOIN qinfo_status_fieldwork Q
         ON G.info_status_fieldwork = Q.id"    
 
-connect_db <- odbcDriverConnect(paste("DRIVER={Firebird/InterBase(r) driver};UID=SYSDBA;PWD=masterkey; DBNAME=", db_fieldmap_forest_hab))
+connect_db <- odbcDriverConnect(paste("DRIVER={Firebird/InterBase(r) driver};UID=SYSDBA;PWD=masterkey; DBNAME=", db_fieldmap_foresthab))
 
 gridpoints_orig <- sqlQuery(connect_db, query_status)
 colnames(gridpoints_orig) <- str_to_lower(colnames(gridpoints_orig))
 
 gridpoints <- gridpoints_orig %>%
-    filter(!is.na(status_fieldwork))
+    filter(!is.na(status_fieldwork)) %>%
+    mutate(status_fieldwork = ifelse(status_fieldwork == 0, "nee", 
+                                     ifelse(status_fieldwork == 1, "ja")))
 
 odbcClose(connect_db)
 
@@ -618,6 +643,7 @@ get_coordinates_foresthab <- function(db = db_fieldmap_foresthab){
   Plots_Forest_Inventory.X_m as x_measured,
   Plots_Forest_Inventory.Y_m as y_measured
   FROM Plots_Forest_Inventory"
+  
   connect_db <- odbcDriverConnect(paste("DRIVER={Firebird/InterBase(r) driver};UID=SYSDBA;PWD=masterkey; DBNAME=", db))
 
   coordinates <- sqlQuery(connect_db, query_coord) %>%
