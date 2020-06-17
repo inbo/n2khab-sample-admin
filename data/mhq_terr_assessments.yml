@@ -5,8 +5,8 @@
   sorting:
   - point_code
   - type_target
-  hash: 753157c42f0fea7bcc39195f2add4921f7c0ce93
-  data_hash: c72c4e8e6e3388708d5967693c0acc0021717334
+  hash: d930a6193d9335fe241a9d0534a84a9e65d7d53a
+  data_hash: a47e0defd7ba312a6028119d0afe9f5edbce4c09
 point_code:
   class: character
 type_target:
@@ -240,10 +240,9 @@ is_type_target:
   class: logical
 type_observed:
   class: character
-inaccessable:
-  class: character
 assessment_date:
-  class: numeric
+  class: Date
+  format: '%Y-%m-%d'
 assessment_source:
   class: factor
   labels:
@@ -257,3 +256,5 @@ x:
   class: numeric
 'y':
   class: numeric
+inaccessible:
+  class: character

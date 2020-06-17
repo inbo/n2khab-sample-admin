@@ -397,10 +397,10 @@ Next, we evaluate if a sampling unit is valid. We compare type_target and type_o
 ```{r}
 #maximum grts_ranking_draw in sample for each type
 max_ranking <- samples_grts %>%
-    group_by(type, sac) %>%
+    group_by(type_target, sac) %>%
     summarise(max_grts_ranking_draw = max(grts_ranking_draw)) %>%
     ungroup() %>%
-    rename(type_observed = type)
+    rename(type_observed = type_target)
     
 square_plots <- plots %>%
     filter(plot == "square")
@@ -409,14 +409,14 @@ assessment_inbo <- samples_grts %>%
     select(-db_ref) %>%
     filter(point_code %in% square_plots$point_code) %>%
     left_join(plot_types_center, by = c("point_code")) %>%
-    mutate(type_target= ifelse(type_target== "6230" & str_sub(type_observed, 1, 4) == "6230", type_observed, as.character(type)),
+    mutate(type_target= ifelse(type_target== "6230" & str_sub(type_observed, 1, 4) == "6230", type_observed, as.character(type_target)),
            is_type_target = type_target== type_observed,
            assessment_year = as.numeric(format(date, "%Y"))) %>%
     left_join(type_cover_wide, by = c("point_code", "date")) %>%
     left_join(max_ranking, by = c("type_observed", "sac")) %>%
     left_join(measurement_completed, by = c("point_code")) %>%
     mutate(allow_other_type = ifelse(is_type_target_plot, NA, (grts_ranking_draw <= max_grts_ranking_draw) & !is.na(max_grts_ranking_draw))) %>%
-    select( point_code, sampling_unit_code, grts_ranking_draw, assessment_date = date, assessment_year,completed, type_target = type, type_observed, type_observed_cover = type_cover, is_type_target, allow_other_type, type_cover_circle, type_cover_square, n_type_observed, n_habtarget, n_center, max_grts_ranking_draw)
+    select( point_code, sampling_unit_code, grts_ranking_draw, assessment_date = date, assessment_year,completed, type_target, type_observed, type_observed_cover = type_cover, is_type_target, allow_other_type, type_cover_circle, type_cover_square, n_type_observed, n_habtarget, n_center, max_grts_ranking_draw)
 
 check_sampling_unit_code <- assessment_inbo %>%
     group_by(sampling_unit_code, assessment_date) %>%
@@ -475,7 +475,7 @@ We join by the point_code, because and assessment is done for all target types (
 
 ```{r}
 sample_admin_inbo <- samples_grts %>%
-    filter(type_target%in% types_inbo) %>%
+    filter(type_target %in% types_inbo) %>%
     #select(-db_ref) %>%
     full_join(admin_inbo, by = c("point_code", "grts_ranking_draw")) %>%
     mutate(distance_from_refpoint = round(sqrt((x_assessment- x)^2 + (y_assessment- y)^2), 1)) 
@@ -498,13 +498,14 @@ When a sampling unit is assessed but not measured according to the admin data, t
 ```{r}
 
 sample_assessments_inbo <- sample_admin_inbo %>%
-    left_join(assessment_inbo, by = c("sampling_unit_code", "point_code", "grts_ranking_draw", "assessment_year")) %>%
+    left_join(assessment_inbo, by = c("sampling_unit_code", "point_code", "grts_ranking_draw", "assessment_year", "type_target")) %>%
     mutate(is_type_target = ifelse(assessment_source %in% c("field assessment", "orthophoto assessment"),
                                    ifelse(!lsvi_measurement, FALSE, is_type_target),
                                    is_type_target),
-           type_target = ifelse(is.na(type_target), as.character(type), type_target),
+           #type_target = ifelse(is.na(type_target), as.character(type), type_target),
+           assessment_date = if_else(is.na(assessment_date) & !is.na(assessment_year), as.Date(str_c(assessment_year, "-01-01"), format = "%Y-%m-%d"), assessment_date),
            fieldwork_team = "inbo") %>%
-    select(scheme, sampling_unit_code, type_target, point_code, sac, grts_ranking, grts_ranking_draw, year_planned, assessment_source, assessment_year, inaccessible, lsvi_measurement, completed, location_change, is_type_target, type_observed,  allow_other_type, type_cover_circle, type_cover_square, x_orig = x, y_orig = y, x_assessment, y_assessment, distance_from_refpoint, fieldwork_team, db_ref, is_centroid, legacy_site)
+    select(scheme, sampling_unit_code, type_target, point_code, sac, grts_ranking, grts_ranking_draw, year_planned, assessment_source, assessment_year, assessment_date, inaccessible, lsvi_measurement, completed, location_change, is_type_target, type_observed,  allow_other_type, type_cover_circle, type_cover_square, x_orig = x, y_orig = y, x_assessment, y_assessment, distance_from_refpoint, fieldwork_team, db_ref, is_centroid, legacy_site)
 
 check <- n_distinct(sample_assessments_inbo$sampling_unit_code) == nrow(sample_assessments_inbo)
 ```
@@ -552,7 +553,7 @@ temp <- admin_inbo_dunes_orig %>%
 check_position_change <- sample_admin_inbo %>%
     filter(lsvi_measurement & !is.na(lsvi_measurement)) %>%
     mutate(distance_from_refpoint = round(sqrt((x_assessment- x)^2 + (y_assessment- y)^2), 1)) %>%
-    select(sampling_unit_code, type, point_code, lsvi_measurement, location_change,  distance_from_refpoint)
+    select(sampling_unit_code, type_target, point_code, lsvi_measurement, location_change,  distance_from_refpoint)
 
 #some of the coordinates in the PINK sample are wrong --> to check
 
@@ -577,7 +578,7 @@ When no position change is mentioned in the admin table, we expect the measured 
 
 ```{r}
 check_no_position_change <- check_position_change %>%
-    filter(!str_detect(point_code, "reloc")) %>%
+    #filter(!str_detect(point_code, "reloc")) %>%
     filter(!location_change) %>%
     filter(distance_from_refpoint > 1) %>%
     arrange(desc(distance_from_refpoint))
@@ -740,7 +741,7 @@ admin_anb <- sample_status %>%
            location_change = ifelse(lsvi_measurement & !is.na(lsvi_measurement),
                                     ifelse(is.na(Remark), FALSE,str_detect( Remark, "verlegd")),
                                     NA)) %>%
-    distinct(point_code, assessment_source, inaccessible, assessment_year, lsvi_measurement, completed, location_change) 
+    distinct(point_code, assessment_source, inaccessible, assessment_year, assessment_date, lsvi_measurement, completed, location_change) 
 
 admin_ortho_control <- admin_ortho_control %>%
     filter(!(point_code %in% admin_anb$point_code)) %>%
@@ -788,9 +789,8 @@ type_square <- measurements_square %>%
     
 assessment_anb <- type_square %>%
     left_join(type_circle, by = "point_code") %>%
-    left_join(select(samples_grts, sampling_unit_code, point_code, grts_ranking_draw, type, sac), by = c("point_code")) %>%
+    left_join(select(samples_grts, sampling_unit_code, point_code, grts_ranking_draw, type_target, sac), by = c("point_code")) %>%
     left_join(max_ranking, by = c("type_observed", "sac")) %>%
-    rename(type_target = type) %>%
     mutate(main_type = str_sub(type_target, 1, 4),
           type_observed = ifelse(is.na(type_observed) & !is.na(type_cover_circle),
                                   str_sub(type_cover_circle, start = 6),
@@ -869,7 +869,7 @@ coordinates <- coordinates %>%
 
 sample_admin_anb <- samples_grts %>%
    #select(-db_ref) %>%
-    filter(str_sub(type, 1, 4) %in% main_type_anb) %>%
+    filter(str_sub(type_target, 1, 4) %in% main_type_anb) %>%
     left_join(admin_anb, by = c("point_code")) %>%
     left_join(coordinates, by = "point_code") %>%
     mutate(distance_from_refpoint = round(sqrt((x_assessment- x)^2 + (y_assessment- y)^2), 1)) 
@@ -935,13 +935,14 @@ ANB also records in most cases the observed habitat type/land cover class when a
 ```{r}
 
 sample_assessments_anb <- sample_admin_anb %>%
-    left_join(assessment_anb, by = c("sampling_unit_code", "point_code", "grts_ranking_draw", "sac")) %>%
+    left_join(assessment_anb, by = c("sampling_unit_code", "point_code", "grts_ranking_draw", "sac", "type_target")) %>%
     mutate(is_type_target = ifelse(assessment_source %in% c("field assessment", "orthophoto"),
                                    ifelse(!lsvi_measurement, FALSE, is_type_target),
                                    is_type_target),
-           type_target = ifelse(is.na(type_target), as.character(type), as.character(type_target)),
+           #type_target = ifelse(is.na(type_target), as.character(type), as.character(type_target)),
+           assessment_date = if_else(is.na(assessment_date) & !is.na(assessment_year), as.Date(str_c(assessment_year, "-01-01"), format = "%Y-%m-%d"), assessment_date),
            fieldwork_team = "anb") %>%
-    select(scheme, sampling_unit_code, type_target, point_code, sac, grts_ranking_draw, grts_ranking, year_planned, assessment_source, inaccessible, assessment_year, lsvi_measurement, completed, location_change, is_type_target, type_observed,  allow_other_type, type_cover_circle, type_cover_square, x_orig = x, y_orig = y, x_assessment, y_assessment, distance_from_refpoint, fieldwork_team, db_ref, is_centroid, legacy_site) 
+    select(scheme, sampling_unit_code, type_target, point_code, sac, grts_ranking_draw, grts_ranking, year_planned, assessment_source, inaccessible, assessment_year, assessment_date, lsvi_measurement, completed, location_change, is_type_target, type_observed,  allow_other_type, type_cover_circle, type_cover_square, x_orig = x, y_orig = y, x_assessment, y_assessment, distance_from_refpoint, fieldwork_team, db_ref, is_centroid, legacy_site) 
 
 check <- n_distinct(sample_assessments_inbo$sampling_unit_code) == nrow(sample_assessments_inbo)
 
@@ -1145,7 +1146,7 @@ The table below shows some records as an example.
 mhq_refpoints_validity <- sample_assessments_update2 %>%
     filter(!is.na(is_valid)) %>%
     filter(!is.na(scheme)) %>%
-    select(scheme, sampling_unit_code, point_code, date = assessment_year, is_valid)
+    select(scheme, sampling_unit_code, point_code, date = assessment_date, is_valid)
 
 write_vc(mhq_refpoints_validity, file = "mhq_terr_refpoints_validity", root = "../../data", sorting = c("scheme", "sampling_unit_code", "point_code"), optimize = FALSE, strict = FALSE)
 ```
@@ -1162,7 +1163,7 @@ The table mhq_terr_assessments gives an overview of all assessments (see below f
 
 ```{r}
 mhq_terr_assessments <- sample_assessments_update2 %>%
-    select(point_code, type_target, is_type_target, type_observed, inaccessible, assessment_date = assessment_year, assessment_source, x, y)
+    select(point_code, type_target, is_type_target, type_observed, inaccessible, assessment_date, assessment_source, x, y)
 
 write_vc(mhq_terr_assessments, file = "mhq_terr_assessments", root = "../../data", sorting = c( "point_code", "type_target"), optimize = FALSE, strict = FALSE)
 ```
