@@ -392,7 +392,8 @@ samples <- bind_rows(
     sample_vbi2_type,
     sample_91E0_sf,
     sample_1330_da_grts) %>%
-    mutate(ranking_code = ifelse(is.na(grts_ranking_draw), grts_ranking, grts_ranking_draw))
+    mutate(ranking_code = ifelse(is.na(grts_ranking_draw), grts_ranking, grts_ranking_draw)) %>%
+    rename(type_target = type)
 
 point_codes <- samples %>%
     distinct(ranking_code, x, y) %>%
@@ -405,11 +406,11 @@ mhq_terr_samples_details <- samples %>%
     left_join(point_codes, by = c("ranking_code", "x", "y")) %>%
     select(-ranking_code) %>%
     inner_join(distinct(schemes_mhq, scheme, main_type), by = "main_type") %>%
-    select(scheme, sampling_unit_code, point_code, type, grts_ranking, is_centroid, grts_ranking_draw,  legacy_site, x, y, phab, sac, certain, description_orig, year_planned, db_ref) %>%
-    arrange(scheme, type, grts_ranking)
+    select(scheme, sampling_unit_code, point_code, type_target, grts_ranking, is_centroid, grts_ranking_draw,  legacy_site, x, y, phab, sac, certain, description_orig, year_planned, db_ref) %>%
+    arrange(scheme, type_target, grts_ranking)
 
 mhq_terr_samples <- mhq_terr_samples_details %>%
-    select(scheme, sampling_unit_code, point_code, type, sac, grts_ranking, is_centroid, grts_ranking_draw,  legacy_site, x, y, db_ref, year_planned)
+    select(scheme, sampling_unit_code, point_code, type_target, sac, grts_ranking, is_centroid, grts_ranking_draw,  legacy_site, x, y, db_ref, year_planned)
 
 mhq_terr_details_samplingframe <- mhq_terr_samples_details %>%
     select(scheme, sampling_unit_code, phab, certain, description_orig)

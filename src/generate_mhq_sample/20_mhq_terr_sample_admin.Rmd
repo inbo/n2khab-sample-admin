@@ -303,20 +303,20 @@ To summarise the observed habitat types or other cover types we create following
 plot_types <- plots %>%
   left_join(classif_mhq, by = c("recording_givid", "survey")) %>%
     mutate(type_observed = ifelse(type_observed %in% c("-9", "0"), "gh", type_observed)) %>%
-    inner_join(select(samples_grts, point_code, sampling_unit_code, type), by = "point_code") %>%
-    left_join(select(types, type, main_type), by ="type") %>%
+    inner_join(select(samples_grts, point_code, sampling_unit_code, type_target), by = "point_code") %>%
+    left_join(select(types, type, main_type), by = c("type_target" = "type")) %>%
     group_by(sampling_unit_code, plot, date) %>%
   mutate(type_cover_plot = str_c(str_c(str_replace_na(type_cover), "% ", type_observed), collapse =  " + ")) %>%
   ungroup() %>%
-    mutate(type_observed = ifelse(type_observed == "6410" & main_type == "6410", as.character(type), type_observed),
-           type_observed = ifelse(type_observed == "6230" & main_type == "6230", as.character(type), type_observed),
-           type = ifelse(type == "6230" & str_sub(type_observed, 1, 4) == "6230", type_observed, as.character(type)),
-           is_type_target = type_observed == type,
+    mutate(type_observed = ifelse(type_observed == "6410" & main_type == "6410", as.character(type_target), type_observed),
+           type_observed = ifelse(type_observed == "6230" & main_type == "6230", as.character(type_target), type_observed),
+           type_target = ifelse(type_target == "6230" & str_sub(type_observed, 1, 4) == "6230", type_observed, as.character(type_target)),
+           is_type_target = type_observed == type_target,
            is_main_type_target = str_sub(type_observed, 1, 4) == main_type) %>%
     group_by(point_code, plot, date) %>%
     mutate(is_type_target_plot = sum(is_type_target) > 0,
            is_main_type_target_plot = sum(is_main_type_target) > 0,
-           n_habtarget = n_distinct(type),
+           n_habtarget = n_distinct(type_target),
            n_type_observed = n_distinct(type_observed)) %>%
     ungroup() 
 
@@ -325,7 +325,7 @@ plot_types_check <- plot_types %>%
     filter(n_type_observed > 1,
            plot == "square",
            ) %>%
-    select(recording_givid, sampling_unit_code, plot_bevat_doelhabitat = is_type_target_plot, date, hab_target = type, type_observed, cover = type_cover, n_type_observed) %>%
+    select(recording_givid, sampling_unit_code, plot_bevat_doelhabitat = is_type_target_plot, date, hab_target = type_target, type_observed, cover = type_cover, n_type_observed) %>%
     arrange(sampling_unit_code) %>%
     filter(hab_target != "6510_hu") %>%
     arrange(plot_bevat_doelhabitat) %>%
@@ -409,8 +409,8 @@ assessment_inbo <- samples_grts %>%
     select(-db_ref) %>%
     filter(point_code %in% square_plots$point_code) %>%
     left_join(plot_types_center, by = c("point_code")) %>%
-    mutate(type = ifelse(type == "6230" & str_sub(type_observed, 1, 4) == "6230", type_observed, as.character(type)),
-           is_type_target = type == type_observed,
+    mutate(type_target= ifelse(type_target== "6230" & str_sub(type_observed, 1, 4) == "6230", type_observed, as.character(type)),
+           is_type_target = type_target== type_observed,
            assessment_year = as.numeric(format(date, "%Y"))) %>%
     left_join(type_cover_wide, by = c("point_code", "date")) %>%
     left_join(max_ranking, by = c("type_observed", "sac")) %>%
@@ -475,7 +475,7 @@ We join by the point_code, because and assessment is done for all target types (
 
 ```{r}
 sample_admin_inbo <- samples_grts %>%
-    filter(type %in% types_inbo) %>%
+    filter(type_target%in% types_inbo) %>%
     #select(-db_ref) %>%
     full_join(admin_inbo, by = c("point_code", "grts_ranking_draw")) %>%
     mutate(distance_from_refpoint = round(sqrt((x_assessment- x)^2 + (y_assessment- y)^2), 1)) 
@@ -1113,7 +1113,7 @@ mhq_terr_refpoint <- read_vc(file = "mhq_terr_refpoints", root = "../../data")
 
 mhq_terr_refpoint_new <- sample_assessments_update2 %>%
     anti_join(mhq_terr_refpoint, by = c("sampling_unit_code", "point_code")) %>%
-    select(scheme, sampling_unit_code, point_code, type = type_target, sac, grts_ranking, is_centroid, grts_ranking_draw, legacy_site, x, y, db_ref, year_planned)
+    select(scheme, sampling_unit_code, point_code, type_target, sac, grts_ranking, is_centroid, grts_ranking_draw, legacy_site, x, y, db_ref, year_planned)
 
 mhq_terr_refpoint_update <- mhq_terr_refpoint %>%
     bind_rows(mhq_terr_refpoint_new) %>%

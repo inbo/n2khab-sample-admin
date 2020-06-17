@@ -5,8 +5,8 @@
   sorting:
   - scheme
   - sampling_unit_code
-  hash: aca1d063d4a22631313b32ba1fa388b0c08cf23e
-  data_hash: 0136d6028ea8ddcbdfa10ca08be52ced254ea015
+  hash: 0920b744e855a1efd3aa7ffae9039bd5ababf5d3
+  data_hash: 571bd7d524fbe09c2fb7dc585ae835331076e6ef
 scheme:
   class: factor
   labels:
@@ -142,7 +142,25 @@ sampling_unit_code:
   class: character
 point_code:
   class: character
-type:
+grts_ranking:
+  class: numeric
+is_centroid:
+  class: logical
+grts_ranking_draw:
+  class: numeric
+legacy_site:
+  class: logical
+x:
+  class: numeric
+'y':
+  class: numeric
+sac:
+  class: numeric
+db_ref:
+  class: character
+year_planned:
+  class: numeric
+type_target:
   class: factor
   labels:
   - '1130'
@@ -369,21 +387,3 @@ type:
   - 110
   - 111
   ordered: no
-grts_ranking:
-  class: numeric
-is_centroid:
-  class: logical
-grts_ranking_draw:
-  class: numeric
-legacy_site:
-  class: logical
-x:
-  class: numeric
-'y':
-  class: numeric
-sac:
-  class: numeric
-db_ref:
-  class: character
-year_planned:
-  class: numeric
