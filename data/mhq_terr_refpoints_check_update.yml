@@ -1,13 +1,13 @@
 ..generic:
   git2rdata: 0.2.0
-  optimize: yes
+  optimize: no
   NA string: NA
   sorting:
   - scheme
   - sampling_unit_code
   - point_code
-  hash: a97e2681da4d92b8969124e5a4bae534540ec165
-  data_hash: d6e1fa7941f9a5339d37b7ed86764a3f52f01e2c
+  hash: 27903845f96aec021fe056a4e28da28f5614928a
+  data_hash: 05647c5da9a0b6f52f024cfe37612c44152c28a4
 scheme:
   class: factor
   labels:
@@ -143,7 +143,25 @@ sampling_unit_code:
   class: character
 point_code:
   class: character
-type:
+grts_ranking:
+  class: numeric
+is_centroid:
+  class: logical
+grts_ranking_draw:
+  class: numeric
+legacy_site:
+  class: logical
+x:
+  class: numeric
+'y':
+  class: numeric
+sac:
+  class: numeric
+db_ref:
+  class: character
+year_planned:
+  class: numeric
+type_target:
   class: factor
   labels:
   - '1130'
@@ -370,15 +388,3 @@ type:
   - 110
   - 111
   ordered: no
-grts_ranking:
-  class: numeric
-is_centroid:
-  class: logical
-grts_ranking_draw:
-  class: numeric
-legacy_site:
-  class: logical
-x:
-  class: numeric
-'y':
-  class: numeric

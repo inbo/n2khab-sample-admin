@@ -5,9 +5,8 @@
   sorting:
   - scheme
   - sampling_unit_code
-  - point_code
-  hash: 7d920ae0452de8e56ed6cc800e0fa71b15738c34
-  data_hash: d6c60b99667b172ab4b437fbf4187cac2d238dd9
+  hash: 963343132b84353f436d4049ef5c4b526b004338
+  data_hash: c170ea05e002175dcc960bf45808d39d45a8e9ba
 scheme:
   class: factor
   labels:
@@ -141,10 +140,9 @@ scheme:
   ordered: no
 sampling_unit_code:
   class: character
-point_code:
-  class: character
-date:
-  class: Date
-  format: '%Y-%m-%d'
-is_valid:
+phab:
+  class: numeric
+certain:
   class: logical
+description_orig:
+  class: character
