@@ -1,0 +1,23 @@
+..generic:
+  git2rdata: 0.2.0
+  optimize: yes
+  NA string: NA
+  sorting:
+  - coverscale_name
+  - class_id
+  hash: 7e2f023b624832f702e01863543adbd949c684eb
+  data_hash: 8206a92799076e6b0e4eb3ee2aab3e9749661bf2
+class_id:
+  class: integer
+class_code:
+  class: character
+cover_mean:
+  class: numeric
+cover_min:
+  class: numeric
+cover_max:
+  class: numeric
+cover_description:
+  class: character
+coverscale_name:
+  class: character

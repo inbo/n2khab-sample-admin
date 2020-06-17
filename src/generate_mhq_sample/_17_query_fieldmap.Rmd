@@ -1,377 +1,117 @@
-# Query fieldmap
+# Query fieldmap openhab
+
+```{r}
+library(tidyverse)
+library(RODBC)
+```
+
+
+## Database names
 
 ```{r}
 
-db_fieldmap_open_hab <- "../../n2khab_mhq_data/field-data/fieldmap/database_2020-01-31/FieldMapData_NA2000.accdb"
-
-get_status <- function(db = db_fieldmap_open_hab){
-
-query_gridpoints <- "SELECT Grid_points.IDPlots
-  , Grid_points.RANKING
-  , Grid_points.ID
-  , Grid_points.Add_date
-  , Grid_points.SingleID
-  , Grid_points.Status_Fieldwork
-  , YesNo.Value1
-  , Grid_points.Info_Status_Fieldwork
-  , qinfo_Status_Fieldwork.Value1
-  , Grid_points.Remark
-
-FROM ((Grid_points LEFT JOIN qFieldteam ON Grid_points.Fieldteam = qFieldteam.ID)
-  LEFT JOIN qinfo_Status_Fieldwork ON Grid_points.Info_Status_Fieldwork = qinfo_Status_Fieldwork.ID)
-  LEFT JOIN [YesNo] ON Grid_points.Status_Fieldwork = YesNo.ID
-;"
-
-  if(substr(db,nchar(db)-3,nchar(db)) == ".mdb"){
-    connectieDB <-   odbcConnectAccess(db)
-  } else if (substr(db,nchar(db)-5,nchar(db)) == ".accdb") {
-    connectieDB <-   odbcConnectAccess2007(db)
-  }
-
- gridpointsOrig <- sqlQuery(connectieDB, query_gridpoints)
-  gridPoint <- gridpointsOrig %>%
-    select(sample_id = SingleID, asses_date = Add_date, grts_ranking = RANKING, status_fieldwork = Value1, info_status_fieldwork = Value1.1, Remark) %>%
-    filter(!is.na(status_fieldwork))
-
-  odbcClose(connectieDB)
-
-  return(gridPoint)
-}
-
-get_observed_hab <- function(db = db_fieldmap_open_hab){
-
-  query_HabTypeObserved <- "
-  SELECT
-  Standdescription.IDPlots,
-  Standdescription.ID,
-  Standdescription.Add_date,
-  Standdescription.Area_m2,
-  Standdescription.HABITAT,
-  qHABITAT.Value1
-  FROM Standdescription LEFT JOIN qHABITAT ON Standdescription.HABITAT = qHABITAT.ID;
-  "
-
-  if(substr(db,nchar(db) - 3,nchar(db)) == ".mdb"){
-    connectieDB <-   odbcConnectAccess(db)
-  } else if (substr(db,nchar(db) - 5,nchar(db)) == ".accdb") {
-    connectieDB <-   odbcConnectAccess2007(db)
-  }
-
-  habObservedOrig <- sqlQuery(connectieDB, query_HabTypeObserved, stringsAsFactors = FALSE)
-
-  odbcClose(connectieDB)
-
-  habObserved <- habObservedOrig %>%
-    rename(plot_id = IDPlots,
-           segment_id = ID,
-           type_observed_code = HABITAT,
-           type_observed_circle = Value1,
-           date_standdescription = Add_date) %>%
-    mutate(type_observed_circle = ifelse(nchar(type_observed_circle) %in% c(7, 8),
-                                         gsub(" ", "_", type_observed_circle),
-                                         type_observed_circle),
-           type_observed_cover_circle = round(ifelse (is.na(Area_m2),1,Area_m2/(pi*18^2)), 2))
-
-  result <- habObserved
-
-  return (result)
-}
-
-get_measurements_square <- function(db = db_fieldmap_open_hab){
-
-  query_CoverPlot <- "
-  SELECT
-  VegPQ.IDPlots,
-  VegPQ.ID,
-  VegPQ.HAB1,
-  qHABITAT.Value1,
-  VegPQ.Licheneslayer,
-  VegPQ.Sphagnumlayer,
-  VegPQ.OtherMosslayer,
-  VegPQ.Herblayer,
-  VegPQ.Shrublayer,
-  VegPQ.Treelayer,
-  VegPQ.Shrub_and_Treelayer,
-  VegPQ.Litter
-  FROM VegPQ LEFT JOIN qHABITAT ON VegPQ.HAB1 = qHABITAT.ID;"
-
-
-   if(substr(db,nchar(db)-3,nchar(db)) == ".mdb"){
-    connectieDB <-   odbcConnectAccess(db)
-  } else if (substr(db,nchar(db)-5,nchar(db)) == ".accdb") {
-    connectieDB <-   odbcConnectAccess2007(db)
-  }
-
-  coverPlotsOrig <- sqlQuery(connectieDB, query_CoverPlot, stringsAsFactors = FALSE)
-
-  odbcClose(connectieDB)
-
-  coverPlots <- coverPlotsOrig %>%
-    mutate(Mosslayer = Sphagnumlayer + OtherMosslayer) %>%
-    rename(type_observed_square = Value1, herblayer = Herblayer, shrublayer = Shrublayer, treelayer = Treelayer, shrub_treelayer = Shrub_and_Treelayer, litter = Litter) %>%
-    filter(ID == 1) %>%  # een vegetatieopname per plot
-    gather(herblayer, shrublayer, treelayer, shrub_treelayer, litter, key = "layer", value = "cover")  %>%
-    select(plot_id = IDPlots, type_observed_square, layer, cover) %>%
-    mutate(type_observed_square = ifelse(nchar(type_observed_square) %in% c(7, 8), #dus een habitatsubtype
-                                         sub(" ", "_", type_observed_square),
-                                         type_observed_square)) %>%
-      arrange(plot_id)
-
-  return(coverPlots)
-
-}
-
-
-get_cover_species <- function(db = db_fieldmap_open_hab){
-
-  query_herblayer<-"
-  SELECT Herblayer.IDPlots,
-  Herblayer.Species,
-  qVEG_HerbSpecies.Value1,
-  qVEG_HerbSpeciesScientific.Value1,
-  Herblayer.Coverage_date1,
-  qLondo.Value1
-  FROM ((Herblayer
-  LEFT JOIN qVEG_HerbSpecies ON Herblayer.Species = qVEG_HerbSpecies.ID)
-  LEFT JOIN qVEG_HerbSpeciesScientific ON Herblayer.Species_scientific = qVEG_HerbSpeciesScientific.ID)
-  LEFT JOIN qLondo ON Herblayer.Coverage_date1 = qLondo.ID;
-  "
-
-  query_shrublayer <- "
-  SELECT Shrublayer.IDPlots,
-  Shrublayer.Species,
-  qVEG_TreeSpecies.Value1,
-  qVEG_TreeSpeciesScientific.Value1,
-  Shrublayer.Coverage,
-  qLondo.Value1
-  FROM ((Shrublayer
-  LEFT JOIN qVEG_TreeSpecies ON Shrublayer.Species = qVEG_TreeSpecies.ID)
-  LEFT JOIN qVEG_TreeSpeciesScientific ON Shrublayer.Species_Scientific = qVEG_TreeSpeciesScientific.ID)
-  LEFT JOIN qLondo ON Shrublayer.Coverage = qLondo.ID;
-
-  "
-
-  query_treelayer <- "
-  SELECT Treelayer.IDPlots,
-  Treelayer.Species,
-  qVEG_TreeSpecies.Value1,
-  qVEG_TreeSpeciesScientific.Value1,
-  Treelayer.Coverage,
-  qLondo.Value1
-  FROM ((Treelayer
-  LEFT JOIN qVEG_TreeSpecies ON Treelayer.Species = qVEG_TreeSpecies.ID)
-  LEFT JOIN qVEG_TreeSpeciesScientific ON Treelayer.Species_Scientific = qVEG_TreeSpeciesScientific.ID)
-  LEFT JOIN qLondo ON Treelayer.Coverage = qLondo.ID;
-  "
-
-  query_mosslayer <- "
-  SELECT Mosslayer.IDPlots,
-  Mosslayer.Species,
-  qVEG_MossSpecies.Value1,
-  qVEG_MossSpeciesScientific.Value1,
-  Mosslayer.Coverage,
-  qLondo.Value1
-  FROM ((Mosslayer
-  LEFT JOIN qVEG_MossSpecies ON Mosslayer.Species = qVEG_MossSpecies.ID)
-  LEFT JOIN qVEG_MossSpeciesScientific ON Mosslayer.Species_Scientific = qVEG_MossSpeciesScientific.ID)
-  LEFT JOIN qLondo ON Mosslayer.Coverage = qLondo.ID;
-  "
-
-  if(substr(db,nchar(db)-3,nchar(db)) == ".mdb"){
-    connectieDB <-   odbcConnectAccess(db)
-  } else if (substr(db,nchar(db)-5,nchar(db)) == ".accdb") {
-    connectieDB <-   odbcConnectAccess2007(db)
-  }
-
-  herblayerOrig <- sqlQuery(connectieDB, query_herblayer, stringsAsFactors = FALSE)
-  shrublayerOrig <- sqlQuery(connectieDB, query_shrublayer, stringsAsFactors = FALSE)
-  treelayerOrig <- sqlQuery(connectieDB, query_treelayer, stringsAsFactors = FALSE)
-  mosslayerOrig <- sqlQuery(connectieDB, query_mosslayer, stringsAsFactors = FALSE)
-
-  odbcClose(connectieDB)
-
-   herblayer <- herblayerOrig %>%
-     filter(!is.na(Species)) %>%
-     select(plot_id = IDPlots,  name_nl = Value1, name_sc = Value1.1,  cover_class = Value1.2) %>%
-     mutate(layer = "herblayer")
-
-   shrublayer <- shrublayerOrig %>%
-     filter(!is.na(Species)) %>%
-     select(plot_id = IDPlots,  name_nl = Value1, name_sc = Value1.1, cover_class = Value1.2) %>%
-     mutate(layer = "shrublayer")
-
-   treelayer <- treelayerOrig %>%
-     filter(!is.na(Species)) %>%
-     select(plot_id = IDPlots,  name_nl = Value1, name_sc = Value1.1,  cover_class = Value1.2) %>%
-     mutate(layer = "treelayer")
-
-   mosslayer <- mosslayerOrig %>%
-     filter(!is.na(Species)) %>%
-     select(plot_id = IDPlots, name_nl = Value1, name_sc = Value1.1, cover_class = Value1.2) %>%
-     mutate(layer = "mosslayer")
-
-  veglayers <- bind_rows(herblayer, shrublayer, treelayer, mosslayer) %>%
-    mutate(scale = "Londo") %>%
-    arrange(plot_id, layer, name_sc)
-    
-  return(veglayers)
-
-}
-
-get_measurements_heath_circle <- function(db = db_fieldmap_open_hab){
-
-  query_StructurePlotHeide <- "SELECT
-  SiteDescription_HEIDE.IDPlots,
-SiteDescription_HEIDE.Edit_date,
-  SiteDescription_HEIDE.Shrub_and_Treelayer_18m,
-  SiteDescription_HEIDE.Sphagnumlayer,
-  SiteDescription_HEIDE.Campylopus_introflexus,
-  SiteDescription_HEIDE.LowShrublayer,
-  SiteDescription_HEIDE.Brushwood,
-  SiteDescription_HEIDE.Herbs,
-  SiteDescription_HEIDE.Calluna_phase_pioneer,
-  SiteDescription_HEIDE.Calluna_phase_devel,
-  SiteDescription_HEIDE.Calluna_phase_climax,
-  SiteDescription_HEIDE.Calluna_phase_degen,
-  SiteDescription_HEIDE.Pioneer_phase_open_soil,
-  SiteDescription_HEIDE.Pioneer_Coryn_Aira,
-  SiteDescription_HEIDE.Pioneer_Mos,
-  SiteDescription_HEIDE.Pioneer_Lichenen
-  FROM SiteDescription_HEIDE;"
-  
-  query_scale_tansley <- "SELECT
-  qCoverageTansley.ID,
-  qCoverageTansley.Value1
-  FROM qCoverageTansley;"
-
-  if(substr(db,nchar(db)-3,nchar(db)) == ".mdb"){
-    connectieDB <-   odbcConnectAccess(db)
-  } else if (substr(db,nchar(db)-5,nchar(db)) == ".accdb") {
-    connectieDB <-   odbcConnectAccess2007(db)
-  }
-
-  structurePlots <- sqlQuery(connectieDB, query_StructurePlotHeide, stringsAsFactors = FALSE)
-
-  scale_tansley <- sqlQuery(connectieDB, query_scale_tansley, stringsAsFactors = FALSE)
-
-  odbcClose(connectieDB)
-
-# uitgezonderd bedekking van struik+boomlaag worden alle bedekkingen via Tansley-schaal bepaald
-  structurePlots_Tansley <- structurePlots %>%
-    select(-Shrub_and_Treelayer_18m) %>%
-    gather(-IDPlots, -Edit_date, key = "structure_var", value = "ID") %>%
-    mutate(scale = "Beheermonitoringsschaal") %>%
-      left_join(scale_tansley, by = "ID") %>%
-      select(plot_id = IDPlots, structure_var, cover_class = Value1, scale) %>%
-      mutate(structure_var = tolower(structure_var))
-  
-  structurePlots_Cover <- structurePlots %>%
-      mutate(structure_var = "shrub_treelayer") %>%
-      select(plot_id = IDPlots, structure_var, cover = Shrub_and_Treelayer_18m)
-      
-
-# alle records als bedekking uitgedrukt
-  structurePlots_cover_long <- bind_rows(structurePlots_Tansley,
-                                   structurePlots_Cover) %>%
-      arrange(plot_id, structure_var)
-
-  return(structurePlots_cover_long)
-
-}
-
-get_measurements_6510_circle <- function(db = db_fieldmap_open_hab){
-
-  query_StructurePlot6510 <- "SELECT
-  SiteDescription_6510.IDPlots,
-  SiteDescription_6510.Shrub_and_Treelayer_18m
-  FROM SiteDescription_6510"
-
-     if(substr(db,nchar(db)-3,nchar(db)) == ".mdb"){
-    connectieDB <-   odbcConnectAccess(db)
-  } else if (substr(db,nchar(db)-5,nchar(db)) == ".accdb") {
-    connectieDB <-   odbcConnectAccess2007(db)
-  }
-
-  structurePlots <- sqlQuery(connectieDB, query_StructurePlot6510) %>%
-      mutate(structure_var = "shrub_treelayer") %>%
-      select(plot_id = IDPlots, structure_var, cover = Shrub_and_Treelayer_18m)
-
-  odbcClose(connectieDB)
-  
-  return(structurePlots)
-}
-
-get_observation_date <- function(db = db_fieldmap_open_hab){
-
-  query_date <- "SELECT
-  Observer_date.IDPlots,
-  Observer_date.Starting_time
-  FROM Observer_date"
-
-     if(substr(db,nchar(db)-3,nchar(db)) == ".mdb"){
-    connectieDB <-   odbcConnectAccess(db)
-  } else if (substr(db,nchar(db)-5,nchar(db)) == ".accdb") {
-    connectieDB <-   odbcConnectAccess2007(db)
-  }
-
-  observer_date <- sqlQuery(connectieDB, query_date) %>%
-      select(plot_id = IDPlots, date = Starting_time)
-
-  odbcClose(connectieDB)
-  
-  return(observer_date)
-}
-
-get_coordinates <- function(db = db_fieldmap_open_hab){
-
-  query_coord <- "SELECT
-  GPS_REF.SingleID,
-  GPS_REF.X_m,
-  GPS_REF.Y_m
-  FROM GPS_REF"
-
-     if(substr(db,nchar(db)-3,nchar(db)) == ".mdb"){
-    connectieDB <-   odbcConnectAccess(db)
-  } else if (substr(db,nchar(db)-5,nchar(db)) == ".accdb") {
-    connectieDB <-   odbcConnectAccess2007(db)
-  }
-
-  coordinates <- sqlQuery(connectieDB, query_coord) %>%
-      select(location_id = SingleID, x_measured = X_m, y_measured = Y_m) %>%
-      filter(!is.na(location_id))
-
-  odbcClose(connectieDB)
-  
-  return(coordinates)
-}
+db_fieldmap_foresthab <- "../../mhq_sample-admin_data/field-data/fieldmap/database_forest_2020-06-04/FIELDMAPDATA_BOSHAB_F_V2020_QC202004.FDB"
+db_fieldmap_openhab <- "../../mhq_sample-admin_data/field-data/fieldmap/database_heath6510_2020-06-12/FIELDMAPDATA_MASTER_NAT2000_F_V5.FDB"
+```
+
+## Export 2020-06-12
+
+```{r}
+
+# sample_status
+sample_status_openhab <- get_status_openhab()
+
+sample_status_foresthab <- get_status_foresthab()
+
+sample_status <- bind_rows(sample_status_openhab, 
+                           sample_status_foresthab)
+
+check <- sample_status %>%
+    group_by(plot_id) %>%
+    mutate(n = n()) %>%
+    ungroup() %>%
+    filter(n > 1)
+
+sample_status <- sample_status %>%
+    group_by(plot_id, sampling_unit_code) %>%
+    summarise(date_status = min(date_status),
+              status_fieldwork = unique(status_fieldwork),
+              info_status_fieldwork = unique(info_status_fieldwork),
+              remark = str_c(remark, collapse = "+")) %>%
+    ungroup()
+
+# type_observed
+
+type_observed <- get_type_observed_openhab() %>%
+    bind_rows(get_type_observed_foresthab())
+
+check <-  type_observed %>%
+    group_by(plot_id, type_observed_circle, type_observed_square, landuse) %>%
+    mutate(n = n()) %>%
+    ungroup() %>%
+    filter(n > 1)
+
+type_observed_corr <- type_observed %>%
+    unique() %>%
+    group_by(plot_id, type_observed_circle, type_observed_square, landuse) %>%
+    summarise(segment_id = segment_id[1],
+              type_observed_cover_circle = sum(type_observed_cover_circle)) %>%
+    ungroup()
+
+# veglayers
+
+cover_veglayers <- get_cover_veglayers_openhab() %>%
+    bind_rows(get_cover_veglayers_foresthab())
+
+#species
+
+cover_species <- get_cover_species_openhab() %>%
+    bind_rows(get_cover_species_foresthab())
+
+# structure_vars
+
+structure_vars_heath <- get_measurements_heath_circle()
+
+structure_vars_6510 <- get_measurements_6510_circle()
+
+structure_vars <- bind_rows(structure_vars_heath, structure_vars_6510)
+
+# date
+
+date_assessment_forest <- get_date_foresthab() %>%
+    mutate(date_assessment = pmin(date_vegetation, date_dendro))
+
+date_assessment <- get_date_openhab(db_fieldmap_openhab_new) %>%
+    bind_rows(date_assessment_forest)
+
+# coordinates
+
+coordinates  <- combine_db(get_coordinates_openhab(db_fieldmap_openhab_new),
+                                    get_coordinates_openhab(db_fieldmap_openhab_old)) %>%
+    bind_rows(get_coordinates_foresthab())
 
 ```
 
 
+## Write result to .csv file
 
 ```{r}
+setwd("../../mhq_sample-admin_data/field-data/fieldmap/")
 
-sample_status <- get_status()
-hab_observed <- get_observed_hab()
-measurements_square <- get_measurements_square()
-cover_species <- get_cover_species()
-measurements_heath_circle <- get_measurements_heath_circle() 
-measurements_6510_circle <- get_measurements_6510_circle()
-observer_date <- get_observation_date()
-coordinates <- get_coordinates()
+if (!dir.exists(as.character(str_c("export_fieldmap", as.character(Sys.Date(),"%Y-%m-%d"), sep = "_")))) {
+    
+  dir.create(as.character(str_c("export_fieldmap", as.character(Sys.Date(),"%Y-%m-%d"), sep = "_")))  
+    
+}
 
-
-setwd("../../n2khab_mhq_data/field-data/fieldmap/")
-dir.create(as.character(str_c("export_fieldmap", as.character(Sys.Date(),"%Y-%m-%d"), sep = "_")))
 setwd(str_c("export_fieldmap_", as.character(Sys.Date(),"%Y-%m-%d"), "/"))
 
 write.csv2(sample_status, "sample_status.csv", row.names = FALSE)
-write.csv2(hab_observed, "hab_observed.csv", row.names = FALSE)
-write.csv2(measurements_square, "measurements_square.csv", row.names = FALSE)
+write.csv2(type_observed_corr, "type_observed.csv", row.names = FALSE)
+write.csv2(cover_veglayers, "cover_veglayers.csv", row.names = FALSE)
 write.csv2(cover_species, "cover_species.csv", row.names = FALSE)
-write.csv2(measurements_heath_circle, "measurements_heath_circle.csv", row.names = FALSE)
-write.csv2(measurements_6510_circle, "measurements_6510_circle.csv", row.names = FALSE)
-write.csv2(observer_date, "observer_date.csv", row.names = FALSE)
+write.csv2(structure_vars, "structure_vars.csv", row.names = FALSE)
+write.csv2(date_assessment, "date_assessment.csv", row.names = FALSE)
 write.csv2(coordinates, "coordinates.csv", row.names = FALSE)
 
 ```
