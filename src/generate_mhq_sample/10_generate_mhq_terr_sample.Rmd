@@ -2,7 +2,7 @@
 
 The original data files which are used the scripts are stored in [this google drive folder](https://drive.google.com/open?id=1JpYol4Fmv_a6tjm3CBZ4RFU_81f9Wr8G) which can be accessed within INBO.   
 
-# Generation of table with reference points for all mhq terrestial sampling units 
+# Generation of table with reference points for all mhq terrestial sampling units (mhq_terr_refpoints)
 
 The sampling units for the monitoring habitat quality (mhq) programme [Westra et al., 2014](https://pureportal.inbo.be/portal/files/4339795/Westra_etal_2014_MonitoringNatura2000Habitats.pdf) were drawn based on the grts-method. 
 The mhq sampling units were stored in different files. Here we will generate one standardized table containing all mhq sampling units including legacy sites. Legacy sites are existing sampling units that were included in mhq.
@@ -14,7 +14,7 @@ The table contains characteristics of the sampling unit:
 - point_code: a unique code for the reference point of each sampling unit; this is the point in which it is evaluated wether the target type is present or not 
 - legacy_site: TRUE/FALSE
 - xy-coordinates of the reference points in Lambert72 (crs = 31370)
-- type: the target type, i.e. the type for which the sample was drawn
+- type_target: the type for which the sample was drawn
 - grts_ranking: ranking number of the grts master grid cell in which the reference point is located
 - grts_ranking_draw: ranking number which was used to select the sampling unit.
     - in general grts_ranking_draw is equal to grts_ranking, however in some cases the sampling_unit is moved to another position and as a consequence the reference_point is located in another grts grid cell.
@@ -22,6 +22,7 @@ The table contains characteristics of the sampling unit:
 - is_centroid: is the reference point located in the center of a grts master grid cell
 - year_planned: the monitoring cycle is 12 years and the sample is divided in 12 subsets according to the grts-ranking (one subset for each year in the monitoring cycle)
 - sac (special area of conservation): TRUE/FALSE; a stratefied sampling design was used with a higher sample size within sac
+- db_ref: a reference code used in databases where measurement are stored (INBOVeg or Fieldmap) 
 
 We also bring together some variables related to the sampling frame. These variables will only be used for quality contol within the mhq programme.
 

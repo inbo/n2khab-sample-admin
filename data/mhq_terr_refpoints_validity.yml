@@ -7,7 +7,7 @@
   - sampling_unit_code
   - point_code
   hash: 7d920ae0452de8e56ed6cc800e0fa71b15738c34
-  data_hash: d20ee2ea85f3cde4364542ce8877a51ebd579577
+  data_hash: d6c60b99667b172ab4b437fbf4187cac2d238dd9
 scheme:
   class: factor
   labels:

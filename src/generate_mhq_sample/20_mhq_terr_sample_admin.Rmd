@@ -1,6 +1,6 @@
-# Generate mhq sample administration table
+# Generate a table with sampling unit administration information (mhq_terr_assessments) and update the mhq_terr_refpoints based on the assessment information
 
-In the mhq sample adminstration table we want to document assessments and measurements of the mhq sampling units. 
+In the mhq sampling unit adminstration table (mhq_terr_assessments) we want to document assessments and measurements of the mhq sampling units. 
 An assessment of a mhq sampling unit is seen as evaluation whether or not a sampling unit is valid. 
 A mhq sampling unit is valid if the target type (= the type for which the sampling unit was selected) corresponds with the observed type in the reference point. 
 A reference point can contain different sampling units, with each sampling unit having a different target type. 
@@ -1118,7 +1118,7 @@ mhq_terr_refpoint_new <- sample_assessments_update2 %>%
 
 mhq_terr_refpoint_update <- mhq_terr_refpoint %>%
     bind_rows(mhq_terr_refpoint_new) %>%
-    arrange(type, sampling_unit_code)
+    arrange(type_target, sampling_unit_code)
 
 check <- sample_assessments_update2 %>%
     group_by(scheme, sampling_unit_code, point_code) %>%
