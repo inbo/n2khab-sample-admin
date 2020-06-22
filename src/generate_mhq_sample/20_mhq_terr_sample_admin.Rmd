@@ -666,7 +666,7 @@ ANB uses Fieldmap to store assessment data: both admin data on assessment status
 
 ```{r}
 
-export <- "export_fieldmap_2020-06-10"
+export <- "export_fieldmap_2020-06-17"
 
 cover_species <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/cover_species.csv"), stringsAsFactors = FALSE)
 type_observed <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/type_observed.csv"), stringsAsFactors = FALSE)
@@ -675,6 +675,7 @@ cover_veglayers <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/field
 sample_status <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/sample_status.csv"), stringsAsFactors = FALSE)
 date_assessments <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/date_assessment.csv"), stringsAsFactors = FALSE)
 coordinates <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/coordinates.csv"), stringsAsFactors = FALSE)
+trees_a3a4 <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/trees_a3a4.csv"), stringsAsFactors = FALSE)
 
 ```
 
@@ -719,7 +720,6 @@ check_n <- date_assessments %>%
     ungroup() %>%
     filter(n > 1)
 
-
 admin_anb <- sample_status %>%
     mutate(point_code = str_c(as.character(plot_id), "_1"),
            date_status = as.Date(date_status,  format = "%Y-%m-%d")) %>%
@@ -743,7 +743,7 @@ admin_anb <- sample_status %>%
            assessment_year = ifelse(is.na(assessment_date), 
                                     as.numeric(format(date_status, "%Y")), 
                                     as.numeric(format(assessment_date, "%Y")))) %>%
-    distinct(point_code, assessment_source, inaccessable, assessment_date, assessment_year, lsvi_measurement, completed, location_change) 
+    distinct(db, point_code, assessment_source, inaccessible, assessment_date, assessment_year, lsvi_measurement, completed, location_change) 
 
 admin_ortho_control <- admin_ortho_control %>%
     filter(!(point_code %in% admin_anb$point_code)) %>%
@@ -758,9 +758,13 @@ check <- n_distinct(admin_anb$point_code) == nrow(admin_anb)
 check_n <- admin_anb %>%
     group_by(point_code) %>%
     mutate(n = n()) %>%
-    ungroup()
+    ungroup() %>%
+    filter(n > 1)
 
 ```
+
+
+
 
 ### Type observed
 
@@ -774,7 +778,6 @@ For some samples for main types 6510 and 2330, the observed subtype is not speci
 
 type_observed_corr <- type_observed %>%
     mutate(type_observed_circle = ifelse(plot_id == 201689 & segment_id == 2, "geen habitat", type_observed_circle))
-
 
 ```
 
@@ -791,19 +794,16 @@ plot_types <- type_observed_corr %>%
            type_observed_square = ifelse(type_observed_square %in% c("geen habitat (akker, houtkant, tuin,...)", "geen habitat", "infrastructuur"),
                                          "gh",
                                          type_observed_square),
-        type_observed_cover_circle = 100 * type_observed_cover_circle,
         type_cover_square = type_observed_square) %>%
     group_by(point_code) %>%
     mutate(n_type_observed = n(),
            # type_square_assessed = sum(!is.na(type_observed_square)) > 0,
            # type_circle_assessed = sum(!is.na(type_observed_circle)) > 0,
-           match_type = (type_observed_square[1] %in% type_observed_circle) | (is.na(type_observed_square[1])),
-        type_cover_circle = str_c(str_c(str_replace_na(type_observed_cover_circle), "% ", type_observed_circle), collapse =  " + ")) %>%
+          match_type = (type_observed_square[1] %in% type_observed_circle) | (is.na(type_observed_square[1])),
+          type_cover_circle = str_c(str_c(str_replace_na(type_observed_cover_circle), "% ", type_observed_circle), collapse =  " + ")) %>%
     ungroup() %>%
     mutate(type_observed = ifelse(is.na(type_observed_circle), type_observed_square, type_observed_circle)) %>%
-    left_join(select(samples_grts, sampling_unit_code, point_code, grts_ranking_draw, type, sac), by = c("point_code")) %>%
-    rename(type_target = type) %>%
-
+    left_join(select(samples_grts, sampling_unit_code, point_code, grts_ranking_draw, type_target, sac), by = c("point_code")) %>%
     mutate(main_type = str_sub(type_target, 1, 4),
            type_observed = ifelse(type_observed == "6510" & main_type == "6510", as.character(type_target), type_observed),
            type_observed = ifelse(type_observed == "2330" & main_type == "2330", as.character(type_target), type_observed),
@@ -820,7 +820,7 @@ check_match_type <- plot_types %>%
     filter(!match_type) %>%
     filter(type_observed_circle %in% c(as.character(types$type), as.character(types$main_type)) | type_observed_square %in%  c(as.character(types$type), as.character(types$main_type))) %>%
     filter(segment_id == 1) %>%
-    left_join(select(admin_anb, point_code, lsvi_measurement), by = "point_code")
+    left_join(select(admin_anb, point_code, lsvi_measurement), by = "point_code") 
 
 write.csv2(check_match_type, "type_match_heide6510.csv", row.names = FALSE)
 
@@ -845,6 +845,7 @@ plot_types_center <- plot_types %>%
     ungroup()
 ```
 
+
 ```{r}
   
 assessment_anb <- samples_grts %>%
@@ -853,9 +854,9 @@ assessment_anb <- samples_grts %>%
     left_join(plot_types_center, by = c("point_code")) %>%
     left_join(max_ranking, by = c("type_observed", "sac")) %>%
    # left_join(measurement_completed, by = c("point_code")) %>%
-    mutate(is_type_target = type_observed == type,
+    mutate(is_type_target = type_observed == type_target,
         allow_other_type = ifelse(is_type_target_plot, NA, (grts_ranking_draw <= max_grts_ranking_draw) & !is.na(max_grts_ranking_draw))) %>%
-    select( point_code, sampling_unit_code, grts_ranking_draw, type_target = type, type_observed, type_observed_cover = type_cover, is_type_target, allow_other_type, type_cover_circle, type_cover_square, n_type_observed, n_habtarget, n_center, max_grts_ranking_draw)
+    select( point_code, sampling_unit_code, grts_ranking_draw, type_target , type_observed, type_observed_cover = type_cover, is_type_target, allow_other_type, type_cover_circle, type_cover_square, n_type_observed, n_habtarget, n_center, max_grts_ranking_draw)
 
   
 check_sampling_unit_code <- assessment_anb %>%
@@ -873,8 +874,33 @@ assessment_anb <- assessment_anb %>%
     filter(!(point_code %in% c("643970_1", "53561_1")) |
                is_type_target)
 
+check <- n_distinct(assessment_anb$sampling_unit_code) == nrow(assessment_anb)
 
 ```
+
+
+#### Check completed
+
+```{r}
+dendro_records <- trees_a3a4 %>%
+    mutate(dendro_record = TRUE) %>%
+    mutate(point_code = str_c(plot_id, "_1")) %>%
+    distinct(point_code, dendro_record)
+    
+veg_records <- cover_species %>%
+    mutate(veg_record = TRUE) %>%
+    mutate(point_code = str_c(plot_id, "_1")) %>%
+    distinct(point_code, veg_record)
+
+    
+check_admin <- admin_anb %>%
+    left_join(dendro_records, by = "point_code") %>%
+    mutate(dendro_record = ifelse(db == "foresthab" & is.na(dendro_record), FALSE, dendro_record)) %>%
+    left_join(veg_records, by = "point_code") %>%
+    mutate(veg_record = ifelse(is.na(veg_record), FALSE, veg_record)) %>%
+    left_join( distinct( assessment_anb, point_code, type_observed, type_cover_circle), by = "point_code")
+```
+
 
 #### Check cover sum in circle plot
 
@@ -887,13 +913,12 @@ check_type_cover_circle <- type_observed %>%
     group_by(point_code) %>% 
     mutate(sum_cover = sum(type_observed_cover_circle)) %>%
     ungroup() %>%
-    filter(abs(sum_cover - 1) > 0.2) %>%
+    filter(abs(sum_cover - 100) > 2) %>%
     select(point_code, segment_id, type_observed_circle, type_observed_cover_circle, sum_cover)
 
 check_type_cover_circle %>%
     kable() %>%
     kable_styling()
-
 
 ```
 
@@ -902,7 +927,7 @@ check_type_cover_circle %>%
 
 ```{r}
 check_allow_other_type <- assessment_anb %>%
-    left_join(select(admin_anb, point_code, lsvi_measurement)) %>%
+    left_join(select(admin_anb, point_code, lsvi_measurement), by = "point_code") %>%
     filter(lsvi_measurement) %>%
     filter(!is_type_target) %>%
     filter(!allow_other_type) %>%
@@ -922,17 +947,13 @@ check_allow_other_type %>%
 ### Combine sample table with admin data
 
 ```{r}
-main_type_anb <- c("6510", "4010", "4030", "2310", "2330")
+main_type_anb <- c("6510", "4010", "4030", "2310", "2330", "91E0", "9130", "9160", "9190", "9120", "9110")
 ```
 
 Next, we join the sample table and the admin data. We join by the point_code, because and assessment is done for all target types (sampling units) in a reference point. However we only select the sampling units for the types that were assigned to ANB field work team. These types belong to the following main types `r main_type_anb`. 
 
 
 ```{r}
-coordinates <- coordinates %>%
-    mutate(point_code = str_c(as.character(location_id), "_1")) %>%
-    rename(x_assessment = x_measured,
-           y_assessment = y_measured)
 
 sample_admin_anb <- samples_grts %>%
    #select(-db_ref) %>%
@@ -946,28 +967,29 @@ check <- n_distinct(sample_admin_anb$sampling_unit_code) == nrow(sample_admin_an
 check_n <- sample_admin_anb %>%
     group_by(sampling_unit_code) %>%
     mutate(n = n()) %>%
-    ungroup()
+    ungroup() 
 
-#dubbele coödinaten voor 4 plots
+#dubbele coödinaten voor 4 plots --> te checken
 
 ```
 
-#### Check coordinates
 
-Some sampling units have two different measured coordinates. For now, we select the measured coordinates that are closest to the original reference point.
 
 ```{r}
-check_coordinates_double <- check_n %>%
-    filter(n > 1) %>%
+check_coordinates_double_or_error <- check_n %>%
+    filter(n > 1 | x_assessment > 100000000000) %>%
     select(sampling_unit_code, point_code, assessment_source, lsvi_measurement, x, y, x_assessment, y_assessment, distance_from_refpoint)
 
-write.table(check_coordinates_double, "../../output/check_coordinates_double.txt")
+write.table(check_coordinates_double_or_error, "../../output/check_coordinates_double.txt")
 
-check_coordinates_double %>%
+check_coordinates_double_or_error %>%
     kable() %>%
     kable_styling()
 
 sample_admin_anb <- sample_admin_anb %>%
+    mutate(x_assessment = ifelse(x_assessment > 100000000000, NA, x_assessment),
+           y_assessment = ifelse(y_assessment > 100000000000, NA, y_assessment),
+           distance_from_refpoint = ifelse(x_assessment > 100000000000, NA, distance_from_refpoint)) %>%
     mutate(wt = ifelse(is.na(distance_from_refpoint), 0,  distance_from_refpoint)) %>%
     group_by(sampling_unit_code) %>%
     top_n(1, desc(wt)) %>%
@@ -981,7 +1003,7 @@ check <- n_distinct(sample_admin_anb$sampling_unit_code) == nrow(sample_admin_an
 For some sampling units the measured location is more tha 100 meters away from the reference point. In some cases the distance is extremely large and probably the point_code in the database is incorrect.
 
 ```{r}
-check_distance <-  check_n %>%
+check_distance <-  sample_admin_anb %>%
     filter(distance_from_refpoint > 100) %>%
     select(sampling_unit_code, point_code, assessment_source, lsvi_measurement, distance_from_refpoint, x, y, x_assessment, y_assessment) %>%
     arrange(desc(distance_from_refpoint))
@@ -1002,7 +1024,7 @@ ANB also records in most cases the observed habitat type/land cover class when a
 ```{r}
 
 sample_assessments_anb <- sample_admin_anb %>%
-    left_join(assessment_anb, by = c("sampling_unit_code", "point_code", "grts_ranking_draw", "sac", "type_target")) %>%
+    left_join(assessment_anb, by = c("sampling_unit_code", "point_code", "grts_ranking_draw",  "type_target")) %>%
     mutate(is_type_target = ifelse(assessment_source %in% c("field assessment", "orthophoto"),
                                    ifelse(!lsvi_measurement, FALSE, is_type_target),
                                    is_type_target),
@@ -1029,6 +1051,15 @@ check <- sample_assessments_anb %>%
 
 ### Additional checks
 
+#### Assessment date missing
+
+```{r}
+check_assessment_date <- sample_assessments_anb %>%
+    filter(assessment_source == "field assessment") %>%
+    select(point_code, sampling_unit_code, assessment_source, lsvi_measurement, type_target, type_observed, assessment_date, completed)
+```
+
+
 #### Sampling units for which the subtype of the observed type is unknown
 
 ```{r}
@@ -1039,7 +1070,7 @@ check_subtype <- sample_assessments_anb %>%
     filter(type_observed %in% subtypes$main_type)
 ```
 
-#### Observed type was not assigned to ANB or no sampl was drawn for observed type
+#### Observed type was not assigned to ANB or no sample was drawn for observed type
 
 ```{r}
 
@@ -1240,3 +1271,5 @@ mhq_terr_assessments %>%
     filter(!is.na(assessment_date)) %>%
     slice(1000:1009)
 ```
+
+
