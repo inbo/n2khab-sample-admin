@@ -280,15 +280,25 @@ check_plots_data_import %>%
 
 Vegetation type cover is measured both in the square plot and the circle plot. 
 The field protocol prescribes that a plot is only recorded when the plot center is located within (one of) the target habitat type(s). 
-When the observed type is different from (one of) the target type(s), the sampling unit can be measured when grts_ranking_draw of the reference point is smaller than the largest rts_ranking_draw in the sample of the observed type. 
+When the observed type is different from (one of) the target type(s), the sampling unit can be measured when grts_ranking_draw of the reference point is smaller than the largest grts_ranking_draw in the sample of the observed type. 
 
 In some cases the subtype is not specified. When this is the case, we assume that the subtype of the observed type corresponds to the target type.
 
-Some measured sampling units contain different habitat types or other cover types. 
+Some measured sampling units contain different habitat types or other land cover/ land use types (for example 'akker'). 
 However it is not explicitely recorded which of the cover types is located in the reference point. 
 Yet this is essential information to determine if a sampling unit is valid. 
-Therefore, when a plot contains different cover types we assume that the reference point is located in the type observed in the square plot that corresponds to (one of) the target type(s). 
-When none of the target habitat types are observed we assume that the reference point is located in the type that belongs to the same main type as (one of) the target habitat types. We apply these rules and check of we select one type for each reference point this way.
+Therefore, when a plot contains different cover types we define a set of assumptions:
+
+- We assume that the reference point is located in the type observed in the square plot that corresponds to (one of) the target type(s). 
+
+- When none of the target habitat types are observed we assume that the reference point is located in the type that belongs to the main type of (one of) the target types. 
+For example, if we observe 6510_hus and 4010 in a sampling unit and the targte type is 6510_hu, then we assume that the reference point is located in 6510_hu. 
+
+- When neither the target type(s) or the main type (of the tartget type(s)) is observed, we assume that the reference point is located in the observed type with the largest cover. These situations have to be checked by the field work coordinator.
+
+- It can occur that we have two target types and we observe both target types. Such a situation has to be checked by the field work coordinator.
+
+We apply these rules and check of we select one type for each reference point this way.
 
 To summarise the observed habitat types or other cover types we create following variables:
 
