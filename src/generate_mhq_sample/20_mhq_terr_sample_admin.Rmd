@@ -926,12 +926,9 @@ check_type_cover_circle %>%
     kable() %>%
     kable_styling()
 
+write.table(check_type_cover_circle, "../../output/check_type_cover_circle_anb.txt")
+
 ```
-
-
-
-
-
 
 ### Combine sample table with admin data
 
@@ -968,9 +965,9 @@ check_n <- sample_admin_anb %>%
 ```{r}
 check_coordinates_double_or_error <- check_n %>%
     filter(n > 1 | x_assessment > 100000000000) %>%
-    select(sampling_unit_code, point_code, assessment_source, lsvi_measurement, x, y, x_assessment, y_assessment, distance_from_refpoint)
+    distinct(point_code, assessment_source, lsvi_measurement, x, y, x_assessment, y_assessment, distance_from_refpoint)
 
-write.table(check_coordinates_double_or_error, "../../output/check_coordinates_double.txt")
+write.table(check_coordinates_double_or_error, "../../output/check_coordinates_anb.txt")
 
 check_coordinates_double_or_error %>%
     kable() %>%
@@ -994,11 +991,13 @@ For some sampling units the measured location is more tha 100 meters away from t
 
 ```{r}
 check_distance <-  sample_admin_anb %>%
-    filter(distance_from_refpoint > 100) %>%
-    select(sampling_unit_code, point_code, assessment_source, lsvi_measurement, distance_from_refpoint, x, y, x_assessment, y_assessment) %>%
+    filter(distance_from_refpoint > 100 | (!lsvi_measurement & distance_from_refpoint > 5)) %>%
+    select(sampling_unit_code, point_code, assessment_source, inaccessible, lsvi_measurement, distance_from_refpoint, x, y, x_assessment, y_assessment) %>%
     arrange(desc(distance_from_refpoint))
 
-write.table(check_distance, "../../output/check_distance.txt")
+n_location_change <- sum(sample_admin_anb$distance_from_refpoint > 1, na.rm = TRUE)
+
+write.table(check_distance, "../../output/check_distance_anb.txt")
 
 check_distance %>%
     kable() %>%
@@ -1057,6 +1056,7 @@ sample_assessments_anb <- sample_assessments_anb %>%
 check_allow_other_type <- sample_assessments_anb %>%
     filter(lsvi_measurement) %>%
     filter(!is_type_target) %>%
+    filter(!is.na(max_grts_ranking_draw)) %>%
     filter(!allow_other_type) %>%
     select(point_code, sampling_unit_code, grts_ranking_draw, type_target, type_observed, max_grts_ranking_draw, allow_other_type)
 
@@ -1089,12 +1089,12 @@ check_subtype <- sample_assessments_anb %>%
 check_anb_type <- sample_assessments_anb %>%
     filter(assessment_source == "field assessment") %>%
     filter(lsvi_measurement) %>%
-    filter(! str_sub(type_observed, 1 , 4) %in% main_type_anb) %>%
+    filter(! str_sub(type_observed, 1 , 4) %in% main_type_anb | type_observed == "9120") %>%
     select(sampling_unit_code, type_target, type_observed)
 
-#write.table(check_anb_type, "../../output/check_anb_type.txt")
+write.table(check_anb_type, "../../output/check_anb_type.txt")
 
-# check_anb_type %>% 
+# check_anb_type %>%
 #     kable() %>%
 #     kable_styling()
 
