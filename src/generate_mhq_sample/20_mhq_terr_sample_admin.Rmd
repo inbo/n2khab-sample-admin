@@ -38,9 +38,9 @@ samples_grts <- read_vc(file = "mhq_terr_refpoints", root = "../../data")
 
 ### Read INBO sample administration data 
 
-INBO documents the administration of mhq sample assessments in separate files. From this file we van determine the assessment status, the assessment year, wether a location is measured and wether a reference point is changed. 
+INBO documents the administration of mhq sampling unit assessments in separate files. From this file we can determine the assessment status, the assessment year, wether a sampling unit is measured and wether a reference point is changed. 
 There is one file for grassland (excluding 6510) and marsh types and one file for coastal dune types. 
-Later we will propose a standardised file for all mhq samples.  
+Later we will propose a standardised file for all mhq sampling units.  
 
 #### Grassland habitat (excluding 6510) and marshes
 
@@ -437,7 +437,7 @@ check_sampling_unit_code <- assessment_inbo %>%
 
 #### Check cover of observed type in plot 
 
-We check what the cover is of the type observed in the center of the plot. In the following table we show the sampling units with a cover lower than 50 %. These ssampling units will be checked.
+We check what the cover is of the type observed in the center of the plot. In the following table we show the sampling units with a cover lower than 50 %. These sampling units will be checked.
 
 ```{r}
 assessment_inbo %>%
@@ -523,7 +523,7 @@ check <- n_distinct(sample_assessments_inbo$sampling_unit_code) == nrow(sample_a
 
 #### Check lsvi_measurement samples not in INBOveg database
 
-Normally all samples measured before 2019 should already have been imported in the INBOveg database. However the data from the following samples are still missing in the database.
+Normally all sampling units measured before 2019 should already have been imported in the INBOveg database. However the data from the following sampling units are still missing in the database.
 
 ```{r}
 
@@ -795,7 +795,7 @@ sample_forest_orig <- sample_forest_orig %>%
 
 In the circle plot all habitat types and other land cover classes are recorded and mapped. In the square plot only the habitat type/land cover class in the center of the plot is recorded. There is no data on the cover of the type in the square plot is the Access database, however we could derive this from the mapping in the circle plot.
 
-For some samples for main types 6510, 9130 and 2330, the observed subtype is not specified. When this is the case we assume that the subtype corresponds to the target type.
+For some sampling units for main types 6510, 9130 and 2330, the observed subtype is not specified. When this is the case we assume that the subtype corresponds to the target type.
 
 
 ```{r}
@@ -827,20 +827,24 @@ plot_types <- type_observed_corr %>%
           match_type = (type_observed_square[1] %in% type_observed_circle) | (is.na(type_observed_square[1])),
           type_cover_circle = str_c(str_c(str_replace_na(type_observed_cover_circle), "% ", type_observed_circle), collapse =  " + ")) %>%
     ungroup() %>%
-    mutate(type_observed = ifelse(is.na(type_observed_circle), type_observed_square, type_observed_circle)) %>%
+    mutate(type_observed = ifelse(is.na(type_observed_circle), type_observed_square, type_observed_circle),
+           main_type_observed = str_sub(type_observed, 1, 4),
+           has_subtypes = type_observed %in% subtypes$type & type_observed != "9120",
+           subtype_missing = type_observed == main_type_observed & has_subtypes) %>%
     left_join(select(samples_grts, sampling_unit_code, point_code, grts_ranking_draw, type_target, sac), by = c("point_code")) %>%
     mutate(main_type = str_sub(type_target, 1, 4),
-           type_observed = ifelse(type_observed == "6510" & main_type == "6510", as.character(type_target), type_observed),
-           type_observed = ifelse(type_observed == "2330" & main_type == "2330", as.character(type_target), type_observed),
-           type_observed = ifelse(type_observed == "9130" & main_type == "9130", as.character(type_target), type_observed),
-           type_observed = ifelse(type_observed == "9130" & main_type != "9130", "9130_end", type_observed),
-           is_type_target = type_target == type_observed,
-           type_cover = type_observed_cover_circle,
-           is_main_type_target = str_sub(type_observed, 1, 4) == main_type) %>%
+           is_main_type_target = main_type_observed == main_type) %>%
     group_by(point_code) %>%
-    mutate(is_type_target_plot = sum(is_type_target, na.rm = TRUE) > 0,
-           is_main_type_target_plot = sum(str_sub(type_observed, 1, 4) == main_type) > 0,
+    mutate(is_main_type_target_plot = sum(str_sub(type_observed, 1, 4) == main_type) > 0,
            n_habtarget = n_distinct(type_target)) %>%
+    ungroup() %>%
+    filter(!is_main_type_target_plot |
+           (is_main_type_target_plot & is_main_type_target)) %>%
+    mutate(type_observed = ifelse(subtype_missing & is_main_type_target, as.character(type_target), type_observed),
+           is_type_target = type_target == type_observed,
+           type_cover = type_observed_cover_circle) %>%
+    group_by(point_code) %>%
+    mutate(is_type_target_plot = sum(type_observed == type_target) > 0) %>%
     ungroup()
 
 check_match_type <- plot_types %>%
@@ -871,6 +875,10 @@ plot_types_center <- plot_types %>%
         group_by(point_code) %>%
            mutate(n_center_filter = sum(type_in_center, na.rm = TRUE)) %>%
     ungroup()
+
+check <- plot_types_center %>%
+    group_by(point_code) %>%
+    filter(n() > 1)
 ```
 
 
@@ -1113,27 +1121,26 @@ sample_assessments <- bind_rows(
     mutate(type_target = factor(type_target, levels= levels(types$type)),
            assessment_source = factor(assessment_source, levels = c("field assessment", "orthophoto")),
            sample_source = "habitatmap",
-           is_valid = is_type_target & (distance_from_refpoint <= 110) & is.na(inaccessible))
+           is_valid = is_type_target & (distance_from_refpoint <= 110) & is.na(inaccessible),
+           is_valid_type = is_type_target,
+           is_valid_refpoint = (distance_from_refpoint <= 110) & is.na(inaccessible))
 ```
 
 
-## Create new sampling units when is_type_target = FALSE
+## Create new sampling units when allow_other_type = TRUE
 
-When a location is measured and the observed type is different from the target type, we create a new sampling unit within the scheme of the observed type. 
-
-The new sampling unit is valid when allow_other_type = TRUE and when the distance from the reference point is smaller than 110 meters
+When a reference point is measured and the observed type is different from the target type, we create a new sampling unit within the scheme of the observed type. We only do this for valid assessments (allow_other_type = TRUE and distance_from refpoint)
 
 ```{r}
 new_sampling_units <- sample_assessments %>%
-    filter(assessment_source == "field assessment" & !is.na(allow_other_type)) %>%
     filter(lsvi_measurement) %>%
-    filter(!is_type_target) %>%
-    filter(type_observed %in% types$type) %>%
+    filter(allow_other_type & distance_from_refpoint <= 110) %>%
     mutate(sampling_unit_code = str_c(grts_ranking_draw, "_", type_observed),
            type_target = factor(type_observed, levels = levels(types$type)),
            phab = NA,
            is_type_target = TRUE,
-           is_valid = allow_other_type & distance_from_refpoint <= 110,
+           is_valid = TRUE,
+           is_valid_type = TRUE,
            allow_other_type = NA,
            sample_source = "mhq assessment",
            scheme = factor(str_c("HQ", str_sub(type_target, 1, 4)), levels = levels(schemes_mhq$scheme))) %>%
@@ -1153,20 +1160,21 @@ sample_assessments_update <- bind_rows(
 ```
 
 
-## Handle location changes
+## Handle reference point changes
 
-We change the point_code of the locations for which the location was changed. 
-This is done by adding adding 1 to the number at the end of the point_code. 
+When lsvi is measured at a different location than the original reference point, we create a new point_code for the reference point. 
+This is done by adding adding 1 to the number at the end of the point_code.  
+We consider a reference point as changed when the difference between the measured location and the original reference point is larger than 1 meter. Smaller differences are assumed unintentional.  
 
-Next we create assessments for the original coordinates of the changed locations. It is assumed that for the changed locations, the target type is not present in the original location.
+Next we create assessments for the original reference points. It is assumed that for the changed locations, the target type is not present in the original reference point.
 
 ```{r}
 sample_units_change_location <-  sample_assessments_update %>%
-    filter(lsvi_measurement) %>%
+    #filter(lsvi_measurement) %>%
     filter(distance_from_refpoint > 1) %>%
-    filter(is_type_target) %>%
-    mutate(temp_n = as.numeric(str_sub(point_code, -1)),
-           point_code = str_c(grts_ranking_draw, "_", temp_n +1),
+    #filter(is_type_target) %>%
+    mutate(ranking_code = str_sub(point_code, end = -3),
+           n_temp = as.numeric(str_sub(point_code, start = -1)),
            x = x_assessment,
            y = y_assessment,
            is_centroid = FALSE,
@@ -1175,7 +1183,10 @@ sample_units_change_location <-  sample_assessments_update %>%
     mutate(grts_ranking = grts_master[as(., "Spatial")]) %>%
     st_drop_geometry() %>%
     mutate(x = x_assessment,
-           y = y_assessment)
+           y = y_assessment) %>%
+    group_by(ranking_code) %>%
+    mutate(point_code = str_c(ranking_code, "_", max(n_temp) + rank(x, y, ties.method = "min"))) %>%
+    ungroup()
 
 #check: no lsvi measurement AND location change
 
@@ -1192,6 +1203,8 @@ sample_units_update_orig_location <- sample_assessments_update %>%
            x = x_orig,
            y = y_orig,
            is_valid = FALSE,
+           is_valid_type = FALSE,
+           is_valid_refpoint = TRUE,
            allow_other_type = NA,
            type_observed = NA,
            type_cover_square = NA,
@@ -1205,12 +1218,9 @@ sample_assessments_update2 <- sample_assessments_update %>%
     bind_rows(sample_units_change_location) %>%
     bind_rows(sample_units_update_orig_location) %>%
     arrange(point_code)
+
+
 ```
-
-
-
-
- 
 
 ## Export
 
@@ -1232,7 +1242,8 @@ mhq_terr_refpoint_update <- mhq_terr_refpoint %>%
 check <- sample_assessments_update2 %>%
     group_by(scheme, sampling_unit_code, point_code) %>%
     mutate(n = n()) %>%
-    ungroup()
+    ungroup() %>%
+    filter(n > 1)
 
 write_vc(mhq_terr_refpoint_update, file = "mhq_terr_refpoints_check_update", root = "../../data", sorting = c("scheme", "sampling_unit_code", "point_code"), strict = FALSE, optimize = FALSE)
 
@@ -1246,6 +1257,8 @@ The table mhq_terr_refpoints_validity contains following variables:
 - point_code
 - date
 - is_valid
+- is_valid_type
+- is_valid_refpoint
 
 The variabe is_valid determines if a sampling unit is valid for mhq at the location corresponding to point_code.
 
@@ -1255,7 +1268,7 @@ The table below shows some records as an example.
 mhq_refpoints_validity <- sample_assessments_update2 %>%
     filter(!is.na(is_valid)) %>%
     filter(!is.na(scheme)) %>%
-    select(scheme, sampling_unit_code, point_code, date = assessment_date, is_valid)
+    select(scheme, sampling_unit_code, point_code, date = assessment_date, is_valid, is_valid_type, is_valid_refpoint)
 
 write_vc(mhq_refpoints_validity, file = "mhq_terr_refpoints_validity", root = "../../data", sorting = c("scheme", "sampling_unit_code", "point_code"), optimize = FALSE, strict = FALSE)
 ```
@@ -1272,7 +1285,7 @@ The table mhq_terr_assessments gives an overview of all assessments (see below f
 
 ```{r}
 mhq_terr_assessments <- sample_assessments_update2 %>%
-    select(point_code, type_target, is_type_target, type_observed, inaccessible, assessment_date, assessment_source, x, y)
+    select(point_code, type_target, is_type_target, type_observed, inaccessible, assessment_date, assessment_source, fieldwork_team, x, y)
 
 write_vc(mhq_terr_assessments, file = "mhq_terr_assessments", root = "../../data", sorting = c( "point_code", "type_target"), optimize = FALSE, strict = FALSE)
 ```
@@ -1283,4 +1296,27 @@ mhq_terr_assessments %>%
     slice(1000:1009)
 ```
 
+### Create mhq_terr_measurements
 
+The table mhq_terr_measurements gives an overview of all measured plots (see below for example records). 
+
+```{r}
+mhq_terr_measurements <-  sample_assessments_update2 %>%
+    filter(lsvi_measurement) %>%
+    #filter(is_valid) %>%
+    filter(is_type_target  | !allow_other_type | is.na(is_type_target)) %>%
+    distinct(sampling_unit_code, point_code, assessment_date, type_observed, completed, type_cover_circle, type_cover_square, distance = distance_from_refpoint)
+
+check <- mhq_terr_measurements %>%
+    group_by(point_code) %>%
+    mutate(n = n()) %>%
+    ungroup() %>%
+    filter(n > 1)
+
+write_vc(mhq_terr_measurements, file = "mhq_terr_measurements", root = "../../data", sorting = c( "point_code", "sampling_unit_code"), optimize = FALSE, strict = FALSE)
+```
+
+```{r}
+mhq_terr_measurements %>%
+    slice(100:109)
+```
