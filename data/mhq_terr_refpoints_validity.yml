@@ -6,8 +6,8 @@
   - scheme
   - sampling_unit_code
   - point_code
-  hash: 7d920ae0452de8e56ed6cc800e0fa71b15738c34
-  data_hash: 14e48e4c79eed9780ca4146a95c7421698b9561a
+  hash: 2208c655d02cd3de1d13ef804b7fd24274a5f583
+  data_hash: fef13dc7261574dcc7da3c6c4697287662d0f420
 scheme:
   class: factor
   labels:
@@ -147,4 +147,8 @@ date:
   class: Date
   format: '%Y-%m-%d'
 is_valid:
+  class: logical
+is_valid_type:
+  class: logical
+is_valid_refpoint:
   class: logical

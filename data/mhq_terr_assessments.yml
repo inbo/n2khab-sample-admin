@@ -5,8 +5,8 @@
   sorting:
   - point_code
   - type_target
-  hash: d930a6193d9335fe241a9d0534a84a9e65d7d53a
-  data_hash: fad5f562b755ff3fa61fccda41bc7166561d47a2
+  hash: cf137677e05a4049743c34cefa98ed4496184f06
+  data_hash: b155870112dee43057d3eb22d20bbd6661c8819f
 point_code:
   class: character
 type_target:
@@ -257,4 +257,6 @@ x:
 'y':
   class: numeric
 inaccessible:
+  class: character
+fieldwork_team:
   class: character
