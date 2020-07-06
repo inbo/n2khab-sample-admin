@@ -753,7 +753,7 @@ admin_anb <- sample_status %>%
 
                                     ifelse(is.na(remark), FALSE,str_detect( remark, "verlegd")),
                                     NA),
-           assessment_year = ifelse(is.na(assessment_date), 
+           assessment_year = ifelse(is.na(assessment_date) & (!is.na(assessment_source) | !is.na(inaccessible)), 
                                     as.numeric(format(date_status, "%Y")), 
                                     as.numeric(format(assessment_date, "%Y")))) %>%
     distinct(db, point_code, assessment_source, inaccessible, assessment_date, assessment_year, lsvi_measurement, completed, location_change) 
@@ -1057,6 +1057,11 @@ sample_assessments_anb <- sample_assessments_anb %>%
            type_observed = ifelse(lsvi_measurement & type_observed == "4 : heide- en struikvegetaties" & type_target %in% c("4010", "4030"),
                                      as.character(type_target), 
                                     type_observed)) 
+
+
+check <- sample_assessments_anb %>%
+    filter(is.na(assessment_source) & !is.na(assessment_date))
+
 ```
 
 
