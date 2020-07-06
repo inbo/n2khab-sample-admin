@@ -474,7 +474,7 @@ check_allow_other_type %>%
 ### Combine sample table with admin data
 
 ```{r}
-types_inbo <- c("1330_hpr", "2120", "2130_had", "2130_hd", "2160", "2170", "2180", "2190", "2190_mp", "6120", "6230_hn","6230_hmo","6230_ha", "6230_hnk", "6230", "6410_mo" ,"6410_ve" , "7140_meso","7140_oli")
+types_inbo <- c("1330_da", "1330_hpr", "2120", "2130_had", "2130_hd", "2160", "2170", "2180", "2190", "2190_mp", "6120", "6230_hn","6230_hmo","6230_ha", "6230_hnk", "6230", "6410_mo" ,"6410_ve" , "7140_meso", "7140_oli", "91E0_sf")
 ```
 
 Next, we join the sample table and the admin data. 
@@ -484,11 +484,10 @@ We join by the point_code, because and assessment is done for all target types (
 sample_admin_inbo <- samples_grts %>%
     filter(type_target %in% types_inbo) %>%
     #select(-db_ref) %>%
-    full_join(admin_inbo, by = c("point_code", "grts_ranking_draw")) %>%
+    left_join(admin_inbo, by = c("point_code", "grts_ranking_draw")) %>%
     mutate(distance_from_refpoint = round(sqrt((x_assessment- x)^2 + (y_assessment- y)^2), 1)) 
 
 check <- n_distinct(sample_admin_inbo$sampling_unit_code) == nrow(sample_admin_inbo)
-
 
 check <- sample_admin_inbo %>%
     group_by(sampling_unit_code) %>%
