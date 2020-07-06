@@ -1,0 +1,320 @@
+# Inleiding
+
+Via het [meetnet (biotische) habitatkwaliteit](https://pureportal.inbo.be/portal/files/4339795/Westra_etal_2014_MonitoringNatura2000Habitats.pdf) monitort het INBO de habitatkwaliteit van Natura 2000 - habitattypen. In dit document analyseren we de voortgang van het meetnet na 6 jaar en selecteren we prioritair af te werken meetpunten.
+
+# Analyse voortgang
+
+## Importeer overzichtsbestand gegevensinzameling
+
+Het bestand 'mhq_terr_assessments' geeft een overzicht van de gegevensinzameling (assessments) voor alle terrestrische meetpunten van het meetnet habitatkwaliteit (monitoring habitat quality = mhq).
+
+```{r}
+
+mhq_refpoints <- read_vc("mhq_terr_refpoints_check_update", "../../data")
+mhq_assessments <- read_vc("mhq_terr_assessments", "../../data")
+mhq_validity <- read_vc("mhq_terr_refpoints_validity", "../../data")
+mhq_measurements <- read_vc("mhq_terr_measurements", "../../data")
+
+```
+
+
+## Haal steekproefgrootte uit bestand met berekende steekproefgroottes
+
+We gaan uit van de steekproefgroottes zoals berekend in het rapport van [Westra et al. (2014)](https://pureportal.inbo.be/portal/files/4339795/Westra_etal_2014_MonitoringNatura2000Habitats.pdf).
+
+```{r}
+get_samplesize <- function(samplesize_calc = "../../mhq_sample-admin_data/original/sample/samplesize/steekproefgrootte_synVBI_versie20140324_bossen.txt", habtypes = "All", forestsyn = TRUE) {
+
+  samplesize <- read.table(samplesize_calc, header = TRUE, dec = ",")
+
+if (habtypes == "All"){
+
+  samplesize_select <- samplesize
+
+} else {
+
+  samplesize_select <- samplesize %>%
+      filter(habsubt %in% habtypes)
+}
+
+if (forestsyn) {
+    samplesize_select <- samplesize_select %>%
+    mutate(n_visits_insidesac = n_habt_SBZH_bruto_syn + extra_habsubt_SBZH_bruto_syn,
+           samplesize_insidesac = n_habt_SBZH_netto_syn + extra_habsubt_SBZH_netto_syn,
+            n_visits_outsidesac = n_habt_buiten_bruto_syn + extra_habsubt_buiten_bruto_syn,
+           samplesize_outsidesac = n_habt_buiten_netto_syn + extra_habsubt_buiten_netto_syn)
+    
+}  else {
+    samplesize_select <- samplesize_select %>%
+        mutate(n_visits_insidesac = n_habt_SBZH_bruto + extra_habsubt_SBZH_bruto,
+               samplesize_insidesac = n_habt_SBZH_netto + extra_habsubt_SBZH_netto,
+                n_visits_outsidesac = n_habt_buiten_bruto + extra_habsubt_buiten_bruto,
+               samplesize_outsidesac = n_habt_buiten_netto + extra_habsubt_buiten_netto)    
+}
+
+#long formaat
+samplesize_select_long1 <- samplesize_select %>%
+  select(habsubt, inside = n_visits_insidesac, outside = n_visits_outsidesac ) %>%
+  gather(inside, outside, key = "sac", value = "n_visits")
+
+samplesize_select_long2 <- samplesize_select %>%
+  select(habsubt, inside = samplesize_insidesac, outside = samplesize_outsidesac ) %>%
+  gather(inside, outside, key = "sac", value = "samplesize")
+
+samplesize_select_long3 <- samplesize_select %>%
+  select(habsubt, inside = prop_hab_SBZH, outside = prop_hab_buiten ) %>%
+  gather(inside, outside, key = "sac", value = "detection_rate_expected")
+
+samplesize_select_long <- samplesize_select_long1 %>%
+  left_join(samplesize_select_long2, by = c("habsubt", "sac")) %>%
+  left_join(samplesize_select_long3, by = c("habsubt", "sac")) %>%
+    rename(type = habsubt) %>%
+    mutate(sac = ifelse(sac == "inside", 1,
+                        ifelse(sac == "outside", 0, NA)))
+
+return (samplesize_select_long)
+
+}
+```
+
+
+```{r}
+samplesize_mhq_forest <- get_samplesize(samplesize_calc = "../../mhq_sample-admin_data/original/sample/samplesize/steekproefgrootte_synVBI_versie20140324_bossen.txt") %>%
+    filter(str_sub(type, end = 1) == "9" | type == "2180")
+
+samplesize_mhq_openhab <- get_samplesize(samplesize_calc = "../../mhq_sample-admin_data/original/sample/samplesize/steekproefgrootte_versie20140324.txt", forestsyn = FALSE) %>%
+    anti_join(samplesize_mhq_forest, by = "type")
+
+samplesize_mhq <- samplesize_mhq_openhab %>%
+    bind_rows(samplesize_mhq_forest) %>%
+    arrange(type)
+
+```
+
+
+## Overzicht voortgang
+
+```{r}
+
+mhq_progress_details <- mhq_assessments %>%
+    left_join(select(mhq_refpoints, scheme, sampling_unit_code, point_code, type_target, sac, grts_ranking_draw, legacy_site), by = c("point_code", "type_target")) %>%
+    # filter(!is.na(assessment_source)) %>%
+    left_join(mhq_measurements, by = c("sampling_unit_code", "point_code", "type_observed", "assessment_date")) %>%
+    left_join(select(mhq_validity, -date), by = c("sampling_unit_code", "point_code", "scheme")) %>%
+    mutate(lsvi_measurement = !is.na(completed))
+
+assessments_overview <- mhq_progress_details %>%
+    group_by(type_target, sac, fieldwork_team) %>%
+    summarise(n_sampling_units = n_distinct(sampling_unit_code),
+              n_assessed = sum(assessment_source %in% c("field assessment", "orthophoto"), na.rm = TRUE)) %>%
+    ungroup() %>%
+    mutate(progress_assess_pct = round(n_assessed/n_sampling_units * 100, 0),
+           to_do_assessments = n_sampling_units - n_assessed) %>%
+    rename(type = type_target)
+```
+
+```{r}
+overview_spatial <- mhq_progress_details %>%
+    mutate(assessment = ifelse(!is.na(inaccessible), "inaccessible",
+                           ifelse(is.na(assessment_source), "no assessment", as.character(assessment_source))),
+           measured = ifelse(is.na(lsvi_measurement), FALSE, lsvi_measurement),
+           is_valid = ifelse(is.na(is_valid), "unknown", as.character(is_valid)),
+           status = ifelse(assessment %in% c("field assessment", "orthophoto"), 
+                           ifelse(measured, "assessment - measured", "assessment - not measured"),
+                           assessment)) %>%
+    st_as_sf(coords = c("x", "y"), crs = 31370) %>%
+    st_transform(crs = 4326)
+
+
+```
+
+```{r}
+
+locaties_shared <- SharedData$new(overview_spatial) 
+  
+colorpal <- c(INBOgreen, INBOred,  "yellow", INBOblue)
+
+factpal <- colorFactor(colorpal, locaties_shared$status)
+
+bscols(
+  list(
+    bscols(widths = c(3, 3, 3, 3),
+    filter_checkbox("assessment", "assessment", locaties_shared, ~assessment),
+    filter_checkbox("measured", "measured", locaties_shared, ~measured),
+    filter_checkbox("is_valid", "is valid sampling unit", locaties_shared, ~is_valid),
+    filter_checkbox("legacy_site", "legacy site", locaties_shared, ~legacy_site)),
+    bscols(widths = c(3, 4, 4),
+    filter_checkbox("fieldwork_team", "fieldwork team", locaties_shared, ~fieldwork_team),
+    filter_select("scheme", "monitoring scheme", locaties_shared, ~scheme),
+    filter_select("type_target", "target type", locaties_shared, ~type_target)),
+    locaties_shared %>%
+      leaflet() %>%
+      addTiles() %>%
+      addCircleMarkers(radius = 2, opacity = 0.6, fillOpacity = 0.6, color = ~factpal(status),
+                       label = ~sampling_unit_code) %>%
+      addLegend("bottomright", pal = factpal, values = ~status,
+                title = "status", opacity = 1),
+    plot_ly(locaties_shared, x = ~status) %>% 
+      add_histogram(color = ~status, colors = colorpal) %>%
+      layout(legend = list(x = 100, y = 0.5))
+    ) 
+)
+```
+
+
+
+
+
+```{r}
+lsvi_measurements <- mhq_measurements %>% 
+    left_join(select(mhq_validity, -date), by = c("sampling_unit_code", "point_code")) %>%
+    left_join(distinct(mhq_refpoints, sampling_unit_code, type_target, point_code, sac, x, y), by = c("sampling_unit_code", "point_code")) %>%
+    left_join(distinct(mhq_assessments, type_target, point_code, fieldwork_team), by = c("point_code", "type_target")) %>%
+    mutate(type_observed = ifelse(is.na(type_observed), as.character(type_target), type_observed)) %>%
+    distinct(assessment_date, point_code,  type_observed, sac, is_valid_type, is_valid_refpoint, is_valid, fieldwork_team, distance, x, y) 
+
+check <- lsvi_measurements %>%
+    group_by(point_code) %>%
+    filter(n() > 1)
+
+lsvi_measurements_overview  <- lsvi_measurements %>% 
+    mutate(is_valid = ifelse(is.na(is_valid), TRUE, is_valid),
+           type_observed) %>% 
+    group_by(fieldwork_team, type_observed, sac) %>%
+    summarise(n_measured = n(),
+              n_measured_valid = sum(is_valid),
+              n_invalid_type = sum(!is_valid_type, na.rm = TRUE),
+              n_invalid_distance = sum(!is_valid_refpoint, na.rm = TRUE)) %>%
+    ungroup() %>%
+    mutate(type = type_observed)
+    
+```
+
+
+```{r}
+samplesize_type <- samplesize_mhq %>%
+    mutate(samplesize = ceiling(samplesize)) 
+
+overview_progress <- assessments_overview %>%
+    left_join(lsvi_measurements_overview, by = c( "fieldwork_team", "sac", "type")) %>%
+    mutate(n_measured = ifelse(is.na(n_measured), 0, n_measured),
+           n_measured_valid = ifelse(is.na(n_measured_valid), 0, n_measured_valid)) %>%
+    left_join(samplesize_type, by = c("sac", "type")) %>%
+    mutate(progress_measurements_pct = ifelse(samplesize > 0, round(n_measured/samplesize *100, 0), NA),
+           progress_valid_measurements_pct = ifelse(samplesize > 0, round(n_measured_valid/samplesize *100, 0), NA)) %>%
+    select(fieldwork_team, type, sac, n_sampling_units, samplesize, n_assessed, n_measured, n_measured_valid, progress_assess_pct, progress_measurements_pct, progress_valid_measurements_pct, detection_rate_expected)
+```
+
+Tabel \@ref(tab:overview) geeft een overzicht van de voortgang, zowel voor het aantal te bezoeken punten conform de originele planning, als voor het aantal op te meten punten in verhouding tot de gewenste steekproefgrootte. 
+
+De opgemeten punten voor een bepaald habitat(sub)type omvatten zowel de opnames in meetpunten die geselecteerd werden voor dat habitat(sub)type (geobserveerd type is gelijk aan doeltype) als opnames in meetpunten die voor een andere type werd geselecteerd (geobserveerd is niet gelijk aan doeltype). Dit laatste geval beschouwen we als een geldige opname zolang de grts-ranking van het meetpunt lager is dan maximale grts-ranking in de steekproef van het geobserveerde type. Een opname is ook enkel geldig als het meetpunt maximaal over een lengte van 110 meter werd verschoven.     
+
+
+```{r overview}
+
+overview_progress %>%
+    select(fieldwork_team, type, sac, "Te bezoeken" = n_sampling_units, "Steekproefgrootte" = samplesize, "Bezocht" = n_assessed, "Opgemeten totaal" = n_measured, "Opgemeten geldig" = n_measured_valid, "Voortgang bezoeken (%)" = progress_assess_pct, "Voortgang meetpunten (%)" = progress_valid_measurements_pct) %>%
+    DT::datatable(caption = "Overzicht van het totaal aantal te bezoeken punten, de gewenste steekproefgrootte, het aantal bezochte meetpuntenpunten en het aantal opgemeten punten",
+                  filter = "top",
+                  rownames = FALSE
+                  ) 
+
+```
+
+
+
+
+# Selectie prioritair af te werken meetpunten
+
+Voor sommige types en strata staan we al verder dan voor anderen. Om er voor te zorgen dat we voor elke type en stratum aan minstens 50% van de totale steekproefgrootte zitten, maken we een selectie van prioritair af te werken meetpunten. Eerst berekenen we het aantal prioritair af te werken meetpunten en het verwacht aantal bezoeken dat daarvoor nodig is. Vervolgens selecteren we het prioritair gewenst aantal te bezoeken punten uit de selectie van de nog niet bezochte punten. Hiervoor baseren we ons op de grts-ranking.
+
+```{r}
+prioritair <- overview_progress %>%
+    mutate(samplesize_50 = ifelse(sac == 1 & (str_sub(type, end = 1) == "9" | type == "2180"), samplesize,  ceiling(samplesize/2)),
+        n_sampling_units_prioritair = pmax(0 , ceiling(samplesize_50) - n_measured_valid),
+        n_visits_prioritair = round(n_sampling_units_prioritair / detection_rate_expected), 0) %>%
+    select(fieldwork_team, type, sac, samplesize, samplesize_50, n_measured, n_measured_valid, n_sampling_units_prioritair, n_visits_prioritair)
+
+type_n_visits_prioritair <- prioritair %>%
+    select(fieldwork_team, type_target =type, sac, n_sampling_units_prioritair, n_visits_prioritair)
+```
+
+
+Tabel \@ref(tab:prioritair) toont het aantal prioritair op te meten steekproefpunten per type en per stratum.
+
+```{r prioritair}
+
+type_n_visits_prioritair %>%
+    select(fieldwork_team, type_target, sac, "Prioritair op te meten" = n_sampling_units_prioritair, "Prioritair te bezoeken" = n_visits_prioritair) %>%
+    datatable(caption = "Aantal prioritair op te meten punten en verwacht aantal bezoeken dat hiervoor nodig is",
+              rownames = FALSE,
+              filter = "top") 
+
+
+```
+
+
+
+Het bestand 'sampling_units_prioritair_grassland_marshes_inbo' bevat de prioritair af te werken meetpunten voor moerastypes en graslandtypes die aan INBO werden toegekend.
+
+```{r}
+
+sampling_unit_prioritair <- mhq_progress_details %>%
+    filter(is.na(assessment_source) & is.na(inaccessible)) %>%
+    left_join(type_n_visits_prioritair, by = c("fieldwork_team", "type_target", "sac")) %>%
+    group_by(fieldwork_team, type_target, sac) %>%
+    mutate(ranking_abs = rank(grts_ranking_draw),
+           priority = ranking_abs <= n_visits_prioritair) %>%
+    ungroup() %>%
+    filter(priority) %>%
+    group_by(point_code) %>%
+    mutate(n_type_target = n()) %>%
+    ungroup()
+
+samples_prioritair_grassland_marshes_inbo <- sampling_unit_prioritair %>%
+    filter(fieldwork_team == "inbo") %>%
+    filter(str_sub(type_target, 1, 1) %in% c("6", "7", "1")) %>%
+    select(sampling_unit_code, point_code, sac, type_target, n_type_target, n_sampling_units_prioritair, n_visits_prioritair, grts_ranking_draw, ranking_abs, x , y ) %>%
+    arrange(point_code, type_target, ranking_abs)
+
+samples_prioritair_grassland_marshes_inbo %>%
+    select(-n_visits_prioritair) %>%
+    write.csv2( "../../output/sampling_units_prioritair_grassland_marshes_inbo_versie2020-07-06.csv", row.names = FALSE)
+
+```
+
+
+```{r}
+samples_prioritair_openhab_forest_anb <- sampling_unit_prioritair %>%
+    filter(fieldwork_team == "anb") %>%
+    select(sampling_unit_code, point_code, sac, type_target, n_type_target, n_sampling_units_prioritair, n_visits_prioritair, grts_ranking_draw, ranking_abs, x , y ) %>%
+    arrange(type_target, ranking_abs)
+
+samples_prioritair_openhab_forest_anb %>%
+    select(-n_visits_prioritair) %>%
+    write.csv2( "../../output/sampling_units_prioritair__openhab_forest_anb_versie2020-07-06.csv", row.names = FALSE)
+
+```
+
+
+
+Indien op een locatie een ander type wordt waargenomen dan het doelhabitat, kan er een opname gebeuren voor het waargenomen type indien de grts-ranking van de locatie lager is dan de maximale grts-ranking in de prioritaire selectie van de steekproefpunten. De maximale grts_ranking per type en per stratum is weergegeven in het bestand 'max_grts_ranking'.  
+
+```{r}
+max_ranking <- sampling_unit_prioritair %>%
+    group_by(fieldwork_team, type_target, sac) %>%
+    summarise(max_grts_ranking = max(grts_ranking_draw)) %>%
+    ungroup()
+
+write.csv2(max_ranking, "../../output/max_grts_ranking.csv", row.names = FALSE)
+
+
+max_ranking  %>%
+    datatable(caption = "Maximale grts-ranking voor geldige opname",
+              rownames = FALSE,
+              filter = "top") 
+```
+
+
+
+
