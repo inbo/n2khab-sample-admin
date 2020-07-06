@@ -192,7 +192,7 @@ Note that INBO also measures the vegetation compostion in the circle plot.
 
 ```{r}
 
-export <- "export_inboveg_2020-03-30"
+export <- "export_inboveg_2020-07-06"
 
 classif_mhq <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/inboveg/", export, "/classif_mhq.csv"), stringsAsFactors = FALSE)
 header_mhq <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/inboveg/", export, "/header_mhq.csv"), stringsAsFactors = FALSE)

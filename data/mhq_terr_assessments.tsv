@@ -3515,7 +3515,7 @@ point_code	type_target	is_type_target	type_observed	assessment_date	assessment_s
 329841_1	2130_hd	NA	NA	NA	NA	53533.6	217390.1	NA	inbo
 329841_1	2160	NA	NA	NA	NA	53533.6	217390.1	NA	inbo
 3298997_1	1330_hpr	NA	NA	NA	NA	70397.6	224910.1	NA	inbo
-32_1	2130_hd	NA	NA	2019-01-01	field assessment	77620.6	228447.1	NA	inbo
+32_1	2130_hd	TRUE	2130_hd	2019-10-28	field assessment	77620.6	228447.1	NA	inbo
 3300078_1	7140_oli	NA	NA	NA	NA	202813.6	222990.1	NA	inbo
 33015942_1	9120	NA	NA	NA	NA	183942.2	178179.8	NA	anb
 330194_1	4010	TRUE	4010	2018-08-06	field assessment	229181.561	193998.16	NA	anb
@@ -4419,7 +4419,7 @@ point_code	type_target	is_type_target	type_observed	assessment_date	assessment_s
 439481_1	9130_end	NA	NA	NA	NA	143837.6	154478.1	NA	anb
 43950166_1	9120	NA	NA	NA	NA	182942.2	199679.8	NA	anb
 439922_1	6510_hu	FALSE	gh	2014-06-03	field assessment	224989.6	165614.1	NA	anb
-43_1	2130_hd	NA	NA	2019-01-01	field assessment	26572.6	200306.3	NA	inbo
+43_1	2130_hd	TRUE	2130_hd	2019-10-25	field assessment	26572.6	200306.3	NA	inbo
 440089_1	9130_end	NA	NA	NA	NA	98845.6	161230.1	NA	anb
 440246_1	9190	NA	NA	NA	NA	213213.6	201998.1	NA	anb
 4406965_1	1330_hpr	FALSE	NA	2015-01-01	field assessment	69309.6	220974.1	NA	inbo
@@ -4547,7 +4547,7 @@ point_code	type_target	is_type_target	type_observed	assessment_date	assessment_s
 4571014_1	6410_ve	NA	NA	NA	NA	177181.6	181326.1	NA	inbo
 4571826_1	6510_huk	NA	NA	NA	NA	250717.6	160398.1	NA	anb
 45733974_1	9120	NA	NA	NA	NA	179942.2	195179.8	NA	anb
-4576306_1	6410_ve	FALSE	6510_hu	2018-06-12	field assessment	221885.69	175406.09	NA	inbo
+4576306_1	6410_ve	TRUE	6410_ve	2018-06-12	field assessment	221885.69	175406.09	NA	inbo
 45774870_1	9120	NA	NA	NA	NA	164942.2	196679.8	NA	anb
 45777670_1	9120	NA	NA	NA	NA	153942.2	159679.9	NA	anb
 4578997_1	1330_hpr	NA	NA	NA	NA	69405.6	220526.1	NA	inbo
@@ -6595,7 +6595,7 @@ point_code	type_target	is_type_target	type_observed	assessment_date	assessment_s
 96217_2	91E0_vc	TRUE	91E0_vc	2015-05-13	field assessment	104092.455	162661.349	NA	anb
 963294_1	2330_bu	TRUE	2330_bu	2016-09-19	field assessment	154685.553	231374.104	NA	anb
 96466_1	4030	NA	NA	NA	NA	219037.6	199854.1	NA	anb
-9655346_1	6410_mo	FALSE	6510_hu	2018-06-12	field assessment	221309.76	175310.34	NA	inbo
+9655346_1	6410_mo	TRUE	6410_mo	2018-06-12	field assessment	221309.76	175310.34	NA	inbo
 9655473_1	2190	NA	NA	NA	NA	22493.6	198798.1	NA	inbo
 9657_1	9130_end	FALSE	onbekend - niet toegankelijk/weigering	2015-01-01	NA	138301.6	161934.1	long term	anb
 9664689_1	2170	NA	NA	NA	NA	29949.6	201678.1	NA	inbo
