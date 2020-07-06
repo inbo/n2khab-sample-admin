@@ -673,7 +673,7 @@ ANB uses Fieldmap to store assessment data: both admin data on assessment status
 
 ```{r}
 
-export <- "export_fieldmap_2020-06-17"
+export <- "export_fieldmap_2020-07-06"
 
 cover_species <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/cover_species.csv"), stringsAsFactors = FALSE)
 type_observed <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/type_observed.csv"), stringsAsFactors = FALSE)
@@ -948,6 +948,11 @@ Next, we join the sample table and the admin data. We join by the point_code, be
 
 
 ```{r}
+coordinates <- coordinates %>%
+    rename(x_assessment = x_measured,
+           y_assessment = y_measured) %>%
+    mutate(point_code = str_c(plot_id, "_1")) %>%
+    select(-plot_id)
 
 sample_admin_anb <- samples_grts %>%
    #select(-db_ref) %>%
