@@ -44,6 +44,7 @@ options(stringsAsFactors = FALSE,
         digits = 15)
 library(sf)
 library(tidyverse)
+library(INBOtheme)
 library(stringr)
 library(knitr)
 library(n2khab)
