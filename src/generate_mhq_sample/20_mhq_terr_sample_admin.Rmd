@@ -505,7 +505,7 @@ When a sampling unit is assessed but not measured according to the admin data, t
 
 sample_assessments_inbo <- sample_admin_inbo %>%
     left_join(assessment_inbo, by = c("sampling_unit_code", "point_code", "grts_ranking_draw", "assessment_year", "type_target")) %>%
-    mutate(is_type_target = ifelse(assessment_source %in% c("field assessment", "orthophoto assessment"),
+    mutate(is_type_target = ifelse(assessment_source %in% c("field assessment", "orthophoto"),
                                    ifelse(!lsvi_measurement, FALSE, is_type_target),
                                    is_type_target),
            #type_target = ifelse(is.na(type_target), as.character(type), type_target),
