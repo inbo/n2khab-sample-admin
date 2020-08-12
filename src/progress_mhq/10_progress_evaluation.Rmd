@@ -17,12 +17,12 @@ In kader van de voortgangsanalyse maakten we op basis van deze 4 tabellen, een s
 
 ```{r}
 
-mhq_refpoints <- read_vc("mhq_terr_refpoints_check_update", "../../data")
-mhq_assessments <- read_vc("mhq_terr_assessments", "../../data")
-mhq_validity <- read_vc("mhq_terr_refpoints_validity", "../../data")
-mhq_measurements <- read_vc("mhq_terr_measurements", "../../data") %>%
+mhq_refpoints <- read_vc("mhq_terr_refpoints_check_update", fileman_up("data"))
+mhq_assessments <- read_vc("mhq_terr_assessments",  fileman_up("data"))
+mhq_validity <- read_vc("mhq_terr_refpoints_validity",  fileman_up("data"))
+mhq_measurements <- read_vc("mhq_terr_measurements",  fileman_up("data")) %>%
     mutate(lsvi_measurement = TRUE)
-mhq_sampleframe_details <- read_vc("mhq_terr_details_samplingframe", "../../data")
+mhq_sampleframe_details <- read_vc("mhq_terr_details_samplingframe",  fileman_up("data"))
 
 mhq_progress_details <- mhq_assessments %>%
     left_join(select(mhq_refpoints, scheme, sampling_unit_code, point_code, type_target, sac, grts_ranking_draw, legacy_site, db_ref, year_planned), by = c("point_code", "type_target")) %>%
@@ -50,6 +50,16 @@ mhq_to_do <- mhq_progress_details %>%
     arrange(type_target_all, year_planned_min, grts_ranking_draw) 
 
 write.csv2(mhq_completed, "../../output/mhq_completed_versie2020-07-06", row.names = FALSE)
+
+mhq_progress_admin <- mhq_progress_details %>%
+    group_by(fieldwork_team, point_code, sac, legacy_site, db_ref, x, y, grts_ranking_draw, assessment_source, assessment_date, inaccessible, lsvi_measurement, type_observed) %>%
+    summarise(year_planned_min = min(year_planned),
+              type_target_all = str_c(type_target, collapse = " + ")) %>%
+    ungroup() %>%
+    arrange(type_target_all, year_planned_min, grts_ranking_draw) %>%
+    select(fieldwork_team, point_code, sac, legacy_site, db_ref, x, y, grts_ranking_draw, assessment_source, assessment_date, inaccessible, lsvi_measurement, year_planned_min, type_target_all, type_observed) 
+        
+write.csv2(mhq_progress_admin, "../../output/mhq_progress_admin_versie2020-07-06.csv", row.names = FALSE, na = "")
 
 ```
 
@@ -145,10 +155,6 @@ assessments_overview <- mhq_progress_details %>%
            to_do_assessments = n_sampling_units - n_assessed) %>%
     rename(type = type_target)
 ```
-
-
-
-
 
 
 ```{r}
