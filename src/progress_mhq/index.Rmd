@@ -55,6 +55,7 @@ library(INBOtheme)
 library(crosstalk)
 library(leaflet)
 library(plotly)
+library(here)
 
 options(stringsAsFactors = FALSE)
 
