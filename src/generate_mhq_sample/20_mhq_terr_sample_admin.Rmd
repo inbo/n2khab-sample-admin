@@ -672,7 +672,7 @@ ANB uses Fieldmap to store assessment data: both admin data on assessment status
 
 ```{r}
 
-export <- "export_fieldmap_2020-07-06"
+export <- "export_fieldmap_2020-08-13"
 
 cover_species <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/cover_species.csv"), stringsAsFactors = FALSE)
 type_observed <- read.csv2(str_c("../../mhq_sample-admin_data/field-data/fieldmap/", export, "/type_observed.csv"), stringsAsFactors = FALSE)
@@ -726,18 +726,17 @@ check_n <- date_assessments %>%
     ungroup() %>%
     filter(n > 1)
 
-#to be changed in database!!
-#---
-sample_status <- sample_status %>%
-    mutate(status_fieldwork = ifelse(plot_id == "4230578", "nee", status_fieldwork))
-#---
+assessments <- type_observed %>% 
+    filter(!(is.na(type_observed_circle) & is.na(type_observed_square)))
 
 admin_anb <- sample_status %>%
     mutate(point_code = str_c(as.character(plot_id), "_1"),
            date_status = as.Date(date_status,  format = "%Y-%m-%d")) %>%
     left_join(date_assessments, by = "point_code") %>%
     mutate(assessment_source = ifelse(status_fieldwork == "ja", "field assessment",
-                                  ifelse(status_fieldwork == "nee", NA, NA)),
+                                  ifelse(status_fieldwork == "nee", 
+                                         ifelse(plot_id %in% assessments$plot_id, "field assessment", NA), 
+                                         NA)),
            inaccessible = ifelse(!is.na(info_status_fieldwork) & info_status_fieldwork == "Geen opname : tijdelijk nt toeg", "short term", 
                                   ifelse(info_status_fieldwork %in% c("Geen opname : permanent nt toegankelijk", "Geen opname : geen toelating"), "long term", NA)),
            lsvi_measurement = ifelse(assessment_source == "field assessment",
@@ -798,18 +797,8 @@ For some sampling units for main types 6510, 9130 and 2330, the observed subtype
 
 
 ```{r}
-# correction!! -> landuse geeft aan dat het een poel is --> dus 91E0_vc veranderen naar 'geen habitat'
 
-type_observed_corr <- type_observed %>%
-    mutate(type_observed_circle = ifelse(plot_id == 201689 & segment_id == 2, "geen habitat", type_observed_circle))
-
-```
-
-
-
-```{r}
-
-plot_types <- type_observed_corr %>% 
+plot_types <- type_observed %>% 
     filter(!(is.na(type_observed_circle) & is.na(type_observed_square))) %>%
     mutate(point_code = str_c(as.character(plot_id), "_1"),
            type_observed_circle = ifelse(type_observed_circle %in% c("geen habitat (akker, houtkant, tuin,...)", "infrastructuur", "geen habitat"),
@@ -968,7 +957,7 @@ check_n <- sample_admin_anb %>%
     mutate(n = n()) %>%
     ungroup() 
 
-#dubbele coödinaten voor 4 plots --> te checken
+#dubbele coödinaten voor 1 plot --> te checken
 
 ```
 
@@ -976,7 +965,7 @@ check_n <- sample_admin_anb %>%
 
 ```{r}
 check_coordinates_double_or_error <- check_n %>%
-    filter(n > 1 | x_assessment > 100000000000) %>%
+    filter(n > 1) %>%
     distinct(point_code, assessment_source, lsvi_measurement, x, y, x_assessment, y_assessment, distance_from_refpoint)
 
 write.table(check_coordinates_double_or_error, "../../output/check_coordinates_anb.txt")
@@ -986,9 +975,6 @@ check_coordinates_double_or_error %>%
     kable_styling()
 
 sample_admin_anb <- sample_admin_anb %>%
-    mutate(x_assessment = ifelse(x_assessment > 100000000000, NA, x_assessment),
-           y_assessment = ifelse(y_assessment > 100000000000, NA, y_assessment),
-           distance_from_refpoint = ifelse(x_assessment > 100000000000, NA, distance_from_refpoint)) %>%
     mutate(wt = ifelse(is.na(distance_from_refpoint), 0,  distance_from_refpoint)) %>%
     group_by(sampling_unit_code) %>%
     top_n(1, desc(wt)) %>%
