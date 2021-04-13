@@ -694,15 +694,73 @@ Before sampling units were assigned to ANB, INBO performed an orthophoto control
 heath_ortho_control_orig <- read_sf("../../mhq_sample-admin_data/original/admin/anb", "meetnet_heide_versie20140611_orthocontrole") %>%
     st_drop_geometry()
 
-admin_ortho_control <- heath_ortho_control_orig %>%
+admin_ortho_nohabitat_heath <- heath_ortho_control_orig %>%
     filter(Orthocontr == 0) %>%
     mutate(point_code = str_c(as.character(Ranking), "_1"),
            assessment_source = "orthophoto",
            assessment_year = "2014",
-           lsvi_measurement = FALSE) %>%
-    distinct(point_code, assessment_source, assessment_year, lsvi_measurement) 
+           lsvi_measurement = FALSE,
+           inaccessible = NA) %>%
+    distinct(point_code, assessment_source, assessment_year, lsvi_measurement, inaccessible) 
+
+admin_ortho_inaccesable_heath <- heath_ortho_control_orig %>%
+    filter(Orthocontr == "ontoegankelijk") %>%
+    mutate(point_code = str_c(as.character(Ranking), "_1"),
+           assessment_source = NA,
+           assessment_year = "2014",
+           lsvi_measurement = FALSE,
+           inaccessible = "long term") %>%
+    distinct(point_code, assessment_source, assessment_year, lsvi_measurement, inaccessible) 
+
+admin_ortho_control_heath <- bind_rows(admin_ortho_nohabitat_heath,
+                                       admin_ortho_inaccesable_heath)
+
+heath_ortho_control2_orig <- read_sf("../../mhq_sample-admin_data/original/admin/anb", "meetnet_heide_versie20140611_SelectieJaar4_5_6") %>%
+    st_drop_geometry() %>%
+    select(type_target = habsubt, grts_ranking = Ranking, sac = SBZH) %>%
+    group_by(type_target, sac) %>%
+    mutate(selected = TRUE) %>%
+    ungroup()
+
+max_ranking_screened <- heath_ortho_control2_orig %>%
+    group_by(type_target, sac) %>%
+    summarise(max_ranking_screening = max(grts_ranking)) %>%
+    ungroup()
+
+heath_control_extra <- samples_grts %>%
+    filter(type_target %in% heath_ortho_control2_orig$type_target) %>%
+    left_join(heath_ortho_control2_orig, by = c("grts_ranking", "type_target", "sac")) %>%
+    left_join(max_ranking_screened, by = c("type_target", "sac")) %>%
+    filter(grts_ranking <= max_ranking_screening) %>%
+    filter(is.na(selected)) %>%
+    mutate(assessment_source = "orthophoto",
+           assessment_year = "2016",
+           lsvi_measurement = FALSE,
+           inaccessible = NA) %>%
+    distinct(point_code, assessment_source, assessment_year, lsvi_measurement, inaccessible) %>%
+    anti_join(admin_ortho_control_heath, by = "point_code")
+
     
 ```
+
+### Read orthocontrol foresthabitats
+
+```{r}
+forest_ortho_control_orig <- read_sf("../../mhq_sample-admin_data/original/sample/sample-locations/bos_hab", "meetnet_bos_versie20180424_orthocheck_y456") %>%
+    st_drop_geometry()
+
+admin_ortho_control_forest <- forest_ortho_control_orig %>%
+    filter(orthocheck == 2) %>%
+    mutate(point_code = str_c(as.character(Ranking), "_1"),
+           assessment_source = "orthophoto",
+           assessment_year = "2018",
+           lsvi_measurement = FALSE) %>%
+    distinct(point_code, assessment_source, assessment_year, lsvi_measurement) 
+
+admin_ortho_control <- bind_rows(admin_ortho_control_heath,
+                                 admin_ortho_control_forest)
+```
+
 
 
 ### Determine assessment status
@@ -756,12 +814,19 @@ admin_anb <- sample_status %>%
                                     as.numeric(format(assessment_date, "%Y")))) %>%
     distinct(db, point_code, assessment_source, inaccessible, assessment_date, assessment_year, lsvi_measurement, completed, location_change) 
 
-admin_ortho_control <- admin_ortho_control %>%
+admin_ortho_control2 <- admin_ortho_control %>%
     filter(!(point_code %in% admin_anb$point_code)) %>%
     mutate(assessment_year = as.numeric(assessment_year))
 
+heath_control_unselected <- heath_control_extra %>%
+    filter(!point_code %in% admin_anb$point_code) %>%
+    filter(!point_code %in% admin_ortho_control2$point_code) %>%
+    mutate(assessment_year = as.numeric(assessment_year))
+
+
 admin_anb <- admin_anb %>%
-    bind_rows(admin_ortho_control) %>%
+    bind_rows(admin_ortho_control2) %>%
+    bind_rows(heath_control_unselected) %>%
     arrange(point_code)
 
 check <- n_distinct(admin_anb$point_code) == nrow(admin_anb)
@@ -888,6 +953,11 @@ check_sampling_unit_code <- assessment_anb %>%
     mutate(n = n()) %>%
     ungroup() %>%
     filter(n> 1)
+
+check <- assessment_anb %>%
+    filter(sampling_unit_code %in% heath_control_extra$sampling_unit_code)
+
+
 
 #two locations with two possible type_observed --> check
 # 643970: 6510_hu or 6510_huk
