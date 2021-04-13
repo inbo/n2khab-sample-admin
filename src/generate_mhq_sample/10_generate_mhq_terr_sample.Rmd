@@ -130,7 +130,7 @@ check_unique_id <- nrow(sample_heath) == n_distinct(sample_heath$sampling_unit_c
 
 ```{r}
 
-sample_forest_orig <- read_sf("../../mhq_sample-admin_data/original/sample/sample-locations/bos_hab", "meetnet_bos_versie20150303", crs =31370, quiet = TRUE) 
+sample_forest_orig <- read_sf("../../mhq_sample-admin_data/original/sample/sample-locations/bos_hab", "meetnet_bos_versie20180424_orthocheck_y456", crs =31370, quiet = TRUE) 
 
 sample_forest <- sample_forest_orig %>%
     st_drop_geometry() %>%
