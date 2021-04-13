@@ -1,12 +1,12 @@
 ..generic:
-  git2rdata: 0.2.0
+  git2rdata: 0.3.1
   optimize: no
   NA string: NA
   sorting:
   - point_code
   - type_target
   hash: cf137677e05a4049743c34cefa98ed4496184f06
-  data_hash: 93a3f06c9d0b21170c1d03fa84562e8f4006a81a
+  data_hash: cc21b960c3dd5e852520a0671ddf942433f703b6
 point_code:
   class: character
 type_target:

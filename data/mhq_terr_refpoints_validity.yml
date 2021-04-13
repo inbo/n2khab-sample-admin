@@ -1,13 +1,13 @@
 ..generic:
-  git2rdata: 0.2.0
+  git2rdata: 0.3.1
   optimize: no
   NA string: NA
   sorting:
   - scheme
   - sampling_unit_code
   - point_code
-  hash: 2208c655d02cd3de1d13ef804b7fd24274a5f583
-  data_hash: 5d6626108a081b647c2762c7b567e0ef7cdae710
+  hash: 9c74ea6841bee798b4c4ba248227f56c4b3298d1
+  data_hash: 64e3ba32eb4a48601277c3b67df094a26ac90bae
 scheme:
   class: factor
   labels:
@@ -19,7 +19,7 @@ scheme:
   - GW_03.3
   - GW_04.2
   - GW_05.1_aq
-  - GW_05.1_caves
+  - GW_05.1_quarries
   - GW_05.1_terr
   - GW_05.2
   - GW_07.1
@@ -83,7 +83,7 @@ scheme:
   - 6
   - 7
   - 8
-  - 9
+  - 64
   - 10
   - 11
   - 12
