@@ -1,0 +1,136 @@
+
+# Number of valid measured sampling units per type
+
+```{r}
+refpoints_validity <- mhq_terr_refpoints_validity %>%
+    select(point_code, sampling_unit_code, assessment_date = date, is_valid, is_valid_type, is_valid_refpoint)
+
+measurements <- mhq_terr_refpoints_check_update %>%
+    left_join(mhq_terr_assessments_update, by = c("point_code", "type_target"), suffix = c("_orig", "_measured")) %>%
+    filter(is_type_target | (is.na(is_type_target) & assessment_source == "field assessment")) %>%
+    left_join(mhq_terr_measurements, c("point_code", "assessment_date", "type_observed", "sampling_unit_code")) %>%
+    left_join(refpoints_validity, by = c("point_code", "sampling_unit_code", "assessment_date")) %>%
+    filter(is.na(is_valid) | is_valid)
+```
+
+For now we condsider all sampling units for which the validity is currently unknown as valid.
+
+```{r}
+measurements_overview_type <- measurements %>%
+    group_by(fieldwork_team, type_target, sac) %>%
+    summarise(n_measured = n_distinct(sampling_unit_code),
+              n_measured_check1 = n_distinct(point_code),
+              n_measured_check2 = n()) %>%
+    ungroup()
+
+all.equal(measurements_overview_type$n_measured, 
+          measurements_overview_type$n_measured_check1,
+          measurements_overview_type$n_measured_check2)
+
+measurements_overview_type <- measurements_overview_type %>%
+  select(fieldwork_team, type = type_target, sac, n_measured)
+
+measurements_overview_year <- measurements %>%
+    mutate(year = year(assessment_date)) %>%
+    group_by(fieldwork_team, year) %>%
+    summarise(n_measured = n_distinct(sampling_unit_code),
+              n_measured_check1 = n_distinct(point_code),
+              n_measured_check2 = n()) %>%
+    ungroup()
+
+assessments_table_new %>%
+    #filter(lsvi_measurement | is.na(lsvi_measurement)) %>%
+    filter(is_type_target | is.na(is_type_target)) %>%
+    nrow()
+```
+
+# Sample size
+
+```{r}
+fileman_up("n2khab-mhq-design")
+
+samplesize_mhq_detailed <- read_vc(root = fileman_up("n2khab-mhq-design"), "design-strategy/output/samplesize_mhq_terr_v2021")
+
+samplesize_mhq <- samplesize_mhq_detailed %>%
+      mutate(samplesize = ceiling(n_finite_flanders + n_extra_sac + n_extra_subtype),
+             samplesize_type = ceiling(n_finite_flanders + n_extra_sac),
+             extra_subtype = ceiling(n_extra_subtype),
+         n_visits = ceiling((n_finite_flanders + n_extra_sac + n_extra_subtype)/prop_subtype_sac),
+         detection_rate_expected = prop_subtype_sac) %>%
+  select(type, sac, samplesize, samplesize_type, extra_subtype,  n_visits, detection_rate_expected) %>%
+  mutate(type = ifelse(type == "2190_overig", "2190", as.character(type)))
+
+progress_mhq <- samplesize_mhq %>%
+  filter(samplesize > 0) %>%
+  left_join(measurements_overview_type, by = c("type", "sac")) %>%
+  mutate(fieldwork_team = ifelse(type %in% c("2190_mp", "2190", "6230_hnk", "7140_oli"), "inbo", fieldwork_team),
+         n_measured = ifelse(is.na(n_measured), 0, n_measured),
+         n_todo = pmax(0, samplesize - n_measured),
+         n_visits_todo = ceiling(n_todo/detection_rate_expected))
+
+progress_mhq_inbo <- progress_mhq %>%
+  filter(fieldwork_team == "inbo")  %>%
+  select(type_target = type, sac, n_todo, n_visits_todo, detection_rate_expected)
+
+```
+
+# Sample selection: the original way
+
+```{r}
+
+mhq_refpoints_todo_potential <- read_vc(root = fileman_up("n2khab-mhq-design"), file = "design-strategy/output/mhq_refpoints_todo_potential")
+
+mhq_refpoints_todo_potential_update <- mhq_refpoints_todo_potential %>%
+    anti_join(assessments_table_new, by = c("point_code")) 
+
+check <- mhq_refpoints_todo_potential %>%
+    inner_join(assessments_table_new, by = c("point_code")) %>%
+    filter(status == "new")
+
+mhq_selection_inbo <- mhq_refpoints_todo_potential_update %>%
+  inner_join(progress_mhq_inbo, by = c("type_target", "sac")) %>%
+  group_by(type_target, sac) %>%
+  mutate(volgorde = rank(grts_ranking_draw)) %>%
+  ungroup() %>%
+  mutate(select = volgorde <= n_visits_todo,
+         reserve = volgorde > n_visits_todo & volgorde < (n_visits_todo * 10))
+
+mhq_selection_inbo_select <- mhq_selection_inbo %>%
+  filter(select)
+
+check <- mhq_selection_inbo_select %>%
+  group_by(sac, type_target) %>%
+  summarise(n_selected = n_distinct(sampling_unit_code),
+            n = n()) %>%
+  ungroup() %>%
+  left_join(progress_mhq_inbo, by = c("sac", "type_target"))
+```
+
+# Sample selection: the alternative way
+
+```{r}
+grts_habmap <- read_vc(file = "design-strategy/output/samplingframe_habitatterr_points", root = fileman_up("n2khab-mhq-design"))
+
+set.seed(24193)
+
+habitatmap_grts_ranking <- grts_habmap %>%
+  distinct(grts_ranking) %>%
+  arrange(grts_ranking) %>%
+  mutate(select_prob = runif(nrow(grts_habmap)))
+```
+
+```{r}
+mhq_selection2_inbo <- mhq_refpoints_todo_potential_update %>%
+  inner_join(progress_mhq_inbo, by = c("type_target", "sac")) %>%
+  left_join(habitatmap_grts_ranking, by = c("grts_ranking_draw" = "grts_ranking")) %>%
+  mutate(select_refpoint = (1 - phab/100) < select_prob) %>%
+  filter(select_refpoint) %>%
+  group_by(type_target, sac) %>%
+  mutate(volgorde = rank(grts_ranking_draw)) %>%
+  ungroup() %>%
+  mutate(select = volgorde <= n_todo*1.2) %>%
+  filter(select)
+  
+```
+
+
