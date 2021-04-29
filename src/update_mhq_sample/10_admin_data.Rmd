@@ -10,6 +10,8 @@ types <- read_types()
 The INBO fieldwork coordinator uses [this googlesheet](https://docs.google.com/spreadsheets/d/1WkGPPYTb1Xytg5kJeOSxLvt3PUdFjlpPb4rwYG9znys/) to document which sampling units have been assessed. 
 
 ```{r}
+gs4_auth("toon.westra@inbo.be")
+
 assessments_admin <- read_sheet(
     "https://docs.google.com/spreadsheets/d/1WkGPPYTb1Xytg5kJeOSxLvt3PUdFjlpPb4rwYG9znys/edit#gid=0",
     col_types = c("ccllcnnncDclncc"), trim_ws = TRUE
@@ -70,15 +72,16 @@ assessments_table_new <- assessments_table_todo %>%
 
 check_records <- assessments_table_new %>%
     filter(is.na(is_type_target) | is.na(lsvi_measurement))
+
 ```
 
 Following records contain missing information:
 
-```{r}
+```{r, results= 'asis'}
 check_records %>%
     select(point_code, type_target, db_ref, assessment_date, assessment_source, lsvi_measurement, type_observed) %>%
     kbl() %>%
-    kable_styling()
+  kable_styling()
 ```
 For following records the target type is observed but lsvi is not measured:
 
@@ -160,15 +163,21 @@ check_allow_other_type %>%
 
 ## Update mhq_terr_assessments
 
-+ Create new sampling units when allow_other_type is TRUE
++ Create new sampling units when is_type_target is FALSE and a LSVI measurement is performed. For a limited number of sampling units allow_other_type is FALSE. Yet, for pragmatic reasons, we will keep these sampling units, altough theoretically they are not valid.
 
 ```{r}
-assessments_table_new <- assessments_table_new %>%
-  select(point_code, db_ref, type_target, is_type_target, type_observed, assessment_date, assessment_source, x = x_measured, y = y_measured, inaccessible, fieldwork_team, lsvi_measurement, allow_other_type)
+# assessments_table_new <- assessments_table_new %>%
+#   select(point_code, db_ref, type_target, is_type_target, type_observed, assessment_date, assessment_source, x = x_measured, y = y_measured, inaccessible, fieldwork_team, lsvi_measurement, allow_other_type)
+
+new_sampling_units_strict <- assessments_table_new %>%
+    filter(lsvi_measurement) %>%
+    # filter(!is_type_target & !is_type_target_plot) %>%
+    filter(allow_other_type)
 
 new_sampling_units <- assessments_table_new %>%
     filter(lsvi_measurement) %>%
-    filter(allow_other_type) %>%
+    filter(!is_type_target & !is_type_target_plot) %>%
+    #filter(allow_other_type) %>%
     mutate(type_target = factor(type_observed, levels = levels(types$type)),
            is_type_target = TRUE,
            allow_other_type = NA) %>%
@@ -179,11 +188,23 @@ assessments_table_new <- assessments_table_new %>%
 
 mhq_terr_assessments_update <- mhq_terr_assessments %>%
   anti_join(assessments_table_new, by = c("point_code", "fieldwork_team")) %>%
-  bind_rows(select(assessments_table_new, -allow_other_type, -lsvi_measurement))
+  bind_rows(select(assessments_table_new, point_code, db_ref, type_target, is_type_target, type_observed, assessment_date, assessment_source, x = x_measured, y = y_measured, inaccessible, fieldwork_team))
   
 ```
 
 To update the other standardized tables we will need the coordinates of the measured sampling units.For now we work with the available data to determine het number of measured valid sampling units per type. 
 
+## Update mhq_terr_refpoints
+
+```{r}
+new_refpoints <- new_sampling_units %>%
+  mutate(sampling_unit_code = str_c(grts_ranking_draw, "_", type_target)) %>%
+  select(sampling_unit_code, type_target, point_code, sac, grts_ranking_draw, x = x_measured, y = y_measured, db_ref)
+
+mhq_terr_refpoints_update <- mhq_terr_refpoints_check_update %>%
+  bind_rows(new_refpoints)
+
+
+```
 
 
