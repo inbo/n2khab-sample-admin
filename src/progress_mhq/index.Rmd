@@ -1,5 +1,5 @@
 ---
-title: "Generating mhq_terr_refpoint, mhq_terr_refpoint_validity and mhq_terr_assessments"
+title: "Voortgang meetnet habitatkwaliteit"
 # subtitle: "x"
 date: "`r lubridate::now()`"
 link-citations: true
@@ -20,6 +20,7 @@ output:
     fig_caption: yes
     df_print: paged
     toc: TRUE
+    code_folding: hide
     toc_float:
       collapsed: FALSE
       smooth_scroll: FALSE
@@ -36,32 +37,37 @@ output:
 
 ```{r setup, include=FALSE}
 
-#devtools::install_github("https://github.com/inbo/n2khab", ref ="rc0.2")
+#devtools::install_github("https://github.com/inbo/n2khab", ref ="crs")
 
 options(stringsAsFactors = FALSE,
         scipen = 999, 
         digits = 15)
 library(sf)
 library(tidyverse)
+library(INBOtheme)
 library(stringr)
 library(knitr)
 library(n2khab)
 library(git2rdata)
 library(kableExtra)
-library(RODBC)
-library(odbc)
-library(DBI)
-library(inborutils)
+library(DT)
+library(INBOtheme)
+library(crosstalk)
+library(leaflet)
+library(plotly)
+library(here)
+library(git2rdata)
 
 options(stringsAsFactors = FALSE)
 
 opts_chunk$set(
   echo = TRUE,
-  dpi = 300
+  dpi = 300,
+  warning = FALSE
 )
 ```
 
-**Note: this is a bookdown project, supposed to be run from within the `src/generate_mhq_sample` subfolder. You can use the `src/generate_mhq_sample.Rproj` RStudio project file in this subfolder to run it.**
+**Note: this is a bookdown project, supposed to be run from within the `src/progress_mhq` subfolder. You can use the `src/progress_mhq.Rproj` RStudio project file in this subfolder to run it.**
 
 
 

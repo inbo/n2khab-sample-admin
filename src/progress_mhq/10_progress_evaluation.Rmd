@@ -1,0 +1,754 @@
+# Inleiding
+
+Via het [meetnet (biotische) habitatkwaliteit](https://pureportal.inbo.be/portal/files/4339795/Westra_etal_2014_MonitoringNatura2000Habitats.pdf) monitort het INBO de habitatkwaliteit van Natura 2000 - habitattypen. In dit document analyseren we de voortgang van het meetnet na 6 jaar en selecteren we prioritair af te werken meetpunten.
+
+# Analyse voortgang
+
+## Administratiegegevens meetnet habitatkwaliteit
+
+In de repository [n2khab-sample-admin](https://github.com/inbo/n2khab-sample-admin/tree/sample-admin) wordt de administratie van het meetnet habitatkwaliteit (mhq) bijgehouden en in gestandaardiseerde tabellen opgeslagen. Het gaat om volgende tabellen:
+
+- mhq_terr_refpoints: overzicht van alle steekproefpunten
+- mhq_assessments: overzicht van de bezoeken aan de meetpunten en het resultaat van de beoordeling (assessment) van die meetpunten
+- mhq_validity: controle van geldigheid van elk meetpunt voor mhq
+- mhq_measurements: overzicht van alle opgemeten meetpunten
+
+In kader van de voortgangsanalyse maakten we op basis van deze 4 tabellen, een samenvattende overzichtstabel ('mhq_completed') met alle beoordeelde meetpunten, met details over de beoordeling, de opmetingen en de geldigheid van de meetpunten.  
+
+```{r}
+
+mhq_refpoints <- read_vc("mhq_terr_refpoints_check_update", fileman_up("data"))
+mhq_assessments <- read_vc("mhq_terr_assessments",  fileman_up("data"))
+mhq_validity <- read_vc("mhq_terr_refpoints_validity",  fileman_up("data"))
+mhq_measurements <- read_vc("mhq_terr_measurements",  fileman_up("data")) %>%
+    mutate(lsvi_measurement = TRUE)
+mhq_sampleframe_details <- read_vc("mhq_terr_details_samplingframe",  fileman_up("data"))
+
+mhq_progress_details <- mhq_assessments %>%
+    left_join(select(mhq_refpoints, scheme, sampling_unit_code, point_code, type_target, sac, grts_ranking_draw, legacy_site, db_ref, year_planned), by = c("point_code", "type_target")) %>%
+    # filter(!is.na(assessment_source)) %>%
+    left_join(mhq_measurements, by = c("sampling_unit_code", "point_code", "type_observed", "assessment_date")) %>%
+    left_join(select(mhq_validity, -date), by = c("sampling_unit_code", "point_code", "scheme")) %>%
+    left_join(mhq_sampleframe_details, by = c("sampling_unit_code", "scheme")) %>%
+    select(fieldwork_team, scheme, sampling_unit_code, point_code, grts_ranking_draw, sac, type_target, assessment_source, assessment_date, inaccessible, is_type_target, type_observed, lsvi_measurement, completed, distance, type_cover_circle, type_cover_square, is_valid, is_valid_type, is_valid_refpoint, phab, x, y, db_ref, year_planned, legacy_site) %>%
+    mutate(lsvi_measurement = ifelse((!is.na(assessment_source) | !is.na(inaccessible)) & is.na(lsvi_measurement), FALSE, lsvi_measurement))
+
+mhq_completed <- mhq_progress_details %>%
+    select(-phab) %>%
+    filter(!is.na(assessment_source) | !is.na(inaccessible)) %>%
+    arrange(scheme, type_target, grts_ranking_draw) 
+
+mhq_to_do <- mhq_progress_details %>%
+    filter(is.na(assessment_source) & is.na(inaccessible)) %>%
+    filter(!is.na(grts_ranking_draw)) %>%
+    group_by(point_code, grts_ranking_draw, sac, x, y) %>%
+    summarise(fieldwork_team = str_c(unique(fieldwork_team), collapse = " + "),
+              type_target_all = str_c(type_target, collapse = " + "),
+              year_planned_min = min(year_planned)) %>% 
+    ungroup() %>%
+    select(fieldwork_team, everything()) %>%
+    arrange(type_target_all, year_planned_min, grts_ranking_draw) 
+
+#write.csv2(mhq_completed, "../../output/mhq_completed_versie2020-07-06", row.names = FALSE)
+
+mhq_progress_admin <- mhq_progress_details %>%
+    group_by(fieldwork_team, point_code, sac, legacy_site, db_ref, x, y, grts_ranking_draw, assessment_source, assessment_date, inaccessible, lsvi_measurement, type_observed) %>%
+    summarise(year_planned_min = min(year_planned),
+              type_target_all = str_c(type_target, collapse = " + ")) %>%
+    ungroup() %>%
+    arrange(type_target_all, year_planned_min, grts_ranking_draw) %>%
+    select(fieldwork_team, point_code, sac, legacy_site, db_ref, x, y, grts_ranking_draw, assessment_source, assessment_date, inaccessible, lsvi_measurement, year_planned_min, type_target_all, type_observed) 
+        
+#write.csv2(mhq_progress_admin, "../../output/mhq_progress_admin_versie2020-07-06.csv", row.names = FALSE, na = "")
+
+```
+
+
+## Gewenste steekproefgrootte per meetnet
+
+We gaan uit van de steekproefgroottes afgeleid uit de Habitatkaart versie 2020.
+
+```{r}
+
+samplesize_mhq <- read_vc(root = file.path(fileman_up("n2khab-mhq-design"), "design-strategy/output"), file = "samplesize_mhq_terr_v2020") %>%
+  mutate(samplesize = ceiling(n_finite_flanders + n_extra_sac + n_extra_subtype),
+         n_visits = ceiling((n_finite_flanders + n_extra_sac + n_extra_subtype)/prop_subtype_sac),
+         detection_rate_expected = prop_subtype_sac) %>%
+  select(type, sac, samplesize, n_visits, detection_rate_expected)
+
+
+
+```
+
+
+
+```{r, eval=FALSE}
+
+# OUD: We gaan uit van de steekproefgroottes zoals berekend in het rapport van [Westra et al. (2014)](https://pureportal.inbo.be/portal/files/4339795/Westra_etal_2014_MonitoringNatura2000Habitats.pdf). 
+
+get_samplesize <- function(samplesize_calc = "../../mhq_sample-admin_data/original/sample/samplesize/steekproefgrootte_synVBI_versie20140324_bossen.txt", habtypes = "All", forestsyn = TRUE) {
+
+  samplesize <- read.table(samplesize_calc, header = TRUE, dec = ",")
+
+if (habtypes == "All"){
+
+  samplesize_select <- samplesize
+
+} else {
+
+  samplesize_select <- samplesize %>%
+      filter(habsubt %in% habtypes)
+}
+
+if (forestsyn) {
+    samplesize_select <- samplesize_select %>%
+    mutate(n_visits_insidesac = n_habt_SBZH_bruto_syn + extra_habsubt_SBZH_bruto_syn,
+           samplesize_insidesac = n_habt_SBZH_netto_syn + extra_habsubt_SBZH_netto_syn,
+            n_visits_outsidesac = n_habt_buiten_bruto_syn + extra_habsubt_buiten_bruto_syn,
+           samplesize_outsidesac = n_habt_buiten_netto_syn + extra_habsubt_buiten_netto_syn)
+    
+}  else {
+    samplesize_select <- samplesize_select %>%
+        mutate(n_visits_insidesac = n_habt_SBZH_bruto + extra_habsubt_SBZH_bruto,
+               samplesize_insidesac = n_habt_SBZH_netto + extra_habsubt_SBZH_netto,
+                n_visits_outsidesac = n_habt_buiten_bruto + extra_habsubt_buiten_bruto,
+               samplesize_outsidesac = n_habt_buiten_netto + extra_habsubt_buiten_netto)    
+}
+
+#long formaat
+samplesize_select_long1 <- samplesize_select %>%
+  select(habsubt, inside = n_visits_insidesac, outside = n_visits_outsidesac ) %>%
+  gather(inside, outside, key = "sac", value = "n_visits")
+
+samplesize_select_long2 <- samplesize_select %>%
+  select(habsubt, inside = samplesize_insidesac, outside = samplesize_outsidesac ) %>%
+  gather(inside, outside, key = "sac", value = "samplesize")
+
+samplesize_select_long3 <- samplesize_select %>%
+  select(habsubt, inside = prop_hab_SBZH, outside = prop_hab_buiten ) %>%
+  gather(inside, outside, key = "sac", value = "detection_rate_expected")
+
+samplesize_select_long <- samplesize_select_long1 %>%
+  left_join(samplesize_select_long2, by = c("habsubt", "sac")) %>%
+  left_join(samplesize_select_long3, by = c("habsubt", "sac")) %>%
+    rename(type = habsubt) %>%
+    mutate(sac = ifelse(sac == "inside", 1,
+                        ifelse(sac == "outside", 0, NA)))
+
+return (samplesize_select_long)
+
+}
+```
+
+
+```{r, eval=FALSE}
+samplesize_mhq_forest <- get_samplesize(samplesize_calc = "../../mhq_sample-admin_data/original/sample/samplesize/steekproefgrootte_synVBI_versie20140324_bossen.txt") %>%
+    filter(str_sub(type, end = 1) == "9" | type == "2180")
+
+samplesize_mhq_openhab <- get_samplesize(samplesize_calc = "../../mhq_sample-admin_data/original/sample/samplesize/steekproefgrootte_versie20140324.txt", forestsyn = FALSE) %>%
+    anti_join(samplesize_mhq_forest, by = "type")
+
+samplesize_mhq_coastaldunes <- read.csv2("../../mhq_sample-admin_data/original/sample/samplesize/steekproefgrootte_kustduinen_versie2020-05-08.csv") %>%
+    select(type = Habsubt, sac = SBZH, n_visits = nBezoek, samplesize = nTotaal, detection_rate_expected = Trefkans)
+
+samplesize_mhq <- samplesize_mhq_openhab %>%
+    bind_rows(samplesize_mhq_forest) %>%
+    bind_rows(samplesize_mhq_coastaldunes) %>%
+    arrange(type)
+
+```
+
+
+## Overzicht voortgang
+
+```{r}
+
+assessments_overview <- mhq_progress_details %>%
+    filter(!(legacy_site & fieldwork_team == "anb")) %>% #hier VBI niet meerekenen
+    group_by(type_target, sac, fieldwork_team) %>%
+    summarise(n_sampling_units = n_distinct(sampling_unit_code),
+              n_assessed = sum(assessment_source %in% c("field assessment", "orthophoto"), na.rm = TRUE)) %>%
+    ungroup() %>%
+    mutate(progress_assess_pct = round(n_assessed/n_sampling_units * 100, 0),
+           to_do_assessments = n_sampling_units - n_assessed) %>%
+    rename(type = type_target)
+```
+
+
+```{r}
+lsvi_measurements <- mhq_measurements %>% 
+    left_join(select(mhq_validity, -date), by = c("sampling_unit_code", "point_code")) %>%
+    left_join(distinct(mhq_refpoints, sampling_unit_code, type_target, point_code, sac, x, y), by = c("sampling_unit_code", "point_code")) %>%
+    left_join(distinct(mhq_assessments, type_target, point_code, fieldwork_team), by = c("point_code", "type_target")) %>%
+    mutate(type_observed = ifelse(is.na(type_observed), as.character(type_target), type_observed)) %>%
+    distinct(assessment_date, point_code,  type_observed, sac, is_valid_type, is_valid_refpoint, is_valid, fieldwork_team, distance, x, y) 
+
+check <- lsvi_measurements %>%
+    group_by(point_code) %>%
+    filter(n() > 1)
+
+lsvi_measurements_overview  <- lsvi_measurements %>% 
+    mutate(is_valid = ifelse(is.na(is_valid), TRUE, is_valid),
+           type_observed) %>% 
+    group_by(fieldwork_team, type_observed, sac) %>%
+    summarise(n_measured = n(),
+              n_measured_valid = sum(is_valid),
+              n_invalid_type = sum(!is_valid_type, na.rm = TRUE),
+              n_invalid_distance = sum(!is_valid_refpoint, na.rm = TRUE)) %>%
+    ungroup() %>%
+    mutate(type = type_observed)
+    
+```
+
+
+```{r}
+
+samplesize_mhq_vbi <- mhq_progress_details %>%
+  filter(legacy_site) %>%
+  filter(fieldwork_team == "anb") %>%
+  group_by(type_target, sac) %>%
+  summarise(samplesize_vbi = n_distinct(sampling_unit_code)) %>%
+  ungroup() %>%
+  rename(type = type_target)
+
+samplesize_type <- samplesize_mhq %>%
+    mutate(samplesize = ceiling(samplesize)) %>%
+    left_join(samplesize_mhq_vbi, by = c("type", "sac")) %>%
+    mutate(samplesize_net = ifelse(!is.na(samplesize_vbi), pmax(0, samplesize - samplesize_vbi), samplesize) ,
+           n_visits_net = ceiling(samplesize_net/detection_rate_expected))
+
+overview_progress <- assessments_overview %>%
+    left_join(lsvi_measurements_overview, by = c( "fieldwork_team", "sac", "type")) %>%
+    mutate(n_measured = ifelse(is.na(n_measured), 0, n_measured),
+           n_measured_valid = ifelse(is.na(n_measured_valid), 0, n_measured_valid)) %>%
+    left_join(samplesize_type, by = c("sac", "type")) %>%
+    mutate(progress_measurements_pct = ifelse(samplesize_net > 0, round(n_measured/samplesize_net *100, 0), NA),
+           progress_valid_measurements_pct = ifelse(samplesize_net > 0, round(n_measured_valid/samplesize_net *100, 0), NA)) %>%
+    select(fieldwork_team, type, sac, n_sampling_units, samplesize_net, n_assessed, n_measured, n_measured_valid, progress_assess_pct, progress_measurements_pct, progress_valid_measurements_pct, detection_rate_expected)
+```
+
+Onderstaande tabel geeft een overzicht van de voortgang, zowel voor het aantal te bezoeken punten conform de originele planning, als voor het aantal op te meten punten in verhouding tot de gewenste steekproefgrootte. 
+
+De opgemeten punten voor een bepaald habitat(sub)type omvatten zowel de opnames in meetpunten die geselecteerd werden voor dat habitat(sub)type (geobserveerd type is gelijk aan doeltype) als opnames in meetpunten die voor een andere type werd geselecteerd (geobserveerd is niet gelijk aan doeltype). Dit laatste geval beschouwen we als een geldige opname zolang de grts-ranking van het meetpunt lager is dan maximale grts-ranking in de steekproef van het geobserveerde type. Een opname is ook enkel geldig als het meetpunt maximaal over een lengte van 110 meter werd verschoven.     
+
+
+```{r overview}
+
+overview_progress %>%
+    select(fieldwork_team, type, sac, "Te bezoeken" = n_sampling_units, "Steekproefgrootte" = samplesize_net, "Bezocht" = n_assessed, "Opgemeten totaal" = n_measured, "Opgemeten geldig" = n_measured_valid, "Voortgang bezoeken (%)" = progress_assess_pct, "Voortgang meetpunten (%)" = progress_valid_measurements_pct) %>%
+    DT::datatable(caption = "Overzicht van het totaal aantal te bezoeken punten, de gewenste steekproefgrootte, het aantal bezochte meetpuntenpunten en het aantal opgemeten punten",
+                  filter = "top",
+                  rownames = FALSE
+                  ) 
+
+```
+
+
+
+```{r}
+samplesize_scheme <- samplesize_mhq %>%
+    mutate(main_type = str_sub(type, end = 4)) %>%
+    group_by(main_type) %>%
+    summarise(samplesize = sum(samplesize)) %>%
+    ungroup()
+
+lsvi_measurements_scheme <- lsvi_measurements %>%
+    mutate(main_type = str_sub(type_observed, end = 4)) %>%
+    left_join(samplesize_scheme, by = c("main_type")) 
+    
+```
+
+Figuur \@ref(fig:progressscheme) vergelijkt het aantal opgemeten meetpunten met de (oorspronkelijke) steekproefgrootte (*) en onderscheidt geldige en ongeldige meetpunten. 
+Voor sommige meetpunten kon de geldigheid nog niet bepaald worden omdat het geobserveerde habitattype of de coördinaten nog ontbreken in de databank. 
+
+```{r progressscheme, fig.cap= "Opgemeten meetpunt en steekproefgrootte per meetnet"}
+lsvi_measurements_scheme %>%
+    ggplot(aes(x = main_type, fill = is_valid)) +
+    geom_bar() +
+    geom_point(aes(x = main_type, y = samplesize), shape = 8) +
+    facet_wrap(~fieldwork_team, scales = "free_x") +
+    theme(axis.text.x = element_text(angle = 90))
+```
+
+
+Onderstaande interactieve kaart geeft een overzicht van de meetnetlocaties met een stand van zaken per meetpunt. Daarbij kan een selectie gemaakt worden op basis van onderstaande variabelen:  
+
+- Assessment: beoordeling van van een meetpunt via veldbezoek of via orthofotocontrole
+- Measured: opname van meetpunt indien het als meetpunt als geschikt werd beoordeeld
+- Is_valid: gaat het al dan niet om een geldig meetpunt (controle achteraf)
+- Legacy_site: een reeds langer bestaand meetpunt (van bv. de Vlaamse Bosinventarisatie) dat opgenomen is in mhq
+- Monitoring scheme: meetnet (meetpunten gegroepeerd per habitattype)
+- Target type: doelhabitattype of doelhabitatsubtype
+
+```{r}
+overview_spatial <- mhq_progress_details %>%
+    mutate(assessment_source = ifelse(legacy_site & str_sub(type_target, end = 2) != "21", "field assessment", as.character(assessment_source)),
+           lsvi_measurement = ifelse(legacy_site & str_sub(type_target, end = 2) != "21", TRUE, lsvi_measurement),
+           is_valid = ifelse(legacy_site & str_sub(type_target, end = 2) != "21", TRUE, is_valid)) %>%
+    mutate(assessment = ifelse(!is.na(inaccessible), "inaccessible",
+                           ifelse(is.na(assessment_source), "no assessment", as.character(assessment_source))),
+           measured = ifelse(is.na(lsvi_measurement), FALSE, lsvi_measurement),
+           is_valid = ifelse(is.na(is_valid), "unknown", as.character(is_valid)),
+           status = ifelse(assessment %in% c("field assessment", "orthophoto"), 
+                           ifelse(measured, "assessment - measured", "assessment - not measured"),
+                           assessment)) %>%
+    st_as_sf(coords = c("x", "y"), crs = 31370) %>%
+    st_transform(crs = 4326)
+
+
+```
+
+```{r}
+
+locaties_shared <- SharedData$new(overview_spatial) 
+  
+colorpal <- c(INBOgreen, INBOred,  "yellow", INBOblue)
+
+factpal <- colorFactor(colorpal, locaties_shared$status)
+
+bscols(
+  list(
+    bscols(widths = c(3, 3, 3, 3),
+    filter_checkbox("assessment", "assessment", locaties_shared, ~assessment),
+    filter_checkbox("measured", "measured", locaties_shared, ~measured),
+    filter_checkbox("is_valid", "is valid sampling unit", locaties_shared, ~is_valid),
+    filter_checkbox("legacy_site", "legacy site", locaties_shared, ~legacy_site)),
+    bscols(widths = c(3, 4, 4),
+    filter_checkbox("fieldwork_team", "fieldwork team", locaties_shared, ~fieldwork_team),
+    filter_select("scheme", "monitoring scheme", locaties_shared, ~scheme),
+    filter_select("type_target", "target type", locaties_shared, ~type_target)),
+    locaties_shared %>%
+      leaflet() %>%
+      addTiles() %>%
+      addCircleMarkers(radius = 2, opacity = 0.6, fillOpacity = 0.6, color = ~factpal(status),
+                       label = ~sampling_unit_code) %>%
+      addLegend("bottomright", pal = factpal, values = ~status,
+                title = "status", opacity = 1),
+    plot_ly(locaties_shared, x = ~status) %>% 
+      add_histogram(color = ~status, colors = colorpal) %>%
+      layout(legend = list(x = 100, y = 0.5))
+    ) 
+)
+```
+
+## Ongeldige meetpunten
+
+Figuur \@ref(fig:invalid) geeft een overzicht van de ongeldige meetpunten. 
+
+```{r invalid, fig.cap= "Meetpunten die na controle ongeldig bleken"}
+lsvi_measurements_scheme %>%
+    filter(!is_valid) %>%
+    mutate(evaluation = ifelse(!is_valid_type & !is_valid_refpoint,
+                               "invalid type and invalid refpoint",
+                               ifelse(!is_valid_type, "invalid type", "invalid refpoint"))) %>%
+    ggplot(aes(x = main_type, fill = evaluation)) +
+    geom_bar() +
+    facet_wrap(~fieldwork_team, scales = "free_x") +
+    theme(axis.text.x = element_text(angle = 90))
+```
+
+
+# Verkenning mogelijke vertekening door verplaatsing van meetpunten
+
+Indien een meetpunt niet in het doelhabitat(sub)type valt kan het verplaatst worden volgens de richtlijnen in het veldprotocol. Een verplaatsing van meetpunten wordt toegestaan omdat voor heel wat habitat(sub)types de trefkans zeer laag bleek. We moeten wel waken voor de mogelijke vertekening die deze verplaatsingen kunnen veroorzaken. 
+
+
+```{r}
+assessments_sampling_unit <- mhq_progress_details %>%
+    filter(assessment_source == "field assessment") %>%
+    group_by(scheme, sampling_unit_code, type_target, phab, fieldwork_team) %>%
+    summarise(lsvi_measurement = any(lsvi_measurement),
+              distance = max(distance, na.rm = TRUE),
+              distance = ifelse(distance == -Inf, 0, distance)) %>%
+    ungroup() %>%
+    mutate(change_location = distance > 1,
+           change_location_class = ifelse(distance <= 1 | is.na(distance), "distance < 1 m",
+                                    ifelse(distance <= 10, "distance between 1 and 10 m",
+                                           "distance > 10 m")),
+           change_location_class = factor(change_location_class, levels = c("distance < 1 m", "distance between 1 and 10 m", "distance > 10 m")),
+           status = ifelse(!lsvi_measurement, "not measured",
+                           ifelse(change_location, "measured and location change", "measured and no location change")),
+           phab_class = ifelse(phab <= 40, "0 - 40",
+                               ifelse(phab <= 80, "50 - 80", "100")),
+           phab_class = factor(phab_class, levels = c("0 - 40", "50 - 80", "100")),
+           habitat_group = ifelse(str_sub(type_target, end = 1) == "9", "forest",
+                                  ifelse(str_sub(type_target, end = 2) %in% c("23", "40"), "heath",
+                                         ifelse(str_sub(type_target, end = 2) %in% c("21"), "coastal dunes",
+                                                ifelse(str_sub(type_target, end = 2) %in% c("71"), "marshes", "grasslands")))))
+
+```
+
+Figuur \@ref(fig:locationchange) toont het aantal verplaatste meetpunten per meetnet en per veldwerkteam, waarbij verschillende afstandsklassen onderscheiden worden. Verder spreken we vanaf een verplaatst meetpunt als het meer dan 1 meter verschoven is t.o.v. het originele referentiepunt (de xy-locatie waar geëvalueerd wordt of doeltype aanwezig is). 
+
+Voor HQ6510 valt op dat er veel meetpunten verplaatst worden binnen een afstand tussen 1 en 10 meter. Zijn dit bewuste verplaatsingen of is dit eerder een fout bij de localisatie van de meetpunten?
+
+```{r locationchange, fig.cap = "Overzicht verplaatste meetpunten"}
+assessments_sampling_unit %>%
+    filter(lsvi_measurement) %>%
+    ggplot(aes(x = scheme, fill = change_location_class)) +
+    geom_bar() +
+    facet_wrap(~fieldwork_team, scales = "free_x") +
+    theme(axis.text.x = element_text(angle = 90),
+          legend.position = "bottom")
+
+```
+
+De habitatkaart (die het steekproefkader vormt) bevat heel wat polygonen die gedeeltelijk uit habitat bestaan of uit verschillende habitattypen. 
+De variabele phab geeft een ruwe inschatting van het procentueel oppervlakteaandeel van elk type binnen een polygoon van de habitatkaart. 
+Om vertekening te vermijden zou elke locatie waar een bepaalde habitat(sub)type voorkomt eenzelfde kans moeten hebben om geselecteerd te worden. 
+Door meetpunten te verplaatsen verhogen we de selectiekans/detectiekans. We willen nagaan in hoeverre deze verhoging van de selectiekans gerelateerd is aan de phab. We willen immers vermijden dat de verhoging van de selectiekans veel groter is bij een lagere phab, want dat zou tot vertekening kunnen leiden. 
+Het zou immers kunnen dat habitat in polygonen met een lage phab vaker uit kleine habitatvlekken bestaan en dat kleinere habitatvlekken meer kans hebben op een ongunstige habitatkwaliteit.
+
+Figuur \@ref(fig:phabgroup) en Figuur \@ref(fig:phabscheme) tonen per habitatgroep en per meetnet het aantal niet opgemeten meetpunten (geen doelhabitat) en het aantal opgemeten meetpunten met en zonder verplaatsing. In het algemeen blijkt dat er zich niet enkel bij de lage phab-waarden verplaatsingen hebben voorgedaan en dat er ook heel wat verplaatsingen zijn bij een phab-waarde van 100. 
+
+```{r phabgroup, fig.cap = "Overzicht bezochte meetpunten per habitatgroep"}
+assessments_sampling_unit %>%
+    filter(!is.na(phab)) %>%
+    ggplot(aes(x = phab, fill = status)) +
+    geom_histogram(binwidth = 10) +
+    facet_wrap(~habitat_group, scales = "free_y") +
+    theme(legend.position = "bottom")
+```
+
+
+```{r phabscheme, fig.height= 8, fig.cap = "Overzicht bezochte meetpunten per meetnet"}
+assessments_sampling_unit %>%
+    filter(!is.na(phab)) %>%
+    ggplot(aes(x = phab, fill = status)) +
+    geom_histogram(binwidth = 10) +
+    facet_wrap(~scheme, scales = "free_y") +
+    theme(legend.position = "bottom")
+```
+
+```{r}
+detection_rate_overall <- assessments_sampling_unit %>%
+    filter(!is.na(phab)) %>%
+    group_by(phab_class, fieldwork_team) %>%
+    summarise(n_assessments = n(),
+              det_rate_expected = round(mean(phab)/100, 2),
+              det_rate_no_location_change = round(sum(status == "measured and no location change") / 
+                  n(), 2),
+              det_rate_location_change = round(sum(status %in% c("measured and no location change", "measured and location change")) / 
+                  n(), 2),
+              det_rate_increase_pct = round((det_rate_location_change - det_rate_no_location_change)/ det_rate_no_location_change * 100)) %>%
+    ungroup() %>%
+    arrange(fieldwork_team, phab_class)
+
+detection_rate_habitat_group <- assessments_sampling_unit %>%
+    filter(!is.na(phab)) %>%
+    group_by(phab_class, habitat_group) %>%
+    summarise(n_assessments = n(),
+              det_rate_expected = round(mean(phab)/100, 2),
+              det_rate_no_location_change = round(sum(status == "measured and no location change") / 
+                  n(), 2),
+              det_rate_location_change = round(sum(status %in% c("measured and no location change", "measured and location change")) / 
+                  n(), 2),
+              det_rate_increase_pct = round((det_rate_location_change - det_rate_no_location_change)/ det_rate_no_location_change * 100)) %>%
+    ungroup() %>%
+    arrange(habitat_group,  phab_class)
+
+detection_rate_scheme <- assessments_sampling_unit %>%
+    filter(!is.na(phab)) %>%
+    group_by(phab_class, fieldwork_team, scheme) %>%
+    summarise(n_assessments = n(),
+              det_rate_expected = round(mean(phab)/100, 2),
+              det_rate_no_location_change = round(sum(status == "measured and no location change") / 
+                  n(), 2),
+              det_rate_location_change = round(sum(status %in% c("measured and no location change", "measured and location change")) / 
+                  n(), 2),
+              det_rate_increase_pct = round((det_rate_location_change - det_rate_no_location_change)/ det_rate_no_location_change * 100)) %>%
+    ungroup() %>%
+    arrange(scheme, fieldwork_team, phab_class)
+```
+
+Figuur \@ref(fig:detgroup) en figuur \@ref(fig:detscheme) tonen per habitatgroep en per meetnet de verwachte detectiekans (gebaseerd op phab) en de geobserveerde detectiekans met en zonder verplaatsing. We delen daarbij de phab-waarden in drie klassen in. De dikte van de punten geeft het aantal observaties weer. 
+
+In het algemeen zien we voor heidehabitats en voor boshabitats, uitgezonderd 91E0, een redelijk goede corelatie tussen de verwachte trefkans en de geobserveerde trefkans zonder verplaatsing (habitats die uit grotere aaneengesloten gebieden bestaan). Voor de meeste andere habitas en vooral dan voor graslandhabitats is deze correlatie eerder klein, waaruit we kunnen afleiden dat de phab-waarden in de habitatkaart weinig nauwkeurig zijn voor die habitats.
+
+Daarnaast zien we in sommige meetnetten (zoals HQ6230, HQ6510 en HQ91E0) een relatief hogere toename in detectiekans bij lage phab-waarden in vergelijking met de hoge phab-waarden, wanneer verplaatsingen meegerekend worden. Maar anderzijds blijken de phab-waarden van deze habitattypen weinig nauwkeurig te zijn (als we verwachte detectiekans met geobserveerde detectiekans vergelijken) waardoor de kans op vertekening eerder klein lijkt.
+
+Voor de kustduinhabitats ontbreken de meetpunten die bezocht werden maar niet werden opgemeten (detectiekans is dus overschat).  
+
+```{r detgroup, fig.height= 6, fig.cap = "Verwachte trefkans en geobserveerde trefkans met en zonder verplaatsing per habitatgroep"}
+
+detection_rate_habitat_group %>%
+    gather(det_rate_expected, det_rate_location_change, det_rate_no_location_change, key = "type", value = "detection_rate") %>%
+    ggplot(aes(x = phab_class, y = detection_rate, colour = type, shape = type, group = type, size = n_assessments)) +
+    geom_point(alpha = 0.7) +
+    geom_line(size = 0.5, alpha = 0.7) +
+    facet_wrap(~ habitat_group) +
+    theme(axis.text.x = element_text(angle = 90))
+              
+```
+
+```{r detscheme, fig.height= 8, message=FALSE, fig.cap = "Verwachte trefkans en geobserveerde trefkans met en zonder verplaatsing per meetnet"}
+
+detection_rate_scheme %>%
+    gather(det_rate_expected, det_rate_location_change, det_rate_no_location_change, key = "type", value = "detection_rate") %>%
+    ggplot(aes(x = phab_class, y = detection_rate, colour = type, shape = type, group = type, size = n_assessments)) +
+    geom_point(alpha = 0.7) +
+    geom_line(size = 0.5, alpha = 0.7) +
+    facet_wrap(~ scheme) +
+    theme(axis.text.x = element_text(angle = 90))
+               
+
+```
+
+
+# Selectie prioritair af te werken meetpunten
+
+## Inititiële selectie
+
+Voor sommige types en strata staan we al verder dan voor anderen. Om er voor te zorgen dat we voor elke type en stratum aan minstens 50% van de totale steekproefgrootte zitten, maken we een selectie van prioritair af te werken meetpunten. Eerst berekenen we het aantal prioritair af te werken meetpunten en het verwacht aantal bezoeken dat daarvoor nodig is. Vervolgens selecteren we het prioritair gewenst aantal te bezoeken punten uit de selectie van de nog niet bezochte punten. Hiervoor baseren we ons op de grts-ranking.
+
+```{r}
+prioritair <- overview_progress %>%
+    mutate(samplesize_50 = ceiling(samplesize_net/2),
+        n_sampling_units_prioritair = pmax(0 , samplesize_50 - n_measured_valid),
+        n_visits_prioritair = round(n_sampling_units_prioritair / detection_rate_expected, 0),
+        n_visits = ceiling(samplesize_50/detection_rate_expected)) %>%
+    select(fieldwork_team, type_target = type, sac, samplesize_net, n_visits, samplesize_50, n_measured, n_measured_valid, n_sampling_units_prioritair, n_visits_prioritair)
+
+type_n_visits_prioritair <- prioritair %>%
+    select(fieldwork_team, type_target, sac, n_sampling_units_prioritair, n_visits_prioritair) %>%
+    filter(type_target != "2330_dw") %>%
+    filter(type_target != "9130_fm") %>%
+    mutate(foresthab = str_sub(type_target, 1,1) == "9")
+
+total <- type_n_visits_prioritair %>%
+  group_by(fieldwork_team, foresthab) %>%
+  summarise(n_visits_prioritair_tot = sum(n_visits_prioritair),
+            n_sampling_units_prioritair_tot = sum(n_sampling_units_prioritair)) %>%
+  ungroup()
+
+write.csv2(type_n_visits_prioritair, "../../output/mhq_samplesize_priority.csv", row.names = FALSE)
+```
+
+
+Onderstaande tabel toont het aantal prioritair op te meten steekproefpunten per type en per stratum.
+
+```{r prioritair}
+
+type_n_visits_prioritair %>%
+    select(fieldwork_team, type_target, sac, "Prioritair op te meten" = n_sampling_units_prioritair, "Prioritair te bezoeken" = n_visits_prioritair) %>%
+    datatable(caption = "Aantal prioritair op te meten punten en verwacht aantal bezoeken dat hiervoor nodig is",
+              rownames = FALSE,
+              filter = "top") 
+
+
+```
+
+Het bestand 'sampling_units_prioritair' bevat alle te bezoeken meetpunten volgens de steekproeftrekking op basis van de Habitatkaart 2020 met aanduiding van de prioritair af te werken meetpunten.
+
+```{r}
+
+mhq_refpoints_todo_potential <- read_vc(file = "mhq_refpoints_todo_potential", root = file.path(fileman_up("n2khab-mhq-design"), "design-strategy/output"))
+
+sampling_unit_prioritair <- mhq_refpoints_todo_potential %>%
+    # filter(is.na(assessment_source) & is.na(inaccessible)) %>%
+    # filter(!(legacy_site & fieldwork_team == "anb")) %>% # geen vbi-meetpunten
+    left_join(prioritair, by = c("type_target", "sac")) %>%
+    group_by(fieldwork_team, type_target, sac) %>%
+    mutate(ranking_abs = rank(grts_ranking_draw),
+           priority = ranking_abs <= n_visits_prioritair,
+           sample = ranking_abs <= n_visits,
+           reserve = ranking_abs > n_visits & ranking_abs <= (n_visits + 25),
+           status = ifelse(status == "new", "update 2020", "original sample")) %>%
+    ungroup() %>%
+    filter(sample | reserve) %>%
+    group_by(point_code) %>%
+    mutate(n_typetarget_priority = n()) %>%
+    ungroup()
+   
+
+# mhq_to_do_priority <- mhq_to_do %>%
+#     mutate(priority = point_code %in% sampling_unit_prioritair$point_code)
+
+#write.csv2( mhq_to_do_priority, "../../output/sampling_units_prioritair_versie2020-07-06.csv", row.names = FALSE)
+
+check <- sampling_unit_prioritair %>%
+  group_by(fieldwork_team, type_target, sac, n_visits_prioritair, n_sampling_units_prioritair) %>%
+  summarise(n_selected = n_distinct(point_code)) %>%
+  ungroup()
+
+
+# samples_prioritair_grassland_marshes_inbo <- sampling_unit_prioritair %>%
+#     filter(fieldwork_team == "inbo") %>%
+#     filter(str_sub(type_target, 1, 1) %in% c("6", "7", "1")) %>%
+#     select(sampling_unit_code, point_code, sac, type_target, n_type_target, n_sampling_units_prioritair, n_visits_prioritair, grts_ranking_draw, ranking_abs, x , y ) %>%
+#     arrange(point_code, type_target, ranking_abs)
+# 
+# samples_prioritair_grassland_marshes_inbo %>%
+#     select(-n_visits_prioritair) %>%
+#     write.csv2( "../../output/sampling_units_prioritair_grassland_marshes_inbo_versie2020-07-06.csv", row.names = FALSE)
+
+```
+
+
+```{r}
+samples_prioritair_openhab_anb <- sampling_unit_prioritair %>%
+    filter(sample) %>%
+    filter(fieldwork_team == "anb") %>%
+    filter(str_sub(type_target, 1, 1) != "9" ) %>%
+    filter(type_target != "2330_dw") %>%
+    select(sampling_unit_code, point_code, sac, type_target, phab, year_planned, priority, n_typetarget_priority, n_sampling_units_prioritair, n_visits_prioritair, grts_ranking_draw, ranking_abs, x , y , status) %>%
+    arrange(type_target, sac, ranking_abs)
+
+samples_prioritair_openhab_anb %>%
+    # select(-n_visits_prioritair) %>%
+    write.csv2( "../../output/sampling_units_prioritair_openhab_anb_versie2021-02-08.csv", row.names = FALSE)
+
+```
+
+```{r}
+
+samples_prioritair_foresthab_anb <- sampling_unit_prioritair %>%
+    filter(sample) %>%
+    filter(fieldwork_team == "anb") %>%
+    filter(str_sub(type_target, 1, 1) == "9" ) %>%
+    filter(type_target != "9130_fm") %>%
+    select(sampling_unit_code, point_code, sac, type_target, phab, year_planned, priority, n_typetarget_priority, n_sampling_units_prioritair, n_visits_prioritair, grts_ranking_draw, ranking_abs, x , y , status) %>%
+    arrange(type_target, sac, ranking_abs)
+
+samples_prioritair_foresthab_anb %>%
+    # select(-n_visits_prioritair) %>%
+    write.csv2( "../../output/sampling_units_prioritair_foresthab_anb_versie2021-02-08.csv", row.names = FALSE)
+```
+
+
+
+
+Indien op een locatie een ander type wordt waargenomen dan het doelhabitat, kan er een opname gebeuren voor het waargenomen type indien de grts-ranking van de locatie lager is dan de maximale grts-ranking in de prioritaire selectie van de steekproefpunten. De maximale grts_ranking per type en per stratum is weergegeven in het bestand 'max_grts_ranking'.  
+
+```{r}
+max_ranking_foresthab <- sampling_unit_prioritair %>%
+  filter(sample) %>%
+    filter(str_sub(type_target, 1, 1) == "9") %>%
+    filter(type_target != "9130_fm") %>%
+    group_by(fieldwork_team, type_target, sac) %>%
+    summarise(max_grts_ranking = max(grts_ranking_draw)) %>%
+    ungroup()
+
+write.csv2(max_ranking_foresthab, "../../output/max_ranking_foresthab_versie2021-02-08.csv", row.names = FALSE)
+
+
+max_ranking_foresthab  %>%
+    datatable(caption = "Maximale grts-ranking voor geldige opname",
+              rownames = FALSE,
+              filter = "top") 
+```
+
+```{r}
+max_ranking_openhab <- sampling_unit_prioritair %>%
+  filter(priority) %>%
+  filter(fieldwork_team == "anb") %>%
+    filter(str_sub(type_target, 1, 1) != "9") %>%
+    filter(type_target != "2330_dw") %>%
+    group_by(fieldwork_team, type_target, sac) %>%
+    summarise(max_grts_ranking = max(grts_ranking_draw)) %>%
+    ungroup()
+
+write.csv2(max_ranking_openhab, "../../output/max_ranking_openhab_versie2021-02-08.csv", row.names = FALSE)
+
+
+max_ranking_openhab  %>%
+    datatable(caption = "Maximale grts-ranking voor geldige opname",
+              rownames = FALSE,
+              filter = "top") 
+```
+
+## Selectie na desktop controle
+
+```{r}
+samples_prioritair_foresthab_anb_check_orig <- read.csv2("../../mhq_sample-admin_data/visual_control_samplingunits/sampling_units_prioritair_foresthab_anb_versie2021-02-08_dektopcheck.csv", stringsAsFactors = FALSE) %>%
+  rename(orthocontrole = orthocheck)
+
+samples_prioritair_openhab_anb_check_orig <- read.csv2("../../mhq_sample-admin_data/visual_control_samplingunits/sampling_units_prioritair_openhab_anb_versie2021-02-08_desktopcheck.csv", stringsAsFactors = FALSE) %>%
+  rename(opmerking = opm)
+
+samples_extra_orig <- read.csv2("../../mhq_sample-admin_data/visual_control_samplingunits/sampling_unit_prioritair_extra.csv", stringsAsFactors = FALSE) %>%
+  rename(orthocontrole = orthocheck)
+
+overview_check <- bind_rows(
+  samples_prioritair_foresthab_anb_check_orig,
+  samples_prioritair_openhab_anb_check_orig,
+  samples_extra_orig
+) %>%
+  group_by(type_target, sac, n_sampling_units_prioritair, n_visits_prioritair) %>%
+  summarise(n_selected = sum(orthocontrole, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate(match = n_selected == n_visits_prioritair) %>%
+  filter(!match)
+
+#write.csv2(overview_check, "../../output/overzicht_orthocontrole.csv")
+```
+
+```{r, eval=FALSE}
+# extra points needed for 2310 outside sac and for 91E0_vm outside sac
+
+sampling_unit_prioritair_extra <- sampling_unit_prioritair %>%
+  filter(type_target %in% c("91E0_vm", "2310", "9190")) %>%
+  filter(sac == 0) %>%
+  filter(reserve) %>%    
+  select(sampling_unit_code, point_code, sac, type_target, phab, year_planned, priority, n_typetarget_priority, n_sampling_units_prioritair, n_visits_prioritair, grts_ranking_draw, ranking_abs, x , y , status) %>%
+    arrange(type_target, sac, ranking_abs)
+  
+write.csv2(sampling_unit_prioritair_extra, "../../output/sampling_unit_prioritair_extra.csv", row.names = FALSE)
+```
+
+```{r}
+
+habmap <- read_habitatmap_terr()
+
+habmap_pol <- habmap$habitatmap_terr_polygons %>%
+  select(description)
+
+sampling_unit_select <-  bind_rows(
+  samples_prioritair_foresthab_anb_check_orig,
+  samples_prioritair_openhab_anb_check_orig,
+  samples_extra_orig
+) %>% 
+  filter(orthocontrole) %>%
+  group_by(type_target, sac) %>%
+  mutate(ranking_abs = rank(grts_ranking_draw),
+         x_coord = x,
+         y_coord = y) %>%
+  ungroup() %>%
+  mutate(check = ranking_abs <= n_visits_prioritair) %>%
+  filter(check) %>%
+  mutate(opmerking = ifelse(opmerking == "toelating", "toelating nodig", NA)) %>%
+  st_as_sf(coords = c("x", "y"), crs = 31370) %>%
+  st_join(habmap_pol) %>% 
+  st_drop_geometry() %>%
+  select(sampling_unit_code, point_code, grts_ranking = grts_ranking_draw, sac, type_target, phab, n_sampling_units_prioritair, n_bezoeken_prioritair = n_visits_prioritair, beschrijving_habitatkaart = description, opmerking, x = x_coord, y = y_coord)
+
+write.csv2(sampling_unit_select, "../../output/samplingunits_prioritair_anb_versie2021-02-22.csv", row.names = FALSE)
+
+max_ranking_openhab <- sampling_unit_select %>%
+  filter(str_sub(type_target, 1, 1) != "9") %>%
+  group_by(sac, type_target) %>%
+  summarise(max_ranking = max(grts_ranking)) %>%
+  ungroup() %>%
+  arrange(type_target, sac)
+
+write.csv2(max_ranking_openhab, "../../output/max_ranking_openhab_versie2021-02-22.csv", row.names = FALSE)
+
+overzicht_prioritaire_punten <- sampling_unit_select %>%
+  distinct(type_target, sac, n_sampling_units_prioritair, n_bezoeken_prioritair) %>%
+ arrange(type_target, sac)
+
+write.csv2(overzicht_prioritaire_punten, "../../output/overzicht_samplingunits_prioritair_anb_versie2021-02-22.csv", row.names = FALSE)
+
+```
+
+## Controle
+
+```{r}
+
+
+prioritaire_punten <- sampling_unit_select %>%
+  st_as_sf(coords = c("x", "y"), crs = 31370) %>%
+  st_join(habmap_pol)
+
+```
+

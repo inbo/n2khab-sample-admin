@@ -1,0 +1,60 @@
+class_id	class_code	cover_mean	cover_min	cover_max	cover_description	coverscale_name
+0	ZS	0.5	0	5	Zeer schaars	Beheermonitoringsschaal
+1	S	1	0	5	Schaars	Beheermonitoringsschaal
+2	WT	1.5	0	5	Weinig talrijk	Beheermonitoringsschaal
+3	T	3	0	5	Talrijk	Beheermonitoringsschaal
+4	B	15	5	25	Bedekkend	Beheermonitoringsschaal
+5	KB	37.5	25	50	Kwartbedekkend	Beheermonitoringsschaal
+6	HB	62.5	50	75	Halfbedekkend	Beheermonitoringsschaal
+7	D	87.5	75	100	Dominant	Beheermonitoringsschaal
+1	NA	0.25	0	5	r       : < 5 % (1 - 2 )	Braun-Blanquet
+2	NA	1	0	5	+      : < 5 % (3 - 20)	Braun-Blanquet
+3	NA	2.25	0	5	1      : < 5 % (20 - 100)	Braun-Blanquet
+4	NA	4	0	5	2m   : < 5 % (> 100)	Braun-Blanquet
+5	NA	8.75	5	12.5	2a     : 5 - 12,5 %	Braun-Blanquet
+6	NA	18.75	12.5	25	2b     : 12,5 - 25 %	Braun-Blanquet
+7	NA	37.5	25	50	3       : 25 - 50  %	Braun-Blanquet
+8	NA	62.5	50	75	4       : 50 - 75 %	Braun-Blanquet
+9	NA	87.5	75	100	5       : 75 - 100 %	Braun-Blanquet
+0	NA	0	0	0	NVT : niet van toepassing	CoverVeglayers
+1	NA	2.5	0	5	< 5%	CoverVeglayers
+2	NA	8.75	5	12.5	5 - 12,5 %	CoverVeglayers
+3	NA	18.75	12.5	25	12,5 - 25 %	CoverVeglayers
+4	NA	37.5	25	50	25 - 50 %	CoverVeglayers
+5	NA	62.5	50	75	50 - 75 %	CoverVeglayers
+6	NA	87.5	75	100	75 - 100 %	CoverVeglayers
+8	NA	7	5	10	1 - : willekeurig (5-10%)	Londo
+10	NA	20	15	25	2 : willekeurig (15-25%)	Londo
+11	NA	30	25	35	3 : willekeurig (25-35%)	Londo
+12	NA	40	35	45	4 : willekeurig (35-45%)	Londo
+13	NA	50	45	55	5 : willekeurig (45-55%)	Londo
+14	NA	60	55	65	6 : willekeurig (55-65%)	Londo
+15	NA	70	65	75	7 : willekeurig (65-75%)	Londo
+16	NA	80	75	85	8 : willekeurig (75-85%)	Londo
+17	NA	90	85	95	9 : willekeurig (85-95%)	Londo
+18	NA	97	95	100	10 : willekeurig (95-100%)	Londo
+19	NA	10	5	15	1 : willekeurig (5-15%)	Londo
+20	NA	1	0	1	r1 : sporadisch (< 1%)	Londo
+21	NA	2	1	3	r2 : sporadisch (1-3%)	Londo
+22	NA	4	3	5	r4 : sporadisch (3-5%)	Londo
+23	NA	1	0	1	p1 : weinig talrijk (< 1%)	Londo
+24	NA	2	1	3	p2 : weinig talrijk (1-3%)	Londo
+25	NA	4	3	5	p4 : weinig talrijk (3-5%)	Londo
+26	NA	1	0	1	a1 : talrijk (< 1%)	Londo
+27	NA	2	1	3	a2 : talrijk (1-3%)	Londo
+28	NA	4	3	5	a4 : talrijk (3-5%)	Londo
+29	NA	1	0	1	m1 : zeer talrijk (< 1%)	Londo
+30	NA	2	1	3	m2 : zeer talrijk (1-3%)	Londo
+31	NA	4	3	5	m4 : zeer talrijk (3-5%)	Londo
+33	NA	12	10	15	1 + : willekeurig (10-15%)	Londo
+34	NA	47	45	50	5 - : willekeurig (45-50%)	Londo
+35	NA	52	50	55	5 +: willekeurig (50-55%)	Londo
+1	r	1	NA	NA	zeldzaam	Tansley
+5	o	1.5	NA	NA	occasioneel	Tansley
+11	f	3	NA	NA	frequent	Tansley
+16	a	27.5	NA	NA	abundant	Tansley
+22	cd	62.5	NA	NA	codominant	Tansley
+23	d	87.5	NA	NA	dominant	Tansley
+997	ld	21.875	NA	NA	lokaal dominant	Tansley
+998	lf	0.75	NA	NA	lokaal frequent	Tansley
+999	la	6.875	NA	NA	lokaal abundant	Tansley
