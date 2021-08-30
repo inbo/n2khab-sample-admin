@@ -1,0 +1,23 @@
+..generic:
+  git2rdata: 0.3.1
+  optimize: yes
+  NA string: NA
+  sorting:
+  - scheme
+  - sampling_unit_code
+  hash: 006a42c2cefe349f25677191d61184bf4ea65470
+  data_hash: ae3047d18d0ae4348c6738ff9425344bc0cfe9b6
+scheme:
+  class: character
+sampling_unit_code:
+  class: character
+code_watersurfaces:
+  class: character
+type_target:
+  class: character
+grts_ranking:
+  class: numeric
+grts_ranking_draw:
+  class: numeric
+source_samplingunit:
+  class: character

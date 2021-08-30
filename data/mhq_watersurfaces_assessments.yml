@@ -1,0 +1,24 @@
+..generic:
+  git2rdata: 0.3.1
+  optimize: yes
+  NA string: NA
+  sorting:
+  - code_watersurfaces
+  - type_target
+  hash: a42cce81830f7d1b6120ef257f6c3dc4515983df
+  data_hash: 4235d0e7c41bfb916a45f90d1be8af18162f0639
+code_watersurfaces:
+  class: character
+type_target:
+  class: character
+assessment_source:
+  class: character
+assessment_date:
+  class: Date
+  origin: '1970-01-01'
+inaccessible:
+  class: character
+type_observed_all:
+  class: character
+is_type_target:
+  class: logical
