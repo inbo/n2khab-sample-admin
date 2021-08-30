@@ -250,14 +250,14 @@ refpoints_legacy_todo_selected <- refpoints_legacy_todo %>%
          x_coord = x_orig,
          y_coord = y_orig) %>%
   filter(selection) %>%
-  mutate(type = "existing PINK PQ: do not replace",
+  mutate(replacement_rule = "existing PINK PQ: do not replace",
          phab = 100,
          n_type_target = 1,
          type_target_all = type_target) %>%
   st_as_sf(coords = c("x_orig", "y_orig"), crs =31370) %>%
   st_join(habitatmap_pol) %>%
   st_drop_geometry() %>%
-  select(sampling_unit_code, point_code, sac, type_target, phab, n_type_target, type_target_all, grts_ranking, grts_ranking_draw, ranking_rel, x = x_coord, y = y_coord, polygon_id, description_orig, type)
+  select(sampling_unit_code, point_code, sac, type_target, phab, n_type_target, type_target_all, grts_ranking, grts_ranking_draw, ranking_rel, x = x_coord, y = y_coord, polygon_id, description_orig, replacement_rule)
   
 ```
 
@@ -330,8 +330,8 @@ mhq_refpoints_new_inbo <- mhq_refpoints_todo_potential %>%
   # st_as_sf(coords = c("x", "y"), crs = 31370) %>%
   # st_join(habitatmap_pol) %>%
   # st_drop_geometry() %>%
-  mutate(type = "new sampling unit: replace within polygon if type target is not present") %>%
-  select(sampling_unit_code, point_code, sac, type_target, phab, n_type_target, type_target_all, grts_ranking_draw, ranking_rel, x = x_coord, y = y_coord, polygon_id, description_orig, type) %>%
+  mutate(replacement_rule = "new sampling unit: replace within polygon if type target is not present") %>%
+  select(sampling_unit_code, point_code, sac, type_target, phab, n_type_target, type_target_all, grts_ranking_draw, max_grts_ranking, ranking_rel, x = x_coord, y = y_coord, polygon_id, description_orig, replacement_rule) %>%
   arrange(type_target, sac)
 ```
 
@@ -356,7 +356,7 @@ mhq_refpoints_new_inbo_polygons <- habitatmap_pol %>%
 
 mhq_refpoints_new_inbo_polygons %>%
   rename(pol_id = polygon_id, descr = description_orig, type_all = type_target_all) %>%
-  st_write("../../output/polygons_todo_inbo_versie2021-04-29.shp", driver = "ESRI Shapefile",
+  st_write("../../output/polygons_todo_inbo_versie2021-05-04.shp", driver = "ESRI Shapefile",
          delete_layer = TRUE)
 
 # grts_ranking_assessed <- mhq_terr_assessments_update %>%
@@ -384,14 +384,14 @@ mhq_replacements <- grts_habmap %>%
   select(polygon_id, grts_ranking, rank_inpolygon, x, y) %>%
   arrange(polygon_id, rank_inpolygon)
 
-write_csv2(mhq_replacements, "../../output/replacements_inbo_versie2021-04-29.csv")
+write_csv2(mhq_replacements, "../../output/replacements_inbo_versie2021-05-04.csv")
 
 max_grts_ranking <- mhq_refpoints_new_inbo %>%
   group_by(type_target, sac) %>%
   summarise(max_grts_ranking = max(grts_ranking_draw)) %>%
   ungroup()
 
-write_csv2(max_grts_ranking, "../../output/maxranking_inbo_versie2021-04-29.csv")
+write_csv2(max_grts_ranking, "../../output/maxranking_inbo_versie2021-05-04.csv")
   
 ```
 
@@ -400,13 +400,13 @@ write_csv2(max_grts_ranking, "../../output/maxranking_inbo_versie2021-04-29.csv"
 We combine the selected PINK legacy sampling units and the newly selected sampling units.
 
 ```{r}
-mhq_refpoints_inbo_todo <- refpoints_legacy_todo_selected %>%
-  bind_rows(mhq_refpoints_new_inbo) %>%
+mhq_refpoints_inbo_todo <- mhq_refpoints_new_inbo %>%
+  bind_rows(refpoints_legacy_todo_selected) %>%
   arrange(type_target, sac, grts_ranking_draw) %>%
   select(-grts_ranking)
 
 mhq_refpoints_inbo_todo %>%
-  write_csv2("../../output/samplingunits_todo_inbo_versie2021-04-29.csv")
+  write_csv2("../../output/samplingunits_todo_inbo_versie2021-05-04.csv")
 ```
 
 ```{r}
