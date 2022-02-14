@@ -6,3 +6,7 @@
 !header.tex
 .~lock*
 *.tar.gz
+output
+_bookdown_files
+_book
+*.md

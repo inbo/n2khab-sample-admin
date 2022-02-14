@@ -1,5 +1,5 @@
 ---
-title: "Generating mhq_sample"
+title: "Update mhq terr"
 # subtitle: "x"
 date: "`r lubridate::now()`"
 link-citations: true
@@ -15,6 +15,7 @@ documentclass: "article"
 site: bookdown::bookdown_site
 output:
   bookdown::html_document2:
+    code_folding: hide
     keep_md: TRUE
     number_sections: yes
     fig_caption: yes
@@ -23,8 +24,6 @@ output:
     toc_float:
       collapsed: FALSE
       smooth_scroll: FALSE
-    includes:
-        in_header: ../header.html
   bookdown::pdf_document2:
     fig_caption: yes
     keep_tex: yes
@@ -37,6 +36,9 @@ output:
 ---
 
 ```{r setup, include=FALSE}
+
+#devtools::install_github("https://github.com/inbo/n2khab", ref ="rc0.2")
+
 options(stringsAsFactors = FALSE,
         scipen = 999, 
         digits = 15)
@@ -48,14 +50,25 @@ library(n2khab)
 library(git2rdata)
 library(kableExtra)
 library(RODBC)
+library(odbc)
+library(DBI)
+library(inborutils)
+library(googlesheets4)
+library(lubridate)
+library(leaflet)
+library(crosstalk)
+
+options(stringsAsFactors = FALSE)
 
 opts_chunk$set(
+  warning = FALSE,
+  cache = TRUE,
   echo = TRUE,
   dpi = 300
 )
 ```
 
-**Note: this is a bookdown project, supposed to be run from within the `src/generate_mhq_sample` subfolder. You can use the `src/generate_mhq_sample.Rproj` RStudio project file in this subfolder to run it.**
+**Note: this is a bookdown project, supposed to be run from within the `src/update_mhq_sample` subfolder. You can use the `src/update_mhq_sample.Rproj` RStudio project file in this subfolder to run it.**
 
 
 
