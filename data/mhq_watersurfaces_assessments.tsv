@@ -129,6 +129,7 @@ ANTMEC0030	3140	field assessment	16801	NA	3140	1
 ANTMEC0180	3140	field assessment	16436	NA	3140	1
 ANTMEC0257	3150	field assessment	17167	NA	3150	1
 ANTMEC0388	3140	field assessment	16436	NA	3130_na;3140	1
+ANTMEC0388	3150	field assessment	16436	NA	3130_na;3140	0
 ANTMOL0032	3130_na	field assessment	NA	NA	gh	0
 ANTMOL0036	3150	field assessment	16071	NA	3150	1
 ANTMOL0066	3140	field assessment	16801	NA	3140	1
@@ -309,6 +310,7 @@ LIMHMA0012	3130_aom	field assessment	NA	NA	gh	0
 LIMHMA0271	3130_aom	field assessment	NA	NA	gh	0
 LIMHMA0273	3130_aom	field assessment	16071	NA	gh	0
 LIMHVL0092	3130_aom	field assessment	16436	NA	3130_na;3150;3160	0
+LIMHVL0092	3160	field assessment	16436	NA	3130_na;3150;3160	1
 LIMHVL0144	3130_aom	field assessment	NA	NA	gh	0
 LIMKIN0231	3150	field assessment	17167	NA	3150	1
 LIMLNK0018	3150	field assessment	16801	NA	3150	1
@@ -332,7 +334,7 @@ LIMMGR0253	3130_aom	field assessment	16071	NA	gh	0
 LIMMGR0253	3160	field assessment	16071	NA	gh	0
 LIMMGR0261	3160	field assessment	NA	NA	gh	0
 LIMMGR0262	3160	field assessment	16436	NA	3160	1
-LIMMGR0376	3160	field assessment	16436	NA	3130_aom;3160	1
+LIMMGR0376	3160	field assessment	16436	NA	3130_aom;3130_aom;3160;3160	1
 LIMMSK0007	3130_aom	field assessment	16071	NA	3130_aom;3130_na	1
 LIMMSK0134	3130_aom	field assessment	17167	NA	3130_na;3140	0
 LIMMSK0151	NA	field assessment	17167	NA	3150	0
@@ -531,7 +533,7 @@ WVLKOK0010	2190	field assessment	17532	NA	2190	1
 WVLKOK0017	2190	field assessment	17532	NA	2190	1
 WVLKOK0021	2190	NA	NA	long term	gh	0
 WVLKOK0028	2190	field assessment	17167	NA	2190	1
-WVLKOK0041	2190	NA	NA	long term	gh	0
+WVLKOK0041	2190	field assessment	NA	NA	gh	0
 WVLKOK0041	3150	field assessment	NA	NA	gh	0
 WVLKOK0042	2190	NA	NA	long term	gh	0
 WVLKOK0049	2190	field assessment	NA	NA	gh	0
