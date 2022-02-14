@@ -1,0 +1,23 @@
+..generic:
+  git2rdata: 0.3.1
+  optimize: yes
+  NA string: NA
+  sorting:
+  - code_watersurfaces
+  - type_observed
+  hash: 266f553e404239eb76875f8c65f27b495101b425
+  data_hash: 992df500ec1674c6755d2a6d34295d35d32db7c5
+code_watersurfaces:
+  class: character
+db_ref:
+  class: character
+type_observed:
+  class: character
+measurement_biotic:
+  class: logical
+measurement_abiotic:
+  class: logical
+measurement_biotic_year:
+  class: numeric
+measurement_abiotic_year:
+  class: numeric
