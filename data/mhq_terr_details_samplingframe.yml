@@ -5,8 +5,8 @@
   sorting:
   - scheme
   - sampling_unit_code
-  hash: 9e6923beb3fda6513da8290e3ca9abe8319b3ec9
-  data_hash: 28fa8ec277399b1aa273462491363def7571fcd3
+  hash: 209f4792d19c45b9b9e561fe1868b0f7f1a6b747
+  data_hash: 2f3e3d4bb30bf6fbb779630b8bee1a6828cd1095
 scheme:
   class: factor
   labels:
@@ -52,7 +52,8 @@ scheme:
   - HQ2160
   - HQ2170
   - HQ2180
-  - HQ2190
+  - HQ2190_aq
+  - HQ2190_terr
   - HQ2310
   - HQ2330
   - HQ3110
@@ -116,7 +117,8 @@ scheme:
   - 40
   - 41
   - 42
-  - 43
+  - 9
+  - 65
   - 44
   - 45
   - 46

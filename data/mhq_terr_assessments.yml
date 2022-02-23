@@ -1,12 +1,12 @@
 ..generic:
   git2rdata: 0.3.1
-  optimize: yes
+  optimize: no
   NA string: NA
   sorting:
   - point_code
   - type_target
-  hash: a6fc2d5e9ea880113064365c335892e7b77b8d85
-  data_hash: 8eebdff52b1e829163b513ee95c768b87b3b5312
+  hash: cf137677e05a4049743c34cefa98ed4496184f06
+  data_hash: cd3be89fb165b4d7ded10f4d80e1db81d7d43d02
 point_code:
   class: character
 type_target:
@@ -242,7 +242,7 @@ type_observed:
   class: character
 assessment_date:
   class: Date
-  origin: '1970-01-01'
+  format: '%Y-%m-%d'
 assessment_source:
   class: factor
   labels:

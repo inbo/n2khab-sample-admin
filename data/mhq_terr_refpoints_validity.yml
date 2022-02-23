@@ -6,8 +6,8 @@
   - scheme
   - sampling_unit_code
   - point_code
-  hash: 9c74ea6841bee798b4c4ba248227f56c4b3298d1
-  data_hash: 64e3ba32eb4a48601277c3b67df094a26ac90bae
+  hash: 655a0e6795ac9015e3cf577854aecbef6d3acce2
+  data_hash: 18ce6cef8d407b2615890b9be238ba6fd983c233
 scheme:
   class: factor
   labels:
@@ -53,7 +53,8 @@ scheme:
   - HQ2160
   - HQ2170
   - HQ2180
-  - HQ2190
+  - HQ2190_aq
+  - HQ2190_terr
   - HQ2310
   - HQ2330
   - HQ3110
@@ -117,7 +118,8 @@ scheme:
   - 40
   - 41
   - 42
-  - 43
+  - 9
+  - 65
   - 44
   - 45
   - 46
