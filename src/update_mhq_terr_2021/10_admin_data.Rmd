@@ -667,6 +667,21 @@ refpoints_assessed_all <- refpoints_assessed_inbo %>%
     bind_rows(refpoints_assessed_anb) %>%
     bind_rows(refpoints_assessed_anb_ortho) %>%
     arrange(grts_ranking)
+
+original_coordinates_replacement <- mhq_terr_refpoints %>%
+    filter(is_centroid) %>%
+    select(grts_ranking, x_orig = x, y_orig = y) %>%
+    unique()
+
+check <- original_coordinates_replacement %>% 
+    group_by(grts_ranking) %>%
+    filter(n() > 1)
+
+refpoints_assessed_all <- refpoints_assessed_all %>%
+    left_join(original_coordinates_replacement, by = "grts_ranking") %>%
+    mutate(x = ifelse(!is.na(x_orig), x_orig, x),
+           y = ifelse(!is.na(y_orig), y_orig, y),
+           distance = sqrt((x - x_measured) ^ 2 + (y - y_measured) ^ 2))
 ```
 
 
@@ -889,7 +904,8 @@ terr_measurements <- refpoints_assessed_all %>%
     filter(lsvi_measurement) %>%
     select(fieldwork_team, point_code, type = type_observed, measurement_date = assessment_date, db_ref, user_reference, recording_givid) %>%
     mutate(type = factor(type, levels = levels(types$type))) %>%
-    arrange(measurement_date)
+    arrange(measurement_date) %>%
+    filter(!is.na(type))
 
 check <- terr_measurements %>%
     group_by(point_code, measurement_date) %>%
@@ -974,220 +990,140 @@ terr_popunits <- terr_popunits_sf %>%
 ```
 
 
-
-
-
-
-
-
-
-### Check assessments
-
 ```{r}
-grts_max_ranking <- reference_points_update %>%
-    group_by(sac, type_target) %>%
-    summarise(max_ranking = max(grts_ranking_draw)) %>%
-    ungroup() %>%
-    rename(type_observed = type_target)
-
-assessments_admin_check <- refpoints_assessed %>%
-    left_join(grts_max_ranking, by = c("type_observed", "sac")) %>%
-    mutate(distance =ifelse(lsvi_measurement, sqrt((x - x_measured) ^ 2 + (y - y_measured) ^ 2), 0),
-           distance = round(distance, 2),
-           is_type_target = ifelse(nchar(type_target) == 4, str_sub(type_observed, 1, 4) == type_target,
-                               type_observed == type_target),
-           is_type_target = ifelse((!lsvi_measurement) & is.na(type_observed), FALSE, is_type_target),
-           replacement = (distance > 1) | (point_type == "replacement"),
-           is_maintype_target = str_sub(type_observed, 1, 4) == str_sub(type_target, 1, 4)
-           ) %>%
-    group_by(point_code) %>%
-    mutate(any_type_target = any(is_type_target)) %>%
-    ungroup() 
-```
-
-+ check anomaly coordinates
-
-```{r}
-assessments_admin_check_anomaly <- assessments_admin_check %>%
-    filter(point_type == "replacement", distance > 0.1)
-```
-
-
-
-
-### Check 2020 and earlier assessments
-
-```{r}
-
-grts_max_ranking <- reference_points_update %>%
-    group_by(sac, type_target) %>%
-    summarise(max_ranking = max(grts_ranking_draw)) %>%
-    ungroup() %>%
-    rename(type_observed = type_target)
-
-assessments_admin_until2020 <- refpoints_assessed %>%
-    filter(year(assessment_date) <= 2020) %>%
-    left_join(grts_max_rankicng, by = c("type_observed", "sac")) %>%
-    mutate(distance =ifelse(lsvi_measurement, sqrt((x - x_measured) ^ 2 + (y - y_measured) ^ 2), 0),
-           distance = round(distance, 2),
-           is_type_target = ifelse(nchar(type_target) == 4, str_sub(type_observed, 1, 4) == type_target,
-                               type_observed == type_target),
-           is_type_target = ifelse((!lsvi_measurement) & is.na(type_observed), FALSE, is_type_target),
-           replacement = (distance > 1) | (point_code == "replacement"),
-           is_maintype_target = str_sub(type_observed, 1, 4) == str_sub(type_target, 1, 4)
-           ) %>%
-    group_by(point_code) %>%
-    mutate(any_type_target = any(is_type_target)) %>%
-    ungroup() %>%
-    mutate(allow_other_type = ifelse(!any_type_target, 
-                                     grts_ranking_draw <= max_ranking & (!(replacement & !is_maintype_target)),
-                                     NA),
-           is_valid_type = is_type_target | (allow_other_type & !is.na(allow_other_type)),
-           is_valid_refpoint = distance <= 110 | is.na(distance),
-           is_valid = is_valid_type & is_valid_refpoint)
-
-
-    
-```
-
-
-
-
-
-+ We allow a measurement for another type than the target type when:
-    + grts_ranking_draw is smaller than the maximum ranking of the observed type, AND
-    + when the observed type and the target type do not belong to the same main type, the reference point is not replaced
-    
-In the table below we see that these conditions are not met in several occasions.
-
-
-```{r}
-check_allow_other_type <- assessments_admin_until2020 %>%
-    filter(!allow_other_type) %>%
-    select(db_ref, sac ,type_target, type_observed, assessment_date, grts_ranking_draw, max_ranking, distance, allow_other_type)
-
-check_allow_other_type %>%
-    arrange(desc(assessment_date)) %>%
+terr_popunits %>%
+    slice_head(n = 10) %>%
     kable() %>%
     kable_styling()
 ```
 
 
 
-+ Create new sampling units when allow_other_type is TRUE
 
-When a reference point is measured and the observed type is different from the target type, we create a new sampling unit within the scheme of the observed type. We only do this for valid assessments (allow_other_type = TRUE and distance_from refpoint)
+
+
+
+# Validate measurements
 
 ```{r}
-    new_sampling_units_2020 <- assessments_admin_until2020 %>%
-        filter(lsvi_measurement) %>%
-        filter(allow_other_type) %>%
-    select(-sampling_unit_code) %>%
-    mutate(type_target = type_observed,
-           is_type_target = TRUE,
-           any_type_target = TRUE,
-           is_valid = TRUE,
-           is_valid_type = TRUE,
-           allow_other_type = NA) %>%
-    unique()
+grts_max_ranking <- reference_points_update %>%
+    group_by(sac, type_target) %>%
+    summarise(max_ranking = max(grts_ranking_draw)) %>%
+    ungroup() %>%
+    rename(type = type_target)
+```
 
+```{r}
+terr_measurements_validate <- refpoints_assessed_all %>%
+    filter(lsvi_measurement) %>%
+    filter(!is.na(type_observed)) %>%
+    select(fieldwork_team, point_code, type = type_observed, measurement_date = assessment_date, db_ref, user_reference, recording_givid, distance, point_type, distance_centroid) %>%
+    left_join(terr_popunits,  by = c("point_code", "type")) 
 ```
 
 
-```{r}
-assessments_admin_until2020 <- bind_rows(
-    assessments_admin_until2020,
-    new_sampling_units_2020
-) %>% 
-    arrange(type_target, sac, grts_ranking_draw) %>%
-    select(-sampling_unit_code)
 
-```
 
-+ Handle reference point changes
 
-When lsvi is measured at a different location than the original reference point, we create a new point_code for the reference point. 
-This is done by adding adding 1 to the number at the end of the point_code.  
-We consider a reference point as changed when the difference between the measured location and the original reference point is larger than 2 meter. Smaller differences are assumed unintentional.  
-
-Next we create assessments for the original reference points. It is assumed that for the changed locations, the target type is not present in the original reference point.
+## Check 2020 and earlier assessments
 
 ```{r}
-sample_units_change_location_until2020 <-  assessments_admin_until2020 %>%
-    filter(distance > 1 & point_code %in% mhq_terr_refpoints$point_code) %>%
-    mutate(ranking_code = str_sub(point_code, end = -3),
-           n_temp = as.numeric(str_sub(point_code, start = -1)),
-           x = x_measured,
-           y = y_measured,
-           is_centroid = FALSE,
-           legacy_site = FALSE) %>%
-    st_as_sf(coords = c("x", "y"), crs = 31370) %>%
-    mutate(grts_ranking = grts_master[as(., "Spatial")]) %>%
-    st_drop_geometry() %>%
-    mutate(x = x_measured,
-           y = x_measured) %>%
-    group_by(ranking_code) %>%
-    mutate(point_code = str_c(ranking_code, "_", max(n_temp) + rank(x, y, ties.method = "min"))) %>%
-    ungroup()
 
-#check: no lsvi measurement AND location change
+terr_measurements_validate_until2020 <- terr_measurements_validate %>%
+    left_join(grts_max_ranking, by = c("type", "sac")) %>%
+    filter(year(measurement_date) <= 2020) %>%
+    mutate(valid_type = grts_ranking_draw <=  max_ranking,
+           valid_distance = is.na(distance) | distance <= 110.1,
+           valid_distance_legacy = ! ((is.na(distance) | distance > 1) & legacy_site),
+           valid_replacement = valid_distance_legacy & valid_distance) 
 
-check <- sample_units_change_location_2020 %>%
-    filter(distance > 1) %>%
-    filter(!lsvi_measurement)
+check_type <- terr_measurements_validate_until2020 %>%
+    filter(!valid_type) %>%
+    select(point_code, sac, grts_ranking_draw, max_ranking, measurement_date, type, valid_type)
 
-sample_units_update_orig_location_2020 <- assessments_admin_new_2020 %>%
-    filter(distance > 2) %>%
-    mutate(is_type_target = FALSE,
-         lsvi_measurement = FALSE,
-          x = x_original,
-           y = y_original,
-           is_valid = FALSE,
-           is_valid_type = FALSE,
-           is_valid_refpoint = TRUE,
-           allow_other_type = NA,
-           type_observed = NA,
-           cover_description = NA,
-           distance = 0)
+check_distance <- terr_measurements_validate_until2020 %>%
+    filter(!valid_distance) %>%
+    select(point_code, sac, grts_ranking_draw, max_ranking, measurement_date, type, distance, valid_distance)
+
+check_distance_legacy <- terr_measurements_validate_until2020 %>%
+    filter(!valid_distance_legacy) %>%
+    select(point_code, sac, grts_ranking_draw, max_ranking, measurement_date, type, legacy_site, distance, valid_distance)
     
-assessments_admin_new_2020_2 <- assessments_admin_new_2020 %>%
-    filter(distance < 2 | is.na(distance)) %>%
-    mutate(x = ifelse(is.na(x_measured), x_original, x_measured),
-           y = ifelse(is.na(y_measured), y_original, y_measured)) %>%
-    bind_rows(sample_units_change_location_2020) %>%
-    bind_rows(sample_units_update_orig_location_2020) %>%
-    arrange(point_code) %>%
-    filter(fieldwork_team == "inbo")
-
-
 ```
 
 
 
-### Check 2021 assessments
++ We allow a measurement for another type than the original target type as long as:
+    + grts_ranking_draw is smaller than the maximum ranking of the observed type
+    
++ We allow a replacement from the original location
+    + when the distance of the replacement is smaller than 110 meters
+    + when the distance of the replacement is smaller than 1 meter for legacy sites 
+    
+The table below shows the measurements for which the first condition is not met.
+
+
+```{r}
+check_type %>%
+    arrange(measurement_date) %>%
+    kable() %>%
+    kable_styling()
+```
+
+The table below shows the measurements for which the first condition is not met.
+
+```{r}
+check_type %>%
+    arrange(measurement_date) %>%
+    kable() %>%
+    kable_styling()
+```
+
+
+The next shows the measurements for which the second condition is not met.
+
+```{r}
+check_distance %>%
+    arrange(measurement_date) %>%
+    mutate(distance = round(distance, 1))
+    kable() %>%
+    kable_styling()
+```
+
+
+## Check 2021 assessments
 
 In 2021 we started with a new sampling strategy. When the target type is not observed in a sampling unit, we allow it to be replaced by the sampling unit that does contain the target type with the lowest grst-ranking, within the same habitatmap polygon. 
 
 ```{r}
 
 grts_max_ranking_2021 <- su_2021 %>%
-    filter(!is.na(max_grts_ranking)) %>%
-    distinct(sac, type_target, max_grts_ranking) %>%
-    rename(type_observed = type_target)
-
-assessments_admin_new_2021 <- assessments_admin_new %>%
-    filter(year(assessment_date) >= 2021) %>%
-    left_join(coordinates_2021, by = c("point_code")) %>%
-    left_join(grts_max_ranking_2021, by = c("type_observed", "sac")) %>%
-    mutate(distance = sqrt((x_original - x_measured) ^ 2 + (y_original - y_measured) ^ 2),
-           distance = round(distance, 3),
-           is_type_target = ifelse(nchar(type_target) == 4, str_sub(type_observed, 1, 4) == type_target,
-                               type_observed == type_target)) %>%
-    group_by(point_code) %>%
-    mutate(any_type_target = any(is_type_target)) %>%
+    bind_rows(su_anb_2021) %>%
+    filter(!is.na(grts_ranking_draw)) %>%
+    group_by(type_target, sac) %>%
+    summarise(max_ranking = max(grts_ranking_draw)) %>%
     ungroup() %>%
-    mutate(allow_other_type = ifelse(!any_type_target, grts_ranking_draw <= max_grts_ranking & distance <= 1,
-                                     NA))
+    rename(type = type_target)
+
+terr_measurements_validate_from2021 <- terr_measurements_validate %>%
+    left_join(grts_max_ranking_2021, by = c("type", "sac")) %>%
+    filter(year(measurement_date) >= 2021) %>%
+    mutate(valid_type = grts_ranking_draw <=  max_ranking,
+           valid_centroid = distance_centroid >= 1,
+           valid_distance_legacy = ! ((is.na(distance) | distance > 1) & legacy_site),
+           valid_replacement = valid_distance_legacy) 
+
+check_type <- terr_measurements_validate_from2021 %>%
+    filter(!valid_type) %>%
+    select(point_code, sac, grts_ranking_draw, max_ranking, measurement_date, type, valid_type)
+
+check_centroid <- terr_measurements_validate_from2021 %>%
+    filter(!valid_centroid) %>%
+    select(point_code, sac, grts_ranking_draw, max_ranking, measurement_date, type, distance, valid_distance)
+
+check_distance_legacy <- terr_measurements_validate_until2020 %>%
+    filter(!valid_distance_legacy) %>%
+    select(point_code, sac, grts_ranking_draw, max_ranking, measurement_date, type, legacy_site, distance, valid_distance)
 ```
 
 
