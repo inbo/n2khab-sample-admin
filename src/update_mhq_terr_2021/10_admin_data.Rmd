@@ -743,10 +743,12 @@ min_y <- (mhq_terr_refpoints %>%
 
 new_reference_points <- refpoints_assessed_all %>%
     filter(point_type == "original",
-           distance >= 1) %>%
+           distance >= 1.1) %>%
     left_join(max_n, by = "point_code") %>%
     group_by(point_code) %>%
     mutate(ranking_code = str_sub(point_code, end = -3),
+           x_orig = x,
+           y_orig = y,
            x = x_measured,
            y = y_measured,
            distance_centroid = distance_from_centroidgrid(min_x = min_x,
@@ -761,7 +763,7 @@ new_reference_points <- refpoints_assessed_all %>%
     mutate(grts_ranking = grts_master[as(., "Spatial")]) %>%
     st_drop_geometry() %>%
     mutate(x = x_measured,
-           y = x_measured) %>%
+           y = y_measured) %>%
     group_by(ranking_code) %>%
     mutate(point_code = str_c(ranking_code, "_", max_n_point_code + rank(x, y, ties.method = "min"))) %>%
     ungroup()
@@ -771,7 +773,7 @@ check <- new_reference_points %>%
 
 original_reference_points <- refpoints_assessed_all %>%
     filter(point_type == "original",
-           distance >= 1) %>%
+           distance >= 1.1) %>%
     mutate(lsvi_measurement = FALSE,
            type_observed = NA,
            distance = NA,
@@ -1006,18 +1008,37 @@ terr_popunits %>%
 # Validate measurements
 
 ```{r}
-grts_max_ranking <- reference_points_update %>%
+grts_max_ranking_type <- reference_points_update %>%
+    mutate(type_target = ifelse(type_target == "2190", "2190_overig", type_target)) %>%
+    filter(!is.na(grts_ranking_draw)) %>%
     group_by(sac, type_target) %>%
     summarise(max_ranking = max(grts_ranking_draw)) %>%
     ungroup() %>%
     rename(type = type_target)
+
+grts_max_ranking_maintype <- reference_points_update %>%
+    mutate(type_target = ifelse(type_target == "2190", "2190_overig", type_target)) %>%
+    filter(!is.na(grts_ranking_draw)) %>%
+    mutate(main_type = str_sub(type_target, 1, 4)) %>%
+    group_by(sac, type_target, main_type) %>%
+    summarise(max_ranking = max(grts_ranking_draw)) %>%
+    ungroup() %>%
+    group_by(sac, main_type) %>%
+    summarise(max_ranking = min(max_ranking)) %>%
+    ungroup() %>%
+    rename(type = main_type)
+
+grts_max_ranking <- grts_max_ranking_type %>%
+    anti_join(grts_max_ranking_maintype, by = "type") %>%
+    bind_rows(grts_max_ranking_maintype) %>%
+    arrange(type)
 ```
 
 ```{r}
 terr_measurements_validate <- refpoints_assessed_all %>%
     filter(lsvi_measurement) %>%
     filter(!is.na(type_observed)) %>%
-    select(fieldwork_team, point_code, type = type_observed, measurement_date = assessment_date, db_ref, user_reference, recording_givid, distance, point_type, distance_centroid) %>%
+    select(fieldwork_team, point_code, type = type_observed, measurement_date = assessment_date, db_ref, user_reference, recording_givid, distance, point_type, distance_centroid, type_target_all, x_orig, y_orig, x_measured, y_measured) %>%
     left_join(terr_popunits,  by = c("point_code", "type")) 
 ```
 
@@ -1025,33 +1046,11 @@ terr_measurements_validate <- refpoints_assessed_all %>%
 
 
 
-## Check 2020 and earlier assessments
-
-```{r}
-
-terr_measurements_validate_until2020 <- terr_measurements_validate %>%
-    left_join(grts_max_ranking, by = c("type", "sac")) %>%
-    filter(year(measurement_date) <= 2020) %>%
-    mutate(valid_type = grts_ranking_draw <=  max_ranking,
-           valid_distance = is.na(distance) | distance <= 110.1,
-           valid_distance_legacy = ! ((is.na(distance) | distance > 1) & legacy_site),
-           valid_replacement = valid_distance_legacy & valid_distance) 
-
-check_type <- terr_measurements_validate_until2020 %>%
-    filter(!valid_type) %>%
-    select(point_code, sac, grts_ranking_draw, max_ranking, measurement_date, type, valid_type)
-
-check_distance <- terr_measurements_validate_until2020 %>%
-    filter(!valid_distance) %>%
-    select(point_code, sac, grts_ranking_draw, max_ranking, measurement_date, type, distance, valid_distance)
-
-check_distance_legacy <- terr_measurements_validate_until2020 %>%
-    filter(!valid_distance_legacy) %>%
-    select(point_code, sac, grts_ranking_draw, max_ranking, measurement_date, type, legacy_site, distance, valid_distance)
-    
-```
+## Check assessments
 
 
+
+### Field protocol v1
 
 + We allow a measurement for another type than the original target type as long as:
     + grts_ranking_draw is smaller than the maximum ranking of the observed type
@@ -1062,13 +1061,35 @@ check_distance_legacy <- terr_measurements_validate_until2020 %>%
     
 The table below shows the measurements for which the first condition is not met.
 
-
 ```{r}
-check_type %>%
-    arrange(measurement_date) %>%
-    kable() %>%
-    kable_styling()
+
+terr_measurements_validate_sfpv1 <- terr_measurements_validate %>%
+    left_join(grts_max_ranking, by = c("type", "sac")) %>%
+    filter(year(measurement_date) <= 2020 | fieldwork_team == "anb" | type == "91E0_sf") %>%
+    mutate(valid_type = (grts_ranking_draw <=  max_ranking) | str_detect(type_target_all, type),
+           valid_distance = is.na(distance) | distance <= 110.1,
+           valid_distance_legacy = ! ((is.na(distance) | distance > 1.1) & legacy_site),
+           valid_refpoint = valid_distance_legacy & valid_distance,
+           sfp = "v1") 
+
+check_type <- terr_measurements_validate_sfpv1 %>%
+    filter(!valid_type) %>%
+    select(point_code, sac, grts_ranking_draw, max_ranking, measurement_date, type, valid_type)
+
+check_type_na <- terr_measurements_validate_sfpv1 %>%
+    filter(is.na(valid_type)) %>%
+    select(point_code, sac, grts_ranking_draw, max_ranking, measurement_date, type, valid_type)
+
+check_distance <- terr_measurements_validate_sfpv1 %>%
+    filter(!valid_distance) %>%
+    select(point_code, sac, grts_ranking_draw, max_ranking, measurement_date, type, distance, valid_distance)
+
+check_distance_legacy <- terr_measurements_validate_sfpv1 %>%
+    filter(!valid_distance_legacy) %>%
+    select(point_code, sac, grts_ranking_draw, max_ranking, measurement_date, type, legacy_site, distance, valid_distance)
+    
 ```
+
 
 The table below shows the measurements for which the first condition is not met.
 
@@ -1080,69 +1101,121 @@ check_type %>%
 ```
 
 
-The next shows the measurements for which the second condition is not met.
+The next table shows the measurements for which the second condition is not met.
 
 ```{r}
 check_distance %>%
     arrange(measurement_date) %>%
-    mutate(distance = round(distance, 1))
+    mutate(distance = round(distance, 1)) %>%
     kable() %>%
     kable_styling()
 ```
 
 
-## Check 2021 assessments
 
-In 2021 we started with a new sampling strategy. When the target type is not observed in a sampling unit, we allow it to be replaced by the sampling unit that does contain the target type with the lowest grst-ranking, within the same habitatmap polygon. 
+### Field protocol v2
+
+In 2021 inbo started with a new sampling strategy. When the target type is not observed in a sampling unit, we allow it to be replaced by the sampling unit that does contain the target type with the lowest grst-ranking, within the same habitatmap polygon. Legacy ampling units are not replaced.
 
 ```{r}
 
-grts_max_ranking_2021 <- su_2021 %>%
-    bind_rows(su_anb_2021) %>%
+grts_max_ranking_2021_type <- su_2021 %>%
+    mutate(type_target = ifelse(type_target == "2190", "2190_overig", type_target)) %>%
     filter(!is.na(grts_ranking_draw)) %>%
     group_by(type_target, sac) %>%
     summarise(max_ranking = max(grts_ranking_draw)) %>%
     ungroup() %>%
     rename(type = type_target)
 
-terr_measurements_validate_from2021 <- terr_measurements_validate %>%
-    left_join(grts_max_ranking_2021, by = c("type", "sac")) %>%
-    filter(year(measurement_date) >= 2021) %>%
-    mutate(valid_type = grts_ranking_draw <=  max_ranking,
-           valid_centroid = distance_centroid >= 1,
-           valid_distance_legacy = ! ((is.na(distance) | distance > 1) & legacy_site),
-           valid_replacement = valid_distance_legacy) 
+grts_max_ranking_2021_main_type <- su_2021 %>%
+    mutate(type_target = ifelse(type_target == "2190", "2190_overig", type_target)) %>%
+    filter(!is.na(grts_ranking_draw)) %>%
+    mutate(main_type = str_sub(type_target, 1, 4)) %>%
+    group_by(sac, type_target, main_type) %>%
+    summarise(max_ranking = max(grts_ranking_draw)) %>%
+    ungroup() %>%
+    group_by(sac, main_type) %>%
+    summarise(max_ranking = min(max_ranking)) %>%
+    ungroup() %>%
+    rename(type = main_type)
 
-check_type <- terr_measurements_validate_from2021 %>%
+grts_max_ranking_2021 <- grts_max_ranking_2021_type %>%
+    anti_join(grts_max_ranking_2021_main_type, by = "type") %>%
+    bind_rows(grts_max_ranking_2021_main_type) %>%
+    arrange(type)
+
+ rank_inpolygon <- read.csv2("../../output/replacements_inbo_versie2021-04-29.csv") %>%
+    select(polygon_id, grts_ranking, rank_inpolygon) %>%
+    group_by(polygon_id) %>%
+    mutate(n_grid_inpolygon = n()) %>%
+    ungroup()
+
+rank_inpolygon_original <- rank_inpolygon %>%
+    select(polygon_id_original = polygon_id, grts_ranking_draw = grts_ranking, rank_inpolygon_original = rank_inpolygon)
+
+
+terr_measurements_validate_sfpv2 <- terr_measurements_validate %>%
+    filter(year(measurement_date) >= 2021 & fieldwork_team == "inbo" & type != "91E0_sf") %>%
+    left_join(grts_max_ranking_2021, by = c("type", "sac")) %>%
+    left_join(rank_inpolygon, by = c("grts_ranking", "polygon_id")) %>%
+    left_join(rank_inpolygon_original, by = c("grts_ranking_draw")) %>%
+    mutate(valid_type = (grts_ranking_draw <=  max_ranking) | str_detect(type_target_all, type),
+           valid_centroid = distance_centroid <= 1 | is.na(distance_centroid),
+           valid_polygon = polygon_id == polygon_id_original,
+           valid_distance_legacy = ! ((is.na(distance) | distance > 1.1) & legacy_site),
+           prob_replacement = ifelse(point_type == "replacement", (1 - phab/100) ^ (abs(rank_inpolygon - rank_inpolygon_original)), NA),
+           valid_ranking = ifelse(point_type == "replacement", prob_replacement > 0.0005 | abs(rank_inpolygon - rank_inpolygon_original) < 10, TRUE),
+           valid_refpoint = ifelse(point_type == "replacement", valid_polygon & valid_centroid & valid_ranking, TRUE),
+           sfp = "v2") 
+
+check_type <- terr_measurements_validate_sfpv2 %>%
     filter(!valid_type) %>%
     select(point_code, sac, grts_ranking_draw, max_ranking, measurement_date, type, valid_type)
 
-check_centroid <- terr_measurements_validate_from2021 %>%
-    filter(!valid_centroid) %>%
-    select(point_code, sac, grts_ranking_draw, max_ranking, measurement_date, type, distance, valid_distance)
+check_type_na <- terr_measurements_validate_sfpv2 %>%
+    filter(is.na(valid_type)) %>%
+    select(point_code, sac, grts_ranking_draw, max_ranking, measurement_date, type, valid_type)
 
-check_distance_legacy <- terr_measurements_validate_until2020 %>%
+check_replacement <- terr_measurements_validate_sfpv2 %>%
+    filter(!valid_refpoint) %>%
+    filter(! (valid_polygon & valid_centroid)) %>%
+    select(point_code, sac,  measurement_date, type, distance, distance_centroid, polygon_id, polygon_id_original, valid_centroid, valid_polygon)
+
+check_distance_legacy <- terr_measurements_validate_sfpv2 %>%
     filter(!valid_distance_legacy) %>%
-    select(point_code, sac, grts_ranking_draw, max_ranking, measurement_date, type, legacy_site, distance, valid_distance)
+    select(point_code, sac, grts_ranking_draw, max_ranking, measurement_date, type, legacy_site, distance, valid_distance_legacy)
+
+check_ranking <- terr_measurements_validate_sfpv2 %>%
+    filter(!valid_ranking) %>%
+    select(point_code, sac, type, phab, rank_inpolygon, rank_inpolygon_original, n_grid_inpolygon, polygon_id, distance)
 ```
 
 
-
-+ check allow other type
+The table below shows the measurements for which no additional sampling units were needed.
 
 ```{r}
-check_allow_other_type <- assessments_admin_new_2021 %>%
-    filter(lsvi_measurement) %>%
-    filter(!allow_other_type) %>%
-    select(db_ref ,type_target, type_observed, assessment_date, grts_ranking_draw, max_grts_ranking, distance, allow_other_type)
-
+check_type_na %>%
+    arrange(measurement_date) %>%
+    kable() %>%
+    kable_styling()
 ```
 
-The table below shows one invalid measurement.
+The table below shows invalid replacements because the replaced reference point is not in the center of the grid cell or not in the same polygon as the original reference point.
 
 ```{r}
 
-check_allow_other_type %>%
+check_replacement %>%
+    mutate(distance = round(distance,1),
+           distance_centroid = round(distance_centroid, 1)) %>%
+    kable() %>%
+    kable_styling()
+```
+
+For following measurements it is highly unprobable that the correct order of potential replacement reference point was followed.
+
+```{r}
+check_ranking %>%
+    mutate(distance = round(distance,1)) %>%
     kable() %>%
     kable_styling()
 ```
@@ -1150,13 +1223,20 @@ check_allow_other_type %>%
 
 
 
-+ Check replacements
+
+```{r}
+
+replacement <- terr_measurements_validate_sfpv2 %>%
+    filter(point_type == "replacement") %>%
+    mutate(show_color = ifelse(valid_refpoint, "yellow", "red")) %>%
+    st_as_sf(coords = c("x_measured", "y_measured"), crs =31370)
+
+su_replacement_polygon <- read.csv2("../../output/replacements_inbo_versie2021-04-29.csv") %>%
+   filter(polygon_id %in% replacement$polygon_id) %>%
+    st_as_sf(coords= c("x", "y"), crs = 31370)
+```
 
 
-A replacement is correct when:
-
-+ the new reference point is within the same polygon than the replaced refrence point
-+ the new reference point is in the center of the grid cell
 
 The map below shows:
 + the habitatmap polygons in which a raplacement took place 
@@ -1171,34 +1251,18 @@ The map below shows:
 
 habmap_pol <- habmap$habitatmap_polygons %>%
     select(polygon_id_check = polygon_id)
+# 
+# replacement <- assessments_admin_new_2021 %>%
+#     filter(distance > 2) %>%
+#     st_as_sf(coords = c("x_measured", "y_measured"), crs = 31370) %>%
+#     mutate(grts_ranking_new = grts_master[as(., "Spatial")]) %>%
+#     st_join(habmap_pol) %>%
+#     mutate(in_same_polygon = polygon_id_check == polygon_id)
 
-replacement <- assessments_admin_new_2021 %>%
-    filter(distance > 2) %>%
-    st_as_sf(coords = c("x_measured", "y_measured"), crs = 31370) %>%
-    mutate(grts_ranking_new = grts_master[as(., "Spatial")]) %>%
-    st_join(habmap_pol) %>%
-    mutate(in_same_polygon = polygon_id_check == polygon_id)
-
-replaced_from <- assessments_admin_new_2021 %>%
-    filter(distance > 2) %>%
-    st_as_sf(coords = c("x_original", "y_original"), crs = 31370) 
-
-
-su_replacement_2021 <- read.csv2("../../output/replacements_inbo_versie2021-04-29.csv") 
-
-su_replacement_polygon <- su_replacement_2021 %>%
-   filter(polygon_id %in% replaced_from$polygon_id) %>%
-    st_as_sf(coords= c("x", "y"), crs = 31370)
-
-replacement <- replacement %>%
-    group_by(point_code) %>%
-    mutate(distance_grid = min(st_distance(geometry, su_replacement_polygon))) %>%
-    ungroup() %>%
-    mutate(on_grts_grid = drop_units(distance_grid) < 2,
-           allow_replacement = on_grts_grid & in_same_polygon,
-           show_color = ifelse(allow_replacement, "yellow", "red")) 
+replaced_from <- terr_measurements_validate_sfpv2 %>%
+    semi_join(replacement, by = "point_code") %>%
+    st_as_sf(coords = c("x_orig", "y_orig"), crs = 31370)
                
-
 habmap_pol_replacement <- habmap_pol %>%
    filter(polygon_id_check %in% replaced_from$polygon_id)
 
@@ -1208,234 +1272,49 @@ leaflet() %>%
      addCircleMarkers(data = st_transform(replaced_from, 4326), color = "blue") %>%
     addCircleMarkers(data = st_transform(replacement, 4326), color = ~show_color) %>%
     addCircleMarkers(data = st_transform(su_replacement_polygon, 4326), color = "black", radius = 1, label = ~rank_inpolygon)
-   
-```
-
-
-
-
-## Updated assessments
-
-```{r}
-mhq_terr_assessments_diff <- mhq_terr_assessments %>%
-    anti_join(assessments_admin_long, by = c("point_code", "type_target")) %>%
-    filter(!is.na(assessment_date))
-
-mhq_terr_assessments_match <- mhq_terr_assessments %>%
-    semi_join(assessments_admin_long, by = c("point_code", "type_target")) %>%
-    filter(!is.na(assessment_date)) %>%
-    select(point_code, type_target, type_observed, assessment_source, assessment_date, inaccessible) %>%
-    arrange(type_target, point_code) %>%
-    mutate(type_target = as.character(type_target),
-           assessment_source = as.character(assessment_source))
-
-assessments_admin_match <- assessments_admin_long %>%
-    semi_join(mhq_terr_assessments_match, by = c("point_code", "type_target")) %>%
-    select(point_code, type_target, type_observed, assessment_source, assessment_date, inaccessible, lsvi_measurement) %>%
-    arrange(type_target, point_code)
-
-compare <- assessments_admin_match %>%
-    left_join(mhq_terr_assessments_match, by = c("point_code", "type_target"), suffix = c("_admin", "_table"))
-
-update_type_observed <- compare %>%
-    filter(type_observed_table != type_observed_admin & !is.na(type_observed_admin))
-
-update_inaccessible <- compare %>%
-    filter(is.na(inaccessible_table) & !is.na(inaccessible_admin) )
-
-assessments_admin_update <- update_type_observed %>%
-    bind_rows(update_inaccessible)
-```
-
-
-
-
-
-## Read standardized table of mhq refpoints, assessments and measurements
-
-```{r}
-mhq_terr_assessments <- read_vc("mhq_terr_assessments", 
-                                root = "../../data")
-
-# mhq_terr_assessments <- mhq_terr_assessments %>%
-#   mutate(type_observed = str_trim(type_observed))
-# 
-# write_vc(mhq_terr_assessments, "mhq_terr_assessments",
-#                                 root = "../../data", strict = FALSE)
-
-mhq_terr_refpoints <- read_vc("mhq_terr_refpoints", 
-                                root = "../../data")
-
-mhq_terr_refpoints_check_update <- read_vc("mhq_terr_refpoints_check_update", 
-                                root = "../../data")
     
-mhq_terr_measurements <- read_vc("mhq_terr_measurements", 
-                                root = "../../data")
-
-mhq_terr_refpoints_validity <- read_vc("mhq_terr_refpoints_validity", 
-                                root = "../../data")
 ```
 
-# Update standardized tables
 
-+ check for new assessments
+## Standardise table
 
 ```{r}
-assessments_admin_done <- assessments_admin %>%
-    filter(!is.na(assessment_date)) %>%
-    rename(x_measured = x,
-           y_measured = y)
+mhq_terr_measurements_validation <- terr_measurements_validate_sfpv1 %>%
+    bind_rows(terr_measurements_validate_sfpv2) %>%
+    mutate(valid_sampling_unit = valid_type & valid_refpoint) %>%
+    select(sfp, point_code, sac, legacy_site, type, measurement_date, valid_sampling_unit, valid_type, valid_refpoint, valid_centroid, valid_polygon, valid_distance, valid_ranking)
 
-assessments_table_todo <- mhq_terr_assessments %>%
-    filter(is.na(assessment_date)) 
-
-check_no_assessments <- all(is.na(assessments_table_todo$is_type_target)) &
-     all(is.na(assessments_table_todo$assessment_source)) &
-    all(is.na(assessments_table_todo$inaccessible))
-    
-assessments_table_new <- assessments_table_todo %>%
-    select(point_code, type_target, x, y, fieldwork_team) %>%
-    inner_join(assessments_admin_done, by = c("point_code", "fieldwork_team")) %>%
-    mutate(distance_to_refpoint = sqrt((x_measured - x)^2 + (y_measured - y)^2),
-           is_type_target = type_target == type_observed,
-           is_type_target = ifelse(type_target == "2190" & type_observed == "2190_overig", TRUE, is_type_target),
-           is_type_target = ifelse(is.na(is_type_target) & !lsvi_measurement, FALSE, is_type_target))
-
-check_records <- assessments_table_new %>%
-    filter(is.na(is_type_target) | is.na(lsvi_measurement))
-
+check_unique_point_code <- mhq_terr_measurements_validation %>%
+    group_by(point_code) %>%
+    filter(n() > 1)
 ```
 
-Following records contain missing information:
-
-```{r, results= 'asis'}
-check_records %>%
-    select(point_code, type_target, db_ref, assessment_date, assessment_source, lsvi_measurement, type_observed) %>%
-    kbl() %>%
-  kable_styling()
-```
-For following records the target type is observed but lsvi is not measured:
+# Write results
 
 ```{r}
-check_records2 <- assessments_table_new %>%
-  filter(is_type_target) %>%
-  filter(!lsvi_measurement)
+terr_refpoints %>%
+    write_vc(root = "../../data/mhq_terr_v2021", 
+             file = "mhq_terr_refpoints",
+             sorting = "point_code")
 
-check_records2 %>%
-    select(point_code, type_target, db_ref, assessment_date, assessment_source, lsvi_measurement, type_observed) %>%
-    kbl() %>%
-    kable_styling()
+terr_assessments %>%
+    write_vc(root = "../../data/mhq_terr_v2021", 
+             file = "mhq_terr_assessments",
+             sorting = c("assessment_date", "point_code"))
+
+terr_measurements %>%
+    write_vc(root = "../../data/mhq_terr_v2021", 
+             file = "mhq_terr_measurements",
+             sorting = c("measurement_date", "point_code"))
+
+terr_popunits %>%
+    write_vc(root = "../../data/mhq_terr_v2021", 
+             file = "mhq_terr_popunits",
+             sorting = c("point_code", "type"))
+
+mhq_terr_measurements_validation %>%
+    write_vc(root = "../../data/mhq_terr_v2021", 
+             file = "mhq_terr_measurements_validatuib",
+             sorting = c("measurement_date", "point_code"))
 ```
-
-
-+ check for repeated assessments
-
-
-```{r}
-assessments_table_done <- mhq_terr_assessments %>%
-    filter(!is.na(assessment_date))
-  
-assessments_admin_repeat <- assessments_admin_done %>%
-    anti_join(assessments_table_new, by = c("point_code", "assessment_date")) %>%
-    anti_join(assessments_table_done, by = c("point_code", "assessment_date"))
-
-check_repeated_ass <- nrow(assessments_admin_repeat) > 0
-  
-```
-
-+ check for anomalies
-
-```{r}
-assessments_table_done_check <- assessments_table_done %>%
-  left_join(assessments_admin_done, by = c("point_code", "assessment_date"), suffix = c(".table", ".admin")) %>%
-  mutate(match_assessment_source = assessment_source.table == assessment_source.admin,
-         match_type_observed = type_observed.table == type_observed.admin)
-
-check_type_observed <- assessments_table_done_check %>%
-  filter(!match_type_observed)
-
-check_missing_admin <- assessments_table_done_check %>%
-  filter(is.na(lsvi_measurement))
-```
-
-+ check allow_other_types
-
-```{r}
-max_ranking <- mhq_terr_refpoints %>%
-    filter(!is.na(grts_ranking_draw)) %>%
-    group_by(type_target, sac) %>%
-    summarise(max_grts_ranking_draw = max(grts_ranking_draw)) %>%
-    ungroup() %>%
-    rename(type_observed = type_target)
-
-assessments_table_new <- assessments_table_new %>%
-  mutate(type_observed = ifelse(type_observed == "2190_overig", "2190", type_observed)) %>%
-  left_join(max_ranking, by = c("sac", "type_observed")) %>%
-  group_by(point_code, assessment_date) %>%
-  mutate(is_type_target_plot = sum(is_type_target) > 0) %>%
-  ungroup() %>%
-  mutate(allow_other_type = ifelse(is_type_target_plot, NA, (grts_ranking_draw <= max_grts_ranking_draw) & !is.na(max_grts_ranking_draw)))
-  
-check_allow_other_type <- assessments_table_new %>%
-  filter(lsvi_measurement) %>%
-  filter(!allow_other_type)
-```
-
-Following measurements are not valid because the observed type differs from the taget type and the grts-ranking is higher than the maximum grts-ranking in the sample of the observed type.
-
-```{r}
-check_allow_other_type %>%
-  select(point_code, type_target, assessment_date, type_observed, lsvi_measurement, grts_ranking_draw, max_grts_ranking_draw, allow_other_type) %>%
-  kbl() %>%
-  kable_styling()
-```
-
-
-
-## Update mhq_terr_assessments
-
-+ Create new sampling units when is_type_target is FALSE and a LSVI measurement is performed. For a limited number of sampling units allow_other_type is FALSE. Yet, for pragmatic reasons, we will keep these sampling units, altough theoretically they are not valid.
-
-```{r}
-# assessments_table_new <- assessments_table_new %>%
-#   select(point_code, db_ref, type_target, is_type_target, type_observed, assessment_date, assessment_source, x = x_measured, y = y_measured, inaccessible, fieldwork_team, lsvi_measurement, allow_other_type)
-
-new_sampling_units_strict <- assessments_table_new %>%
-    filter(lsvi_measurement) %>%
-    # filter(!is_type_target & !is_type_target_plot) %>%
-    filter(allow_other_type)
-
-new_sampling_units <- assessments_table_new %>%
-    filter(lsvi_measurement) %>%
-    filter(!is_type_target & !is_type_target_plot) %>%
-    #filter(allow_other_type) %>%
-    mutate(type_target = factor(type_observed, levels = levels(types$type)),
-           is_type_target = TRUE,
-           allow_other_type = NA) %>%
-    unique()
-
-assessments_table_new <- assessments_table_new %>%
-  bind_rows(new_sampling_units)
-
-mhq_terr_assessments_update <- mhq_terr_assessments %>%
-  anti_join(assessments_table_new, by = c("point_code", "fieldwork_team")) %>%
-  bind_rows(select(assessments_table_new, point_code, db_ref, type_target, is_type_target, type_observed, assessment_date, assessment_source, x = x_measured, y = y_measured, inaccessible, fieldwork_team))
-  
-```
-
-To update the other standardized tables we will need the coordinates of the measured sampling units.For now we work with the available data to determine het number of measured valid sampling units per type. 
-
-## Update mhq_terr_refpoints
-
-```{r}
-new_refpoints <- new_sampling_units %>%
-  mutate(sampling_unit_code = str_c(grts_ranking_draw, "_", type_target)) %>%
-  select(sampling_unit_code, type_target, point_code, sac, grts_ranking_draw, x = x_measured, y = y_measured, db_ref)
-
-mhq_terr_refpoints_update <- mhq_terr_refpoints_check_update %>%
-  bind_rows(new_refpoints)
-
-
-```
-
 
