@@ -666,7 +666,26 @@ refpoints_assessed_all <- refpoints_assessed_inbo %>%
     select(point_code, is_centroid, legacy_site, sac, grts_ranking, grts_ranking_draw, type_target_all, type_observed, x, y, fieldwork_team, db_ref, assessment_source, assessment_date, inaccessible, lsvi_measurement, x_measured, y_measured, user_reference, recording_givid, distance, point_type) %>%
     bind_rows(refpoints_assessed_anb) %>%
     bind_rows(refpoints_assessed_anb_ortho) %>%
-    arrange(grts_ranking)
+    arrange(grts_ranking) %>%
+    mutate(type_target_all = ifelse(type_target_all == "2190", "2190_overig", type_target_all))
+
+has_subtypes <- types %>%
+    group_by(main_type) %>%
+    summarise(has_subtype = n() > 1 ) %>%
+    ungroup() %>%
+    filter(has_subtype)
+
+add_subtype_observed <- refpoints_assessed_all %>%
+    filter(type_observed %in% has_subtypes$main_type) %>%
+    separate(type_target_all, into = c("type_target_1", "type_target_2"), sep = ";", remove = FALSE) %>%
+    mutate(type_observed = ifelse(str_sub(type_target_1, 1, 4) == type_observed, type_target_1,
+                                  ifelse(str_sub(type_target_2, 1, 4) == type_observed & !is.na(type_target_2), type_target_2, type_observed))) %>%
+    select(-type_target_1, - type_target_2)
+    
+refpoints_assessed_all <- refpoints_assessed_all %>%
+    anti_join(add_subtype_observed, by = c("point_code", "assessment_date")) %>%
+    bind_rows(add_subtype_observed)
+
 
 original_coordinates_replacement <- mhq_terr_refpoints %>%
     filter(is_centroid) %>%
@@ -950,13 +969,16 @@ terr_popunits <- reference_points_update %>%
     filter(is_present | (!assessed)) %>%
     select(point_code,  grts_ranking, grts_ranking_draw, sac, legacy_site, type, assessed, x, y)
     
-
+# legacy sites: niet de bedoeling dat er opname is voor een ander type dan bedoeld; indien toch het geval grs_ranking_draw = grts_ranking zetten
 terr_popunits_new_assessment <- terr_assessments %>%
     filter(is_present) %>%
     anti_join(terr_popunits, by = c("point_code", "type")) %>%
     left_join(terr_refpoints, by = "point_code") %>%
-    left_join(select(refpoints_assessed_all, point_code, grts_ranking_draw, sac, legacy_site), by = "point_code")  %>%
-    mutate(assessed = TRUE) %>%
+    left_join(select(refpoints_assessed_all, point_code, grts_ranking_draw, sac, legacy_site, type_target_all), by = "point_code")  %>%
+    mutate(assessed = TRUE,
+           measured = point_code %in% terr_measurements$point_code) %>%
+    filter(!(legacy_site & !measured)) %>%
+    mutate(grts_ranking_draw = ifelse(legacy_site, grts_ranking, grts_ranking_draw)) %>%
     select(point_code,  grts_ranking, grts_ranking_draw, sac, legacy_site, type, assessed, x, y)
 
 terr_popunits <- terr_popunits %>%
@@ -988,6 +1010,40 @@ terr_popunits <- terr_popunits_sf %>%
     mutate(source = ifelse(is.na(polygon_id) | !match_type, "assessment",
                            ifelse(assessed, "assessment/habitatmap 2020", "habitatmap 2020"))) %>%
     select(-description_orig, -match_type, -remove, -assessed) 
+
+```
+
+
+```{r eval = FALSE}
+grts_habmap <- read_vc(file = "design-strategy/output/samplingframe_habitatterr_points", root = fileman_up("n2khab-mhq-design"))
+
+grts_habmap_types <- grts_habmap %>%
+  left_join(habmap$habitatmap_types, by = "polygon_id") %>%
+  filter(!is.na(type)) %>%
+  filter(phab > 10) %>%
+  group_by(type, sac) %>%
+  mutate(ranking_rel = rank(grts_ranking)) %>%
+  ungroup()
+
+no_habitat <- terr_assessments %>%
+    left_join(terr_refpoints, by = "point_code") %>%
+    filter(is_centroid) %>%
+    filter(no_habitat)
+
+type_not_present <- terr_assessments %>%
+    left_join(terr_refpoints, by = "point_code") %>%
+    filter(is_centroid) %>%
+    filter(!is_present)
+
+grts_habmap_types_top250 <- grts_habmap_types %>%
+  group_by(type, sac) %>%
+  top_n(250, desc(grts_ranking)) %>%
+  ungroup() %>%
+  mutate(grts_ranking_draw = grts_ranking) %>%
+    anti_join(terr_popunits, by =c("type", "grts_ranking_draw")) %>%
+    anti_join(terr_popunits, by =c("type", "grts_ranking")) %>%
+    anti_join(no_habitat, by = "grts_ranking") %>%
+    anti_join(type_not_present, by = c("grts_ranking", "type"))
 
 ```
 
@@ -1300,7 +1356,12 @@ terr_refpoints %>%
 terr_assessments %>%
     write_vc(root = "../../data/mhq_terr_v2021", 
              file = "mhq_terr_assessments",
-             sorting = c("assessment_date", "point_code"))
+             sorting = c("assessment_date", "point_code", "type"),
+             strict = FALSE)
+
+check <- terr_assessments %>%
+    group_by(point_code, assessment_date, type) %>%
+    filter(n( ) > 1)
 
 terr_measurements %>%
     write_vc(root = "../../data/mhq_terr_v2021", 
