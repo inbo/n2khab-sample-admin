@@ -1,5 +1,5 @@
 ..generic:
-  git2rdata: 0.3.1
+  git2rdata: 0.4.0
   optimize: no
   NA string: NA
   sorting:
@@ -7,7 +7,7 @@
   - sampling_unit_code
   - point_code
   hash: 655a0e6795ac9015e3cf577854aecbef6d3acce2
-  data_hash: 18ce6cef8d407b2615890b9be238ba6fd983c233
+  data_hash: c26fa7449b79f14ac3dd2b1eb268e5ec0ec4d4f0
 scheme:
   class: factor
   labels:
