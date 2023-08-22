@@ -75,6 +75,9 @@ measurements_overview_type <- measurements %>%
 #           measurements_overview_type$n_measured_check1,
 #           measurements_overview_type$n_measured_check2)
 
+check <- measurements_overview_type %>%
+    filter((n_measured != n_measured_check1) | n_measured != n_measured_check2)
+
 measurements_overview_type <- measurements_overview_type %>%
   select(fieldwork_team, type = type_target, sac, n_measured)
 
@@ -317,6 +320,7 @@ mhq_refpoints_new_inbo <- mhq_refpoints_todo_potential %>%
   filter(select_refpoint) %>%
   group_by(type_target, sac) %>%
   mutate(ranking_rel = rank(grts_ranking_draw),
+         max_grts_ranking = max(grts_ranking_draw),
          x_coord = x,
          y_coord = y) %>%
   ungroup() %>%
@@ -331,7 +335,7 @@ mhq_refpoints_new_inbo <- mhq_refpoints_todo_potential %>%
   # st_join(habitatmap_pol) %>%
   # st_drop_geometry() %>%
   mutate(replacement_rule = "new sampling unit: replace within polygon if type target is not present") %>%
-  select(sampling_unit_code, point_code, sac, type_target, phab, n_type_target, type_target_all, grts_ranking_draw, ranking_rel, x = x_coord, y = y_coord, polygon_id, description_orig, replacement_rule) %>%
+  select(sampling_unit_code, point_code, sac, type_target, phab, n_type_target, type_target_all, grts_ranking_draw, max_grts_ranking, ranking_rel, x = x_coord, y = y_coord, polygon_id, description_orig, replacement_rule) %>%
   arrange(type_target, sac)
 ```
 
@@ -562,7 +566,7 @@ leaflet(pol_sample_example, width = 800, height = 600) %>%
   addCircleMarkers(data = sd, color = "yellow", radius = 3, label = ~rank_inpolygon,
                    labelOptions = labelOptions(noHide = TRUE)) %>%
   # addCircleMarkers(data = pol_assessed_example, color = "red", radius = 3) %>%
-  addMarkers(popup = ~type_target)
+  addMarkers(popup = ~type)
   
 ```
 

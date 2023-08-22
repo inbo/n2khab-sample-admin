@@ -7,9 +7,11 @@ types <- read_types()
 
 ## Read google sheet data with mhq assessments admin
 
-The INBO fieldwork coordinator uses [this googlesheet](https://docs.google.com/spreadsheets/d/1WkGPPYTb1Xytg5kJeOSxLvt3PUdFjlpPb4rwYG9znys/) to document which sampling units have been assessed. 
+The INBO fieldwork coordinator uses [this googlesheet](https://docs.google.com/spreadsheets/d/1WkGPPYTb1Xytg5kJeOSxLvt3PUdFjlpPb4rwYG9znys/) to document which sampling units have been assessed.
 
-```{r}
+To make the analysis reproducible we downloaded the 2021-04-26 version of the google sheet. 
+
+```{r, eval = FALSE}
 gs4_auth("toon.westra@inbo.be")
 
 assessments_admin <- read_sheet(
@@ -19,18 +21,23 @@ assessments_admin <- read_sheet(
 
 ```
 
+```{r}
+assessments_admin <- read_csv2("../../data/voortgang_mhq_terrestrisch_2021-04-26.csv") %>%
+    select(-starts_with("...")) %>%
+    mutate(legacy_site = ifelse(legacy_site == "WAAR", TRUE,
+                                ifelse(legacy_site == "ONWAAR", FALSE, NA)),
+           lsvi_measurement = ifelse(lsvi_measurement == "WAAR", TRUE,
+                                ifelse(lsvi_measurement == "ONWAAR", FALSE, NA)),
+           assessment_date = as.Date(assessment_date, format = "%d/%m/%Y"))
+           
+```
+
 
 ## Read standardized table of mhq refpoints, assessments and measurements
 
 ```{r}
 mhq_terr_assessments <- read_vc("mhq_terr_assessments", 
                                 root = "../../data")
-
-# mhq_terr_assessments <- mhq_terr_assessments %>%
-#   mutate(type_observed = str_trim(type_observed))
-# 
-# write_vc(mhq_terr_assessments, "mhq_terr_assessments",
-#                                 root = "../../data", strict = FALSE)
 
 mhq_terr_refpoints <- read_vc("mhq_terr_refpoints", 
                                 root = "../../data")
@@ -77,7 +84,7 @@ check_records <- assessments_table_new %>%
 
 Following records contain missing information:
 
-```{r, results= 'asis'}
+```{r}
 check_records %>%
     select(point_code, type_target, db_ref, assessment_date, assessment_source, lsvi_measurement, type_observed) %>%
     kbl() %>%

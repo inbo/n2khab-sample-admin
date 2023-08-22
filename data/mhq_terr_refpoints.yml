@@ -1,12 +1,12 @@
 ..generic:
-  git2rdata: 0.3.1
+  git2rdata: 0.4.0
   optimize: no
   NA string: NA
   sorting:
   - scheme
   - sampling_unit_code
-  hash: e5087bbbb67e65ecc8659c401dd9cda916aa914e
-  data_hash: d79bd0cad7772b2a96aa82e7cb9b2170c1462166
+  hash: 0f25aaa09861fd557aaeced39fd069e146b06d42
+  data_hash: 9de8b0477b71a7eb0971334604e163332791360a
 scheme:
   class: factor
   labels:
@@ -52,7 +52,8 @@ scheme:
   - HQ2160
   - HQ2170
   - HQ2180
-  - HQ2190
+  - HQ2190_aq
+  - HQ2190_terr
   - HQ2310
   - HQ2330
   - HQ3110
@@ -116,7 +117,8 @@ scheme:
   - 40
   - 41
   - 42
-  - 43
+  - 9
+  - 65
   - 44
   - 45
   - 46

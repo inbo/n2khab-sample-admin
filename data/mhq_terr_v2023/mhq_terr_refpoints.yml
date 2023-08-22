@@ -1,0 +1,17 @@
+..generic:
+  git2rdata: 0.4.0
+  optimize: yes
+  NA string: NA
+  sorting: point_code
+  hash: 77b2ac02dbed94abd3e24787f9e893680652edfd
+  data_hash: 594a68e4c665a0ccbcd9b6af2a3e95db3773edce
+point_code:
+  class: character
+is_centroid:
+  class: logical
+grts_ranking:
+  class: numeric
+x:
+  class: numeric
+'y':
+  class: numeric

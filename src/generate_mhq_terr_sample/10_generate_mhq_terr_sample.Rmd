@@ -42,12 +42,13 @@ Following table gives an overview of all mhq-schemes.
 types <- read_types() %>%
     select(main_type, type, type_shortname, typeclass_name)
 
-schemes_mhq <- read_scheme_types() %>%
+schemes_mhq_terr <- read_scheme_types() %>%
     select(scheme, type) %>%
     filter(str_sub(scheme, 1, 2) == "HQ") %>%
+    filter(scheme != "HQ2190_aq") %>%
     left_join(types, by = "type")
 
-schemes_mhq %>%
+schemes_mhq_terr %>%
     kable() %>%
     kable_styling()
 
@@ -74,7 +75,7 @@ grts_master <- read_GRTSmh()
 ```
 
 
-## Read original files with mhq sampling units
+## Original files with mhq sampling units
 
 ### Habitat 6510
 
@@ -196,6 +197,7 @@ sample_dunes_sf_orig <- read.csv2("../../mhq_sample-admin_data/original/sample/s
 sample_dunes <- sample_dunes_sf_orig %>%
     filter(Steekproef == 1)  %>%
     mutate(legacy_site = TypePQ == "PINK_PQ",
+           Habsubt = ifelse(Habsubt == "2190", "2190_overig", Habsubt),
            ID = ifelse(legacy_site, str_sub(ID, start = 6), str_c(Ranking, Habsubt, sep = "_")),
            grts_ranking = grts_master[as(., "Spatial")],
            is_centroid = !legacy_site,
@@ -228,17 +230,19 @@ Besides the legacys sites, a set of additional samples were selected based on th
 
 ```{r}
 
-sample_91E0_sf_orig <- read_sf("../../mhq_sample-admin_data/original/sample/sample-locations/91E0_sf_hab", "PQ_91E0_sf_MONEOS_versie2018-04-16", crs =31370, quiet = TRUE) 
+sample_legacy_91E0_sf_orig <- read_sf("../../mhq_sample-admin_data/original/sample/sample-locations/91E0_sf_hab", "PQ_91E0_sf_MONEOS_versie2018-04-16", crs =31370, quiet = TRUE) 
 
-sample_91E0_sf <- sample_91E0_sf_orig %>%
+sample_additional_91E0_sf_orig <- read_sf("../../mhq_sample-admin_data/original/sample/sample-locations/91E0_sf_hab", "Meetnet91E0_sf_RuimeSelectie_versie2020-05-11", crs =31370, quiet = TRUE) 
+
+sample_legacy_91E0_sf <- sample_legacy_91E0_sf_orig %>%
     mutate(grts_ranking = grts_master[as(., "Spatial")]) %>%
         st_join(sac_map) %>%
     st_drop_geometry() %>%
     mutate(type = "91E0_sf",
            main_type = "91E0",
            legacy_site = TRUE,
-           x = st_coordinates(sample_91E0_sf_orig)[,1],
-           y = st_coordinates(sample_91E0_sf_orig)[,2]) %>%
+           x = st_coordinates(sample_legacy_91E0_sf_orig)[,1],
+           y = st_coordinates(sample_legacy_91E0_sf_orig)[,2]) %>%
     mutate(x = round(x, 1),
            y = round(y, 1),
            main_type = factor(main_type, levels = levels(types$main_type)),
@@ -251,8 +255,33 @@ sample_91E0_sf <- sample_91E0_sf_orig %>%
            db_ref = NummerPQ) %>%
     select(sampling_unit_code = NummerPQ,  x, y, main_type, type, legacy_site, sac, grts_ranking, grts_ranking_draw, is_centroid, phab, certain, db_ref)
 
-check_unique_id <- nrow(sample_91E0_sf) == n_distinct(sample_91E0_sf$sampling_unit_code)
+sample_additional_91E0_sf <- sample_additional_91E0_sf_orig %>%
+    mutate(grts_ranking = grts_master[as(., "Spatial")]) %>%
+        st_join(sac_map) %>%
+    st_drop_geometry() %>%
+    mutate(type = "91E0_sf",
+           main_type = "91E0",
+           legacy_site = FALSE,
+           x = st_coordinates(sample_additional_91E0_sf_orig)[,1],
+           y = st_coordinates(sample_additional_91E0_sf_orig)[,2]) %>%
+    mutate(x = round(x, 1),
+           y = round(y, 1),
+           main_type = factor(main_type, levels = levels(types$main_type)),
+           type = factor(type, levels = levels(types$type)),
+           certain = TRUE,
+           grts_ranking_draw = grts_ranking,
+           is_centroid = TRUE,
+            sac = ifelse(is.na(sac_code), 0, 1),
+           db_ref = as.character(grts_ranking),
+           sampling_unit_code = str_c(grts_ranking, "_", type)) %>%
+    select(sampling_unit_code,  x, y, main_type, type, legacy_site, sac, grts_ranking, grts_ranking_draw, is_centroid, phab, certain, db_ref) %>%
+    anti_join(sample_legacy_91E0_sf, by = "grts_ranking")
 
+sample_91E0_sf <- sample_legacy_91E0_sf %>%
+    bind_rows(sample_additional_91E0_sf)
+
+check_unique_id <- nrow(sample_91E0_sf) == n_distinct(sample_91E0_sf$sampling_unit_code)
+check_unique_id <- nrow(sample_additional_91E0_sf) == n_distinct(sample_additional_91E0_sf$sampling_unit_code)
 ```
 
 
@@ -388,6 +417,8 @@ check_unique_id <- nrow(sample_1330_da) == n_distinct(sample_1330_da$sampling_un
 
 ```
 
+
+
 ## Combine files
 
 Finally, we combine all samples and create a unique point_code for each reference point. The point code is created by adding a number to grts_ranking_draw for every point in the sampling unit starting with 1. If grts_ranking_draw is missing (when a sampling unit is not selected based on grts sampling) we us grts_ranking instead of grts_ranking_draw.
@@ -415,7 +446,7 @@ point_codes <- samples %>%
 mhq_terr_samples_details <- samples %>%
     left_join(point_codes, by = c("ranking_code", "x", "y")) %>%
     select(-ranking_code) %>%
-    inner_join(distinct(schemes_mhq, scheme, main_type), by = "main_type") %>%
+    inner_join(distinct(schemes_mhq_terr, scheme, main_type), by = "main_type") %>%
     select(scheme, sampling_unit_code, point_code, type_target, grts_ranking, is_centroid, grts_ranking_draw,  legacy_site, x, y, phab, sac, certain, description_orig, year_planned, db_ref) %>%
     arrange(scheme, type_target, grts_ranking)
 

@@ -1,5 +1,5 @@
 ---
-title: "Update mhq terr"
+title: "Update mhq terr 2021"
 # subtitle: "x"
 date: "`r lubridate::now()`"
 link-citations: true
@@ -57,6 +57,8 @@ library(googlesheets4)
 library(lubridate)
 library(leaflet)
 library(crosstalk)
+library(DT)
+library(units)
 
 options(stringsAsFactors = FALSE)
 
@@ -68,7 +70,7 @@ opts_chunk$set(
 )
 ```
 
-**Note: this is a bookdown project, supposed to be run from within the `src/update_mhq_sample` subfolder. You can use the `src/update_mhq_sample.Rproj` RStudio project file in this subfolder to run it.**
+**Note: this is a bookdown project, supposed to be run from within the `src/update_mhq_terr_2021` subfolder. You can use the `src/update_mhq_terr_2021/update_mhq_terr_2021.Rproj` RStudio project file in this subfolder to run it.**
 
 
 

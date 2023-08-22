@@ -16,4 +16,4 @@ AutoAppendNewline: Yes
 StripTrailingWhitespace: Yes
 
 BuildType: Website
-WebsitePath: C:/rprojecten/n2khab-sample-admin/src/update_mhq_terr_sample
+WebsitePath: C:/Users/toon_westra/Rprojecten/n2khab-sample-admin/src/update_mhq_sample

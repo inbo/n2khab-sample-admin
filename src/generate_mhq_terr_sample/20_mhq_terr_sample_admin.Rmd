@@ -316,6 +316,7 @@ plot_types <- plots %>%
   ungroup() %>%
     mutate(type_observed = ifelse(type_observed == "6410" & main_type == "6410", as.character(type_target), type_observed),
            type_observed = ifelse(type_observed == "6230" & main_type == "6230", as.character(type_target), type_observed),
+           type_observed = ifelse(type_observed == "2190", "2190_overig", type_observed),
            type_target = ifelse(type_target == "6230" & str_sub(type_observed, 1, 4) == "6230", type_observed, as.character(type_target)),
            is_type_target = type_observed == type_target,
            is_main_type_target = str_sub(type_observed, 1, 4) == main_type) %>%
