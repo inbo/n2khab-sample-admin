@@ -6,7 +6,7 @@
   - measurement_date
   - point_code
   hash: e5e611730497527cfa5950a3d2931be79ea7dd4d
-  data_hash: 2e75e40581b710f3cbd1fd08e8d76562c123275b
+  data_hash: 33d3047cdc451f81f63aefff7a18bf54628beea8
 sfp:
   class: character
 point_code:
