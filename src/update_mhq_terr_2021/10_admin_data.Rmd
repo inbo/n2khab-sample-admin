@@ -143,7 +143,8 @@ INBOVEG contains the actual collected data including the coordinates. Only the a
 path <- file.path(fileman_up("n2khab-mhq-data"), "processed/inboveg_mhq_terr")
 
 header_mhq_terr <- read_vc(root = path, file = "header_mhq_terr") %>%
-    mutate(assessment_date = as.Date(vague_date_begin)) 
+    mutate(assessment_date = as.Date(vague_date_begin)) %>%
+    filter(!str_detect(survey, "Heide"))
 
 classif_mhq_terr <- read_vc(root = path, file = "classif_mhq_terr") 
 
@@ -162,10 +163,10 @@ check <- visits_mhq_terr %>%
     group_by(user_reference, area, assessment_date, type_observed, y , x) %>%
     filter(n() > 1)
 
-dubbele_invoer <- c("V2022051311343665", "IV2022051311373024", "IV2022051311475760", "IV2022051311493921", "IV2022092215204159", "IV2022090915325432", "IV2022051311343665", "IV2022091211044032")
+# dubbele_invoer <- c("V2022051311343665", "IV2022051311373024", "IV2022051311475760", "IV2022051311493921", "IV2022092215204159", "IV2022090915325432", "IV2022051311343665", "IV2022091211044032")
 
 visits_mhq_terr <- visits_mhq_terr %>%
-    filter(!recording_givid %in% dubbele_invoer)
+    filter(!str_detect(user_reference, "double"))
 
 check_missing_area <- visits_mhq_terr %>%
     filter(is.na(area))
@@ -203,7 +204,7 @@ visits_mhq_terr_wide <- visits_mhq_terr_wide %>%
     group_by(db_ref) %>%
     mutate(n_db_ref = n()) %>%
     ungroup() %>%
-    mutate(reassessed = n_db_ref > 1 & year(assessment_date) == 2022)
+    mutate(reassessed = n_db_ref > 1 & year(assessment_date) >= 2022)
 
 reassessments <- visits_mhq_terr_wide %>%
     filter(reassessed)
@@ -222,15 +223,6 @@ For following records we have two visits for the same grts_ranking. In some case
 check_measurements_doubles %>%
     datatable(rownames = FALSE,
               filter = 'top')
-```
-For db_ref = 480306 we will keep only the visit of 2018-06-13 as it is closer tot the original reference point.
-
-For db_ref = 1642233 we will keep only the visit of 2018-05-31 as it is closer tot the original reference point.
-
-```{r}
-visits_mhq_terr_wide <- visits_mhq_terr_wide %>%
-    filter(!(db_ref == "480306" & assessment_date == "2016-06-08")) %>%
-    filter(!(db_ref == "1642233" & assessment_date == "2017-06-23")) 
 ```
 
 
@@ -276,19 +268,17 @@ reference_points_2021 <- su_2021 %>%
     anti_join(mhq_terr_refpoints, by = c("sampling_unit_code")) %>%
     mutate(is_centroid = TRUE,
            legacy_site = FALSE,
-           grts_ranking = grts_ranking_draw,
-           check_point_code = point_code %in% mhq_terr_refpoints$point_code,
-           point_code = ifelse(point_code %in% mhq_terr_refpoints$point_code,
+           grts_ranking = grts_ranking_draw) %>%
+    left_join(select(mhq_terr_refpoints, point_code, grts_ranking_draw, is_centroid, legacy_site), by = "point_code", suffix = c("_new", "_old")) %>%
+    mutate(point_code = ifelse(!is.na(is_centroid_old) & !is_centroid_old,
                                str_c(str_remove(point_code, "_\\d"), "_2"),
                                point_code)) %>%
-    select(sampling_unit_code, point_code, grts_ranking, is_centroid, grts_ranking_draw, legacy_site, x, y, sac, db_ref, type_target) %>%
-    mutate(point_code = ifelse(sampling_unit_code %in% c("326965_2160", "326965_2190_overig"), "326965_1", point_code),
-           point_code = ifelse(sampling_unit_code %in% c("2447382_6410_mo"), "2447382_1", point_code),
-           point_code = ifelse(sampling_unit_code %in% c("3351638_6410_mo"), "3351638_1", point_code))
+    select(sampling_unit_code, point_code, grts_ranking, is_centroid = is_centroid_new, grts_ranking_draw = grts_ranking_draw_new, legacy_site = legacy_site_new, x, y, sac, db_ref, type_target)
 
 reference_points_update <- mhq_terr_refpoints_check_update %>%
     select(-scheme, -year_planned) %>%
-    bind_rows(reference_points_2021)
+    bind_rows(reference_points_2021) %>%
+    unique()
 
 check_unique_point_code_type <- reference_points_update %>%
     group_by(point_code, type_target) %>%
@@ -437,15 +427,15 @@ check <- assessments_admin_basic %>%
 
 # NOG aanpassen en nakijekn
 assessments_admin_basic <- assessments_admin_basic %>%
-    mutate(assessment_date = if_else(db_ref == "311262" & assessment_date == "2016-01-01", as.Date("2015-07-28"), assessment_date),
-           assessment_date = if_else(db_ref == "300649", as.Date("2016-08-31"), assessment_date),
-           assessment_date = if_else(db_ref == "1276081", as.Date("2020-08-21"), assessment_date),
-           assessment_date = if_else(db_ref == "358577", as.Date("2020-08-23"), assessment_date)) %>%
-    filter(db_ref != "8557745")
+    mutate(assessment_date = if_else(db_ref == "311262" & assessment_date == "2016-01-01", as.Date("2015-07-28"), assessment_date), #aangepast in mhq terr google sheet
+           assessment_date = if_else(db_ref == "300649", as.Date("2016-08-31"), assessment_date), #aangepast in mhq terr google sheet
+           assessment_date = if_else(db_ref == "1276081", as.Date("2020-08-21"), assessment_date), #aangepast in mhq terr google sheet
+           assessment_date = if_else(db_ref == "358577", as.Date("2020-08-23"), assessment_date)) %>% #aangepast in mhq terr google sheet
+    filter(db_ref != "8557745") #geen volledige opname
 
 visits_mhq_terr_wide <- visits_mhq_terr_wide %>%
     mutate(db_ref = ifelse(db_ref == "11413617", "dh_01", db_ref)) %>%
-    filter(db_ref != "2534622")
+    filter(db_ref != "2534622") # geen volledige opname
 
 visits_mhq_terr_wide <- visits_mhq_terr_wide %>%
     mutate(year = year(assessment_date))
@@ -470,13 +460,15 @@ assessments_admin_notinboveg_measured <- assessments_admin_basic %>%
     rename(assessment_date_admin = assessment_date)
 
 check <- assessments_admin_notinboveg_measured %>%
-    semi_join(assessments_admin_inboveg_measured, by= "point_code") 
+    semi_join(assessments_admin_inboveg_measured, by = "point_code") 
 
 assessments_admin_other <- assessments_admin_basic %>%
     anti_join(assessments_admin_inboveg_measured, by = c("point_code", "year")) %>%
     anti_join(assessments_admin_notinboveg_measured, by = c("point_code", "year")) %>% 
     filter(fieldwork_team == "inbo") %>%
     rename(assessment_date_admin = assessment_date)
+
+# check 673910_1
 
 assessments_admin_inboveg <- bind_rows(assessments_admin_inboveg_measured,
                                     assessments_admin_notinboveg_measured,
@@ -488,7 +480,7 @@ check_unique_point_code <- assessments_admin_inboveg %>%
     mutate(n_point_code = n()) %>%
     ungroup() %>%
     filter(n_point_code > 1)
-#!! CHECK
+
 
 mhq_refpoints_sf <- reference_points_update %>%
     st_as_sf(coords = c("x", "y"), crs = 31370) %>%
@@ -497,7 +489,8 @@ mhq_refpoints_sf <- reference_points_update %>%
 check_missing_admin <- visits_mhq_terr_wide %>%
     anti_join(assessments_admin_basic, by = c("db_ref", "year")) %>%
     filter(!str_detect(db_ref, "bv")) %>%
-    filter(!str_detect(db_ref, "double"))
+    filter(!str_detect(db_ref, "double")) %>%
+    filter(!reassessed)
     # st_as_sf(coords = c("x_measured", "y_measured"), crs = 31370) %>%
     # st_join(mhq_refpoints_sf, join = st_nearest_feature)
 
@@ -506,6 +499,10 @@ check_missing_inboveg <- assessments_admin_inboveg %>%
     anti_join(visits_mhq_terr_wide, by = c("db_ref", "year")) %>%
     filter(type_observed != "91E0_sf") %>%
     mutate(coordinates_available = !is.na(x_measured))
+
+# 	1381553 --> wn_05_double
+# 	2003969 --> niet in admin
+# wn_21 --> ,iet in admin
 
 # check_missing_coord_2021 <- assessments_admin_inboveg %>%
 #     filter(lsvi_measurement) %>%
