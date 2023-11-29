@@ -1,17 +1,17 @@
 # Metadata
 
-## MHQ Terrestraial habitats
+## MHQ Terrestrial habitats
 
 ### Population units
 
 The table `mhq_terr_popunits` contains the population units which have been assessed or which have been considered for assessment in MHQ. 
-It contains following variabeles:
+It contains following variables:
 
 + `point_code`: unique id
 + `grts_ranking`: grts ranking according to [GRTSmaster_habitats](https://zenodo.org/records/2682323)
 + `grts_ranking_draw`: the grts_ranking which is used for drawing the sample
 + `sac`: located in N2000 special area of conservation
-+ `legacy_site`: population that are used as sampling units in other monitoring programmes and have been included in mhq
++ `legacy_site`: population that are used as sampling units in other monitoring programmes and have been included in MHQ
 + `type`
 + `polygon_id`: id of habitatmap polygon in which the population unit is located 
 + `phab`: fraction (%) of the habitatmap polygon covered by the type
@@ -25,12 +25,12 @@ It contains following variabeles:
 The table `mhq_terr_refpoints` provide the xy-coordinates of the reference points for each population unit.
 When a grts-sample is drawn based on [GRTSmaster_habitats](https://zenodo.org/records/2682323), the reference points are always located in the centroid of the 32 meter x 32 meter grid cells.
 However, in mhq we also make use of legacy sites which are not drawn from the master sample, and therefore are not located in the centroid of the grid cells.
-Furthermore, in some cases (for types with a low detection rate), when the targeted type is not present at a reference point, a new refeerence point is selected within a distance of 100 meter.
+Furthermore, in some cases (for types with a low detection rate), when the targeted type is not present at a reference point, a new reference point is selected within a distance of 100 meter.
 This reference point is not always located in the center of a grid cell.
 
-In MHQ the reference point corresponds with the southeastern corner of the vegetation plot.
+In MHQ the reference point corresponds with the south-eastern corner of the vegetation plot.
 
-Fllowing variables are stored in the table:
+Following variables are stored in the table:
 
 + `point_code`: unique id
 + `grts_ranking`: grts ranking according to [GRTSmaster_habitats](https://zenodo.org/records/2682323)
@@ -53,7 +53,7 @@ The table `mhq_terr_assessments` contains the assessments for MHQ and has follow
     + `FALSE` if the evaluated type was not observed
     + `NA` if no assessment could be performed (inaccessible) or if the type’s presence is unknown
 + `no_habitat`:
-    + `TRUE` if no habitat type was observed,  altough a regional import biotope (rib) type might be present (the presence of rib types was not evaluated)
+    + `TRUE` if no habitat type was observed,  although a regional import biotope (rib) type might be present (the presence of rib types was not evaluated)
     + `FALSE` when any type is present,
     + `NA` when the evaluated type is absent or unknown and it is not known if any other type is present (in case the point is inaccessible)
 + `assessment_source`: `field assessment` or `orthophoto`
@@ -114,7 +114,7 @@ The table contains following variables:
 + `valid_polygon`
     + only applies to `sfp v2`: `TRUE` when the location of the measurement is within the same habmap polygon as the originally selected sampling unit
 + `valid_ranking`
-    + only applies to `sfp v2`: here we check if the relative ranking within the habmap polygon is followed to replace the sampling unit. `TRUE` when the difference between the relative ranking of the measured sampling unit and the relative ranking of the original sampling unit is =< 10 (when > 10 it is highly unprobable that the target type is not present in the 10 sampling units with the lowest relative ranking) 
+    + only applies to `sfp v2`: here we check if the relative ranking within the habmap polygon is followed to replace the sampling unit. `TRUE` when the difference between the relative ranking of the measured sampling unit and the relative ranking of the original sampling unit is =< 10 (when > 10 it is highly improbable that the target type is not present in the 10 sampling units with the lowest relative ranking) 
 
 
 
