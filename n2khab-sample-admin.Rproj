@@ -17,3 +17,5 @@ StripTrailingWhitespace: Yes
 
 BuildType: Website
 WebsitePath: src/generate_mhq_terr_sample
+
+SpellingDictionary: en_GB
