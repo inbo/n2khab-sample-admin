@@ -3,13 +3,10 @@
   optimize: yes
   NA string: NA
   sorting: point_code
-  hash: 5a973e8f5ae01ff371f7e739a765ca3fd1fdfd43
-  data_hash: 98f82aa8ea8dad405fea1e81b3fa0bf03a8eb11e
+  hash: 77b2ac02dbed94abd3e24787f9e893680652edfd
+  data_hash: fba454c4e24a32b5ade3688015993a32c8b6abc3
 point_code:
   class: character
-assessment_date:
-  class: Date
-  origin: '1970-01-01'
 is_centroid:
   class: logical
 grts_ranking:
