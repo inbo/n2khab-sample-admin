@@ -6,7 +6,7 @@
   - measurement_date
   - point_code
   hash: 0da444b5c1040a230b2c48fde331225f4a8f0939
-  data_hash: 3d450d4cf6d1b72e0ed81b0de52e530d1f4feef5
+  data_hash: 7e1fddede1becdc38ff1e5584f3ab391e66df716
 fieldwork_team:
   class: character
 point_code:
