@@ -1271,8 +1271,17 @@ new_point_code <- mhq_terr_assessments_update %>%
     filter(assessment_date == max(assessment_date)) %>%
     ungroup() 
 
+new_su <- su_anb_cyclus2 %>%
+    anti_join(mhq_terr_assessments_update, by = "point_code") %>%
+    anti_join(popunits_old, by = c("point_code")) %>%
+    mutate(legacy_site = FALSE,
+            type = habitattype,
+           assessed = FALSE) %>%
+    select(point_code, type, grts_ranking_draw, legacy_site, assessed)
+
 popunits_update <- popunits_old %>%
     bind_rows(new_point_code) %>%
+    bind_rows(new_su) %>%
     left_join(terr_refpoints, by = c("point_code"))
 
 habmap <- read_habitatmap_stdized()
