@@ -15,6 +15,8 @@ su_duinen_cyclus2 <- read.csv2("../../data/design_cycle2/mhq_terr_cyclus2_duinen
     filter(type_meetpunt == "nieuw meetpunt")
 
 su_anb_cyclus2 <- read.csv2("../../data/design_cycle2/mhq_terr_cyclus2_anb.csv")
+
+su_inbo_cyclus2 <- read.csv2("../../data/design_cycle2/mhq_terr_cyclus2_inbo.csv")
 ```
 
 + Standardized table of mhq refpoints, assessments and measurements
@@ -191,6 +193,7 @@ habmap <- read_habitatmap_stdized()
 # voor sommige nieuwe meetpunten bestaan er al meetpunten met dezelfde point_code: PINK PQ's --> point_code aanpassen
 
 sampling_units_new <- su_duinen_cyclus2 %>%
+    bind_rows(su_inbo_cyclus2) %>%
     select(point_code, x, y) 
 
 check <- sampling_units_new %>%
@@ -1271,16 +1274,28 @@ new_point_code <- mhq_terr_assessments_update %>%
     filter(assessment_date == max(assessment_date)) %>%
     ungroup() 
 
+new_su <- su_anb_cyclus2 %>%
+    bind_rows(su_duinen_cyclus2) %>%
+    bind_rows(su_inbo_cyclus2) %>%
+    mutate(point_code = ifelse(point_code == "9655473_2", "9655473_1", point_code)) %>%
+    anti_join(mhq_terr_assessments_update, by = "point_code") %>%
+    anti_join(popunits_old, by = c("point_code")) %>%
+    mutate(legacy_site = FALSE,
+            type = habitattype,
+           assessed = FALSE) %>%
+    select(point_code, type, grts_ranking_draw, legacy_site, assessed)
+
 popunits_update <- popunits_old %>%
     bind_rows(new_point_code) %>%
+    bind_rows(new_su) %>%
     left_join(terr_refpoints, by = c("point_code"))
 
-habmap <- read_habitatmap_stdized()
+habmap <- read_habitatmap_terr()
 
 sac <- read_admin_areas(dsn = "sac") %>%
     select(sac_code)
 
-types_phab <- habmap$habitatmap_types %>%
+types_phab <- habmap$habitatmap_terr_types %>%
     select(polygon_id, type, phab) %>%
     mutate(type = if_else(type != "2190", type, factor("2190_overig"))) %>%
     group_by(polygon_id, type) %>%
@@ -1289,11 +1304,11 @@ types_phab <- habmap$habitatmap_types %>%
 
 terr_popunits_sf <- popunits_update %>%
     st_as_sf(coords = c("x", "y"), crs = 31370) %>%
-    st_join(select(habmap$habitatmap_polygons, polygon_id, description_orig)) %>%
+    st_join(select(habmap$habitatmap_terr_polygons, polygon_id, description)) %>%
     st_join(sac) %>%
     st_drop_geometry() %>%
-    mutate(match_type = str_detect(description_orig, str_remove(type, "_overig")),
-           remove = (!assessed) & (!match_type | is.na(description_orig)),
+    mutate(match_type = str_detect(description, str_remove(type, "_overig")),
+           remove = (!assessed) & (!match_type | is.na(description)),
            sac = !is.na(sac_code)) %>%
     left_join(types_phab, by = c("polygon_id", "type"))
 
@@ -1656,7 +1671,7 @@ terr_popunits %>%
     unique() %>%
     write_vc(root = "../../data/mhq_terr/rapportage2025", 
              file = "mhq_terr_popunits",
-             sorting = c("point_code", "type"))
+             sorting = c("point_code", "type"), strict = FALSE)
 
 check <- terr_popunits %>%
     group_by(point_code, type) %>%

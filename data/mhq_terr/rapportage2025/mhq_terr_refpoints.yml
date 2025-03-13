@@ -1,10 +1,10 @@
 ..generic:
-  git2rdata: 0.4.0
+  git2rdata: 0.4.1
   optimize: yes
   NA string: NA
   sorting: point_code
   hash: 77b2ac02dbed94abd3e24787f9e893680652edfd
-  data_hash: 972f03446c9928f0eef4dd26110b2827c2194e02
+  data_hash: b8f3c26d15d0625623197158b1bc42bc6fde425b
 point_code:
   class: character
 is_centroid:
