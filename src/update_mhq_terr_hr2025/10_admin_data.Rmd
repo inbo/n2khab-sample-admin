@@ -17,6 +17,9 @@ su_duinen_cyclus2 <- read.csv2("../../data/design_cycle2/mhq_terr_cyclus2_duinen
 su_anb_cyclus2 <- read.csv2("../../data/design_cycle2/mhq_terr_cyclus2_anb.csv")
 
 su_inbo_cyclus2 <- read.csv2("../../data/design_cycle2/mhq_terr_cyclus2_inbo.csv")
+
+su_forest <- read.csv2("../../data/design_cycle1/mhq_forests_cycle1.csv") %>%
+    mutate(grts_ranking_draw = grts_ranking)
 ```
 
 + Standardized table of mhq refpoints, assessments and measurements
@@ -192,8 +195,10 @@ habmap <- read_habitatmap_stdized()
 
 # voor sommige nieuwe meetpunten bestaan er al meetpunten met dezelfde point_code: PINK PQ's --> point_code aanpassen
 
-sampling_units_new <- su_duinen_cyclus2 %>%
+sampling_units_new <- 
+    su_duinen_cyclus2 %>%
     bind_rows(su_inbo_cyclus2) %>%
+    bind_rows(su_forest) %>%
     select(point_code, x, y) 
 
 check <- sampling_units_new %>%
@@ -1277,6 +1282,7 @@ new_point_code <- mhq_terr_assessments_update %>%
 new_su <- su_anb_cyclus2 %>%
     bind_rows(su_duinen_cyclus2) %>%
     bind_rows(su_inbo_cyclus2) %>%
+    bind_rows(su_forest) %>%
     mutate(point_code = ifelse(point_code == "9655473_2", "9655473_1", point_code)) %>%
     anti_join(mhq_terr_assessments_update, by = "point_code") %>%
     anti_join(popunits_old, by = c("point_code")) %>%
@@ -1674,6 +1680,7 @@ terr_popunits %>%
              sorting = c("point_code", "type"), strict = FALSE)
 
 check <- terr_popunits %>%
+    unique() %>%
     group_by(point_code, type) %>%
     filter(n( ) > 1)
 
