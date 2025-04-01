@@ -1,18 +1,20 @@
 ..generic:
-  git2rdata: 0.4.1
+  git2rdata: 0.5.0
   optimize: yes
   NA string: NA
   sorting:
   - point_code
   - type
-  hash: 57a44399b16df7fa1f229b734188f682c4309d01
-  data_hash: 2747df2cc8d240e88123a8e2e01557ef7a4fa9f2
+  hash: dd07b5da7121280e696f2b3100eb405a4bf577b9
+  data_hash: 2042824a071bf94e5128f71477e75a4778fa0876
 point_code:
   class: character
 grts_ranking:
   class: numeric
+  digits: 20
 grts_ranking_draw:
   class: numeric
+  digits: 20
 sac:
   class: logical
 legacy_site:
