@@ -1277,7 +1277,8 @@ new_point_code <- mhq_terr_assessments_update %>%
     mutate(grts_ranking_draw = as.numeric(str_sub(point_code, end = -3))) %>%
     group_by(point_code) %>%
     filter(assessment_date == max(assessment_date)) %>%
-    ungroup() 
+    ungroup() %>%
+    filter(is_present)
 
 new_su <- su_anb_cyclus2 %>%
     bind_rows(su_duinen_cyclus2) %>%
