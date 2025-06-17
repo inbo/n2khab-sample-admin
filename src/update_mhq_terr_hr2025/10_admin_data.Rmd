@@ -1277,7 +1277,8 @@ new_point_code <- mhq_terr_assessments_update %>%
     mutate(grts_ranking_draw = as.numeric(str_sub(point_code, end = -3))) %>%
     group_by(point_code) %>%
     filter(assessment_date == max(assessment_date)) %>%
-    ungroup() 
+    ungroup() %>%
+    filter(is_present)
 
 new_su <- su_anb_cyclus2 %>%
     bind_rows(su_duinen_cyclus2) %>%
@@ -1649,15 +1650,18 @@ check_unique_point_code <- mhq_terr_measurements_validation %>%
 
 ```{r}
 terr_refpoints %>%
+    unique() %>%
     write_vc(root = "../../data/mhq_terr/rapportage2025", 
              file = "mhq_terr_refpoints",
              sorting = "point_code",
+             digits = 20,
              strict = FALSE)
 
 mhq_terr_assessments_update %>%
     write_vc(root = "../../data/mhq_terr/rapportage2025", 
              file = "mhq_terr_assessments",
              sorting = c("assessment_date", "point_code", "type"),
+             digits = 20,
              strict = FALSE)
 
 check <- mhq_terr_assessments_update %>%
@@ -1667,6 +1671,7 @@ check <- mhq_terr_assessments_update %>%
 mhq_terr_measurements_update %>%
     write_vc(root = "../../data/mhq_terr/rapportage2025", 
              file = "mhq_terr_measurements",
+             digits = 20,
              sorting = c("measurement_date", "point_code"))
 
 check <- mhq_terr_measurements_update %>%
@@ -1677,6 +1682,7 @@ terr_popunits %>%
     unique() %>%
     write_vc(root = "../../data/mhq_terr/rapportage2025", 
              file = "mhq_terr_popunits",
+             digits = 20,
              sorting = c("point_code", "type"), strict = FALSE)
 
 check <- terr_popunits %>%
