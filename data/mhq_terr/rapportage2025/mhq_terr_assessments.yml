@@ -1,5 +1,5 @@
 ..generic:
-  git2rdata: 0.4.1
+  git2rdata: 0.5.0
   optimize: yes
   NA string: NA
   sorting:
@@ -7,7 +7,7 @@
   - point_code
   - type
   hash: 4c0580d6458d16d3b8a88b6d4fb65df4e0bd82ef
-  data_hash: 7b89dffcd1db0adf56c4e69de5821ad12b2fc0d3
+  data_hash: 1ceef78206545832353160cbf4a8d94ac98a9efa
 assessment_date:
   class: Date
   origin: '1970-01-01'

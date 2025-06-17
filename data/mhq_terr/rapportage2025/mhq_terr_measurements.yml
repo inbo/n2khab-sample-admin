@@ -1,12 +1,12 @@
 ..generic:
-  git2rdata: 0.4.1
+  git2rdata: 0.5.0
   optimize: yes
   NA string: NA
   sorting:
   - measurement_date
   - point_code
   hash: 0da444b5c1040a230b2c48fde331225f4a8f0939
-  data_hash: 5a6d2cc994b0a379478789c8e77cb5955f208439
+  data_hash: e8788731a22a1e3888f8bacc8e912b23875fbee2
 fieldwork_team:
   class: character
 point_code:
