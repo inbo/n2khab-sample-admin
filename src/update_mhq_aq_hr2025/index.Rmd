@@ -1,0 +1,65 @@
+---
+title: "Update mhq aquatic habitats admin tables for habitat reporting 2025"
+date: "`r lubridate::now()`"
+link-citations: true
+linkcolor: link.colour
+citecolor: link.colour
+urlcolor: link.colour
+geometry: margin=1in
+mainfont: "Calibri"
+fontsize: 11pt
+documentclass: "article"
+# csl: ../inbo.csl
+# bibliography: ../references.bib
+site: bookdown::bookdown_site
+output:
+  bookdown::html_document2:
+    code_folding: hide
+    keep_md: TRUE
+    number_sections: yes
+    fig_caption: yes
+    df_print: paged
+    toc: TRUE
+    toc_float:
+      collapsed: FALSE
+      smooth_scroll: FALSE
+  bookdown::pdf_document2:
+    fig_caption: yes
+    keep_tex: yes
+    toc: yes
+    toc_depth: 3
+    latex_engine: xelatex
+    number_sections: true
+    includes:
+        in_header: ../header.tex
+---
+
+```{r setup, include=FALSE}
+
+library(sf)
+library(tidyverse)
+library(stringr)
+library(knitr)
+library(n2khab)
+library(git2rdata)
+library(kableExtra)
+library(googlesheets4)
+library(DT)
+library(units)
+library(terra)
+library(leaflet)
+
+opts_chunk$set(
+  warning = FALSE,
+  cache = TRUE,
+  echo = TRUE,
+  dpi = 300
+)
+```
+
+**Note: this is a bookdown project, supposed to be run from within the `src/update_mhq_aq_hr2025` subfolder. You can use the `src/update_mhq_aq_hr2025/update_mhq_aq_hr2025.Rproj` RStudio project file in this subfolder to run it.**
+
+
+
+
+

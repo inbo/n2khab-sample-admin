@@ -1,0 +1,22 @@
+..generic:
+  git2rdata: 0.5.0
+  optimize: yes
+  NA string: NA
+  sorting:
+  - grts_ranking
+  - point_code
+  hash: 1faa4f786573a6968b49d5a4f2f9d3493cf7e71c
+  data_hash: 93b444fbb400f45de651079877ddc80a160561bb
+point_code:
+  class: character
+segment_id:
+  class: character
+grts_ranking:
+  class: numeric
+  digits: 20
+x:
+  class: numeric
+  digits: 20
+'y':
+  class: numeric
+  digits: 20

@@ -1,0 +1,24 @@
+..generic:
+  git2rdata: 0.5.0
+  optimize: yes
+  NA string: NA
+  sorting:
+  - measurement_date
+  - point_code
+  hash: 4ddcf7c146a9e4c15c309144fe096a6adf58e22a
+  data_hash: dc9d3428840c2ee505ecc5d9a115df3905b6baa3
+fieldwork_team:
+  class: character
+point_code:
+  class: character
+segment_id:
+  class: character
+db_ref:
+  class: character
+measurement_date:
+  class: Date
+  origin: '1970-01-01'
+recording_givid:
+  class: character
+user_reference:
+  class: character

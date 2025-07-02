@@ -1,0 +1,391 @@
+# Streams
+
+## Progress cycle 2
+
+The second monitoring cycle of the 3260 mhq scheme started in 2022 and last until 2027.
+
+It appears that many of the selected sampling units do not contain 3260 habitat. Therefore we have to select new sampling units to achieve a sufficient sample size.
+
+## Selected sampling units
+
+The file 'meetpunten3260_cyclus2_versie2022-05-05.csv' list the selected sampling units for cycle 2.
+The file can be found in this [google drive folder](https://drive.google.com/drive/folders/1UNKCLEgiYq2r6EkfWXMkppSDraPcqfAU).
+
+```{r}
+sample_cycle2 <- read_csv2("../../data/design_cycle2/meetpunten3260_cyclus2_versie2022-05-05.csv")
+
+path_design <- fileman_up("n2khab-mhq-design")
+
+samplingframe_habitatstreams_1_7 <- read_vc(file = "samplingframe_habitatstreams_v1_7", 
+                                            root = file.path(path_design, "habitatstreams_cycle2/data"))
+```
+
+```{r}
+sample_cycle2 %>%
+  group_by(sac_streams) %>%
+  summarize(sample_size = n()) %>%
+  ungroup() %>%
+  kable() %>%
+  kable_styling()
+```
+
+```{r, eval = FALSE}
+admin_streams_cycle2_orig <- read_csv("../../data/admin_mhq_watersurfaces/voortgang_mhq_aq_stromend_2025-03-17.csv")
+
+assessments_cycle2 <- admin_streams_cycle2_orig %>%
+    select(segment_id = sampling_unit_code, assessment_date = `datum veldbezoek`, type = doelhabitat) %>%
+    filter(!is.na(segment_id), !is.na(type))
+
+write_csv2(assessments_cycle2, "../../output/voortgang_mhq_aq_stromend_cycle2.csv")
+```
+
+## Visited samplign units
+
+The file 'Monitoring3260_SVZ2024_voorToonWestra.csv' contains an overview of the visited and measured sampling units.
+
+
+```{r}
+admin_streams_orig <- read_csv2("../../data/admin_mhq_watersurfaces/Monitoring3260_SVZ2024_voorToonWestra.csv")
+
+admin_streams <- admin_streams_orig %>%
+  mutate(assessment_year = `jaar monitoring`,
+         assessment_date = as.Date(`datum veldbezoek`, format = "%d/%m/%Y"),
+         sac_streams = ifelse(SBZ == 1, "intersecting or downstream",
+                      ifelse(SBZ == 0, "outside", SBZ)),
+         type_observed = doelhabitat,
+         assessment_date = if_else(is.na(assessment_date), as.Date(str_c(assessment_year, "-01-01")), assessment_date),
+         measured = klasse == "mon3260") %>%
+  select(field_code = Veldcode, segment_id = sampling_unit_code,assessment_year, assessment_date, type_observed, klasse, measured, reason_no_assessment = `reden geen bemonstering/ongeschikt`, x_assessment = x, y_assessment = y, position_change = `locatie SO of SA verschoven (xy aangepast tov origineel aangereikt meetpunt, volgens protocol)`) %>%
+    filter(!is.na(field_code))
+
+admin_cycle2 <- admin_streams %>%
+  filter(assessment_year >= 2022) %>%
+  group_by(field_code) %>%
+  filter(assessment_date == max(assessment_date)) %>%
+  ungroup() 
+
+# replacement
+admin_cycle2 <- admin_cycle2 %>%
+  mutate(segment_id = ifelse(field_code == "KaaBe_01a", "1_4_772", segment_id),
+         klasse = ifelse(field_code == "KaaBe_01", "uitval (ongeschikt)", klasse),
+         type_observed = ifelse(field_code == "AntGr_01", "3260", type_observed))
+```
+
+
+## Assessments in cycle 2
+
+
+```{r}
+mhq_streams_refpoints <- read_vc(root =  "../../data/mhq_streams/v2022", file = "mhq_streams_refpoints")
+
+assessments_cycle2 <- sample_cycle2 %>%
+    select(-field_code) %>%
+    select(segment_id = sampling_unit_code, position_change_c1 = punt_verplaatst, grts_ranking_draw, type_meetpunt, x, y) %>%
+    left_join(admin_cycle2, by = "segment_id") %>%
+    mutate(klasse = ifelse(is.na(klasse), "nog niet bemonsterd", klasse),
+           point_code = str_c(grts_ranking_draw, ifelse(position_change_c1 == "ja" & !is.na(position_change_c1),"_2", "_1"))) %>%
+    left_join(select(mhq_streams_refpoints, segment_id, point_code, grts_ranking), by = c("point_code", "segment_id")) %>%
+    mutate(distance = round(sqrt((x - x_assessment) ^ 2 + (y - y_assessment) ^ 2), 1))
+
+# point codes for new sampling units not in mhq_streams_refpoints yet
+assessments_cycle2 <- assessments_cycle2 %>%
+    mutate(grts_ranking = ifelse(type_meetpunt == "Nieuw meetpunt", grts_ranking_draw, grts_ranking))
+
+# point codes for segment_id's 1497974_1, 1497974_2, 131970_1 and 131970_2 missing in mhq_streams_refpoints
+grts_master <- read_GRTSmh()
+
+grts_ranking_missing <- assessments_cycle2 %>%
+    filter(is.na(grts_ranking)) %>%
+    st_as_sf(coords = c("x", "y"), crs = 31370, remove = FALSE) 
+
+grts_ranking_missing <- grts_ranking_missing %>%
+    mutate(grts_ranking = (terra::extract(grts_master, grts_ranking_missing))$GRTSmaster_habitats) %>%
+    st_drop_geometry()
+
+# position change in cycle 2: modify point_code and grts_ranking
+
+su_position_change <- assessments_cycle2 %>%
+    filter(position_change == "ja") %>%
+    mutate(point_code = str_c(grts_ranking_draw, "_2")) %>%
+    st_as_sf(coords = c("x_assessment", "y_assessment"), crs = 31370, remove = FALSE) 
+
+su_position_change <- su_position_change %>%
+    mutate(grts_ranking = (terra::extract(grts_master, su_position_change))$GRTSmaster_habitats) %>%
+    st_drop_geometry()
+    
+assessments_cycle2 <- assessments_cycle2 %>%
+    anti_join(grts_ranking_missing, by = "point_code") %>%
+    bind_rows(grts_ranking_missing) %>%
+    anti_join(su_position_change, by = c("grts_ranking_draw", "position_change")) %>%
+    bind_rows(su_position_change)
+```
+
+
+
+
+## Update mhq_streams_assessments
+
+```{r}
+mhq_assessments_v2020 <- read_vc(root =  "../../data/mhq_streams/v2020", file = "mhq_streams_assessments")
+mhq_streams_refpoints_v2020 <- read_vc(root =  "../../data/mhq_streams/v2020", file = "mhq_streams_refpoints")
+```
+
+```{r}
+mhq_assessments_v2022 <- read_vc(root =  "../../data/mhq_streams/v2022", file = "mhq_streams_assessments")
+
+mhq_streams_refpoints_validity <- read_vc(root =  "../../data/mhq_streams/v2022", file = "mhq_streams_refpoints_validity")
+
+check_missing <- mhq_assessments_v2020 %>%
+    anti_join(mhq_assessments_v2022, by = c("segment_id", "point_code", "assessment_date")) %>%
+    filter(!is.na(assessment_date)) 
+
+check_missing_2020 <- admin_streams %>%
+    anti_join(mhq_assessments_v2020, by = "segment_id") %>%
+    filter(!is.na(segment_id)) %>%
+    filter(year(assessment_date) < 2020)
+
+mhq_streams_assessments_new <- assessments_cycle2 %>%
+  filter(!is.na(assessment_date)) %>%
+  mutate(type_observed = ifelse(type_observed %in% c("gh", "3260"), type_observed, NA),
+         inaccessible = ifelse(klasse == "uitval (ontoegankelijk)", "long term", NA),
+         not_measurable = ifelse(klasse == "uitval (ongeschikt)", "long term",
+                                 ifelse(klasse == "uitval (tijdelijk ongeschikt)", "short term", NA)),
+         change_location = position_change == "ja",
+         assessment_source = "field assessment") %>%
+  select(point_code, segment_id, grts_ranking, grts_ranking_draw, assessment_date, type_observed, measured, klasse, inaccessible, not_measurable, reason_no_assessment, x = x_assessment, y = y_assessment, x_orig = x, y_orig = y, change_location, assessment_source)
+
+check3 <- mhq_streams_assessments_new %>%
+    group_by(segment_id) %>%
+    filter(n() > 1)
+
+types <- read_types()
+
+reason_cycle1 <- admin_streams %>%
+    filter(year(assessment_date) < 2022) %>%
+    filter(klasse != "niet meetellen (2x bezocht)") %>%
+    select(assessment_date, segment_id, reason_no_assessment, measured, klasse) 
+
+check <- reason_cycle1 %>%
+    group_by(assessment_date, segment_id) %>%
+    filter(n() > 1)
+
+mq_streams_assessments_cycle1 <- mhq_assessments_v2022 %>%
+    bind_rows(check_missing) %>%
+  group_by(segment_id) %>%
+    mutate(replacement = n_distinct(point_code) > 1) %>%
+    ungroup() %>%
+  mutate(change_location = str_detect(point_code, "_2"),
+         type_observed = ifelse(segment_id %in% c("1_7_170694", "1_7_7841"), "gh", type_observed), #checked in admin table
+         assessment_source = ifelse(segment_id %in% c("1_7_170694", "1_7_7841"), "orthophoto", assessment_source)) %>% #checked in admin table
+  filter(!is.na(assessment_date))
+
+mq_streams_assessments_cycle1_pos1 <- mq_streams_assessments_cycle1 %>%
+    filter(str_detect(point_code, "_1")) %>%
+    left_join(reason_cycle1, by = c("segment_id", "assessment_date")) %>%
+    mutate(inaccessible = ifelse(str_detect(reason_no_assessment, "permanent niet toegankelijk"), "long term",
+                                 ifelse(str_detect(reason_no_assessment, "tijdelijk niet toegankelijk"), "short term", NA)),
+           not_measurable = ifelse(str_detect(reason_no_assessment, "permanent ongeschikt") & is.na(inaccessible), "long term",
+                                 ifelse(str_detect(reason_no_assessment, "tijdelijk niet geschikt|tijdelijk ongeschikt") & is.na(inaccessible), "short term", NA))) %>%
+    mutate(not_measurable = ifelse(replacement, "long term", not_measurable), #originele positie van verplaatste punten
+           measured = ifelse(replacement, FALSE, measured),
+           klasse = ifelse(replacement, "uitval (ongeschikt)", klasse)
+           )
+
+mq_streams_assessments_cycle1_pos2 <- mq_streams_assessments_cycle1 %>%
+    filter(str_detect(point_code, "_2")) %>%
+    left_join(reason_cycle1, by = c("segment_id", "assessment_date")) %>%
+    mutate(reason_no_assessment = ifelse(segment_id == "1_4_1497", 
+                                         "permanent ongeschikt: schaduw en bodemplaat", reason_no_assessment),  #manual check
+           measurable = ifelse(segment_id == "1_4_838", FALSE, measurable),
+           measured = measurable & type_observed == "3260",
+           not_measurable = ifelse(measurable, NA, "long term"),
+           reason_no_assessment = ifelse(measurable, NA, reason_no_assessment),
+           klasse = ifelse(measurable,
+                           ifelse(type_observed == "3260", "mon3260", "uitval (gh)"),
+                           "uitval (ongeschikt)"))
+
+mq_streams_assessments_update <- mq_streams_assessments_cycle1_pos1 %>%
+    bind_rows(mq_streams_assessments_cycle1_pos2) %>%
+  bind_rows(mhq_streams_assessments_new) %>%
+  mutate(type = "3260",
+         type = factor(type, levels = levels(types$type)),
+         is_present = type_observed == type,
+         no_habitat = str_detect(type_observed, "gh")) 
+
+mq_streams_assessments_output <- mq_streams_assessments_update %>%
+  select(assessment_date, point_code, segment_id, type, is_present, no_habitat, assessment_source, measured, inaccessible, not_measurable, reason_no_assessment, change_location) %>%
+    arrange(assessment_date)
+
+check <- mq_streams_assessments_output %>%
+    group_by(segment_id, point_code, assessment_date) %>%
+    filter(n() > 1)
+
+```
+
+### Check results
+
+```{r}
+check_replaced <- mq_streams_assessments_output %>%
+    mutate(cycle = ifelse(year(assessment_date) < 2022, 1, 2)) %>%
+    filter(str_detect(point_code, "_2")) %>%
+    group_by(point_code) %>%
+    mutate(n_cycles = n_distinct(cycle)) %>%
+    ungroup()
+
+```
+
+
+```{r}
+mq_streams_assessments_output %>%
+    group_by(type, is_present, measured, inaccessible, not_measurable) %>%
+    summarise(n_rec = n()) %>%
+    kable() %>%
+    kable_styling()
+```
+
+### write results
+
+```{r}
+mq_streams_assessments_output %>%
+    write_vc(file = "mhq_streams_assessments",
+             root = "../../data/mhq_streams",
+             sorting = c("assessment_date", "point_code"))
+```
+
+
+## Update mhq_streams_refpoints
+
+```{r}
+check_missing_refpoint_2022 <- mhq_streams_refpoints_v2020 %>%
+    anti_join(mhq_streams_refpoints, by = c("point_code")) %>%
+    semi_join(mq_streams_assessments_update, by = c("point_code"))
+
+mhq_streams_refpoints <- mhq_streams_refpoints%>%
+    bind_rows(check_missing_refpoint_2022)
+
+check <- mhq_streams_refpoints %>%
+    group_by(point_code) %>%
+    filter(n() > 1)
+
+mhq_streams_refpoints_new <- mq_streams_assessments_update %>%
+    anti_join(mhq_streams_refpoints, by = "point_code")
+
+mhq_streams_refpoints_update <- mhq_streams_refpoints %>%
+    bind_rows(mhq_streams_refpoints_new) %>%
+    select(point_code, segment_id, grts_ranking, x, y)
+
+check <- mq_streams_assessments_output %>%
+    anti_join(mhq_streams_refpoints_update, by = "point_code")
+```
+
+```{r}
+mhq_streams_refpoints_update %>%
+    st_as_sf(coords = c("x", "y"), crs = 31370) %>%
+    st_transform(4326) %>%
+    leaflet() %>%
+    addTiles() %>%
+    addCircleMarkers()
+```
+
+```{r}
+mhq_streams_refpoints_update %>%
+    write_vc(file = "mhq_streams_refpoints",
+             digits = 20,
+             root = "../../data/mhq_streams",
+             sorting = c("grts_ranking", "point_code"))
+```
+
+
+## Update mhq_streams_popunits
+
+```{r}
+mhq_streams_popunits <-  mhq_streams_refpoints %>%
+    bind_rows(mhq_streams_refpoints_new) %>%
+    select(point_code, grts_ranking, grts_ranking_draw, sac_streams, legacy_site, type, segment_id, db_ref) %>%
+    left_join(select(mq_streams_assessments_update, point_code, assessment_date, measured, inaccessible, not_measurable, is_present), by = "point_code") %>%
+    group_by(point_code) %>%
+    filter(assessment_date == max(assessment_date)) %>%
+    ungroup() %>%
+    mutate(is_active = is_present,
+           is_active = ifelse(!is.na(inaccessible) & inaccessible == "long term", FALSE, is_active),
+           is_active = ifelse(!is.na(inaccessible) & inaccessible == "short term", TRUE, is_active),
+           is_active = ifelse(!is.na(not_measurable) & not_measurable == "long term", FALSE, is_active),
+           is_active = ifelse(!is.na(not_measurable) & not_measurable == "short term", TRUE, is_active)) %>%
+    select(point_code, grts_ranking, grts_ranking_draw, sac_streams, legacy_site, type, segment_id, is_active, date = assessment_date) %>%
+    mutate(sac_streams = factor(ifelse(segment_id == "1_4_772", "outside", as.character(sac_streams))),
+           legacy_site = FALSE,
+           type = "3260",
+           type = factor(type, levels = levels(types$type)))
+
+```
+
+```{r}
+mhq_streams_refpoints_update %>%
+    write_vc(file = "mhq_streams_refpoints",
+             digits = 20,
+             root = "../../data/mhq_streams",
+             sorting = c("grts_ranking", "point_code"))
+```
+
+
+## Update mhq_streams_measurements
+
+```{r}
+
+data_path <- fileman_up("n2khab-mhq-data")
+
+header_mhq_aq <- read_vc(root = file.path(data_path, "processed/inboveg_mhq_aq"), file = "header_mhq_aq")
+
+header_mhq_aq <- header_mhq_aq %>%
+    select(measurement_date = vague_date_begin, field_code = location, recording_givid, user_reference) %>%
+    mutate(measurement_date = as.Date(measurement_date))
+
+location_code <- admin_streams %>%
+    filter(measured) %>%
+    mutate(field_code = str_trim(field_code)) %>%
+    mutate(segment_id = ifelse(field_code == "Voer_08", "1_4_31", 
+                                ifelse(field_code == "BolBe_08", "1_4_491",
+                                       ifelse(field_code == "SchNe_04", "1_4_565",
+                                               ifelse(field_code == "GroNe_12", "1_4_1602", 
+                                                      ifelse(field_code == "Stiemer_02", "1_4_1497", 
+                                                             ifelse(field_code == "KleBe_01", "1_7_171136",
+                                                                    ifelse(field_code == "KaaBe_01a", "1_4_772", segment_id)))))))) %>%
+    
+    distinct(field_code, segment_id)
+
+measurements <- mq_streams_assessments_update %>%
+    filter(measured) %>%
+    left_join(location_code, by = "segment_id") %>%
+    mutate(fieldwork_team = "inbo") %>%
+    select(fieldwork_team, point_code, segment_id, field_code, measurement_date = assessment_date) %>%
+    left_join(header_mhq_aq, by = c("measurement_date", "field_code"))
+
+check <- admin_streams_orig %>%
+    filter(klasse == "mon3260") %>%
+    distinct(Veldcode, sampling_unit_code, klasse, `datum veldbezoek`) %>%
+    mutate(check = Veldcode %in% measurements$field_code)
+
+overview <- measurements %>%
+    left_join(select(mhq_streams_popunits, point_code, sac_streams), by = "point_code") %>%
+    mutate(cycle = ifelse(year(measurement_date) < 2022, 1, 2)) %>%
+    group_by(cycle, sac_streams) %>%
+    summarise(n_measured = n_distinct(point_code)) %>%
+    ungroup()
+
+sac_streams_seg <- mhq_streams_popunits %>%
+    distinct(segment_id, sac_streams)
+
+check2 <- admin_streams %>%
+    filter(year(assessment_date) < 2022) %>%
+    left_join(sac_streams_seg, by = "segment_id") %>%
+    mutate(in_1_7 = segment_id %in% samplingframe_habitatstreams_1_7$segment_id)
+
+measurements %>%
+    rename(db_ref = field_code) %>%
+    write_vc(file = "mhq_streams_measurements",
+             root = "../../data/mhq_streams",
+             sorting = c("measurement_date", "point_code"))
+
+```
+
+

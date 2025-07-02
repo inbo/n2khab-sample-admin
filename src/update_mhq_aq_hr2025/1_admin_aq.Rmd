@@ -1,0 +1,101 @@
+# standing water
+
+## Read admin data
+
+```{r}
+
+admin_cycle2_orig <- read_csv("../../data/admin_mhq_watersurfaces/voortgang_mhq_aq_stilstaand_2025-03-17.csv")
+
+admin_cycle2 <- admin_cycle2_orig %>%
+    select(polygon_id = plygn_d, cycle1 = Meetnet_1, type_target = type_ll, screening = RednNM2, assessment_date = `datum veldbezoek`, type_observed = `habtype veld`, lsvi_measurement = `LSVI-bepaling?`, reason_no_habitat = `reden geen habitat`, reason_not_measurable = `reden niet geschikt`, opmerking, in_inboveg =`ingevoerd in inboveg?`) %>%
+    filter(!is.na(polygon_id)) %>%
+    mutate(assessment_date = as.Date(assessment_date, format = "%d-%m-%Y")) %>%
+    filter(!is.na(assessment_date) | !is.na(screening)) 
+
+write_csv2(admin_cycle2, "../../output/voortgang_mhq_aq_stilstaand_cycle2.csv")
+        
+```
+
+## Assessments cycle 2
+
+```{r}
+main_type_dissapeared <- admin_cycle2 %>%
+    separate_longer_delim(cols = type_target, delim = "; ") %>%
+    mutate(main_type_target = str_sub(type_target, 1, 4),
+           main_type_is_present = str_detect(type_observed, main_type_target)) %>%
+    filter(cycle1 == "yes" & (!main_type_is_present)) %>%
+    filter(reason_not_measurable != "(grotendeels) drooggevallen" | is.na(reason_not_measurable))
+  
+assessments_cycle2 <- admin_cycle2 %>%
+    separate_longer_delim(cols = type_observed, delim = ",") %>%
+    separate_longer_delim(cols = type_observed, delim =  "; ") %>%
+    mutate(type_observed = str_trim(type_observed),
+           type_observed = ifelse(type_observed == "3130a", "3130_aom",
+                                  ifelse(type_observed == "3130n", "3130_na", type_observed))) %>%
+    filter(!str_detect(type_observed, "\\?") | is.na(type_observed)) %>%
+    filter(!is.na(assessment_date)) %>%
+    filter(!is.na(type_observed)) %>%
+    filter((!reason_not_measurable %in% c("te hoge waterstand", "(grotendeels) drooggevallen")) | 
+               is.na(reason_not_measurable)) %>%
+    mutate(any_habitat = type_observed != "gh",
+           assessment_source = "field assessment",
+           inaccessible = ifelse(reason_not_measurable == "geen toestemming om te betreden", "long term", NA))
+
+assessments_cycle2_is_present <- assessments_cycle2 %>%
+    filter(str_sub(type_observed, 1, 2) == "31") %>%
+    mutate(is_present = TRUE,
+           any_habitat = TRUE) %>%
+    select(assessment_date, polygon_id, type = type_observed, is_present, any_habitat, lsvi_measurement)
+
+assessments_cycle2_gh <- assessments_cycle2 %>%
+    filter(type_observed == "gh") %>%
+    separate_longer_delim(cols = type_target, delim =  "; ") %>%
+    mutate(is_present = FALSE,
+           any_habitat = FALSE) %>%
+    select(assessment_date, polygon_id, type = type_target, is_present, any_habitat, lsvi_measurement)
+
+assessments_cycle2 <-  assessments_cycle2_is_present %>%
+    bind_rows(assessments_cycle2_gh)
+
+check <- assessments_cycle2 %>%
+    group_by(type, polygon_id) %>%
+    filter(n() > 1)
+
+```
+
+## Assessments cycle 1
+
+```{r}
+
+path_admin_mhq <- file.path(fileman_up("n2khab-sample-admin"), "data/mhq_watersurfaces/rapportage2025")
+
+assessments_cycle1 <- read_vc(file = "mhq_watersurfaces_assessments", path_admin_mhq)
+ 
+```
+
+## Combine
+
+```{r}
+check_new <- assessments_cycle2 %>%
+    semi_join(assessments_cycle1, by = c("polygon_id", "assessment_date"))
+
+check_repeated <- assessments_cycle2 %>%
+    bind_rows(assessments_cycle1) %>%
+    group_by(polygon_id) %>%
+    filter(n_distinct(assessment_date) > 1) %>%
+    ungroup() %>%
+    arrange(polygon_id, assessment_date)
+```
+
+# Streams
+
+```{r}
+admin_streams_cycle2_orig <- read_csv("../../data/admin_mhq_watersurfaces/voortgang_mhq_aq_stromend_2025-03-17.csv")
+
+assessments_cycle2 <- admin_streams_cycle2_orig %>%
+    select(segment_id = sampling_unit_code, assessment_date = `datum veldbezoek`, type = doelhabitat) %>%
+    filter(!is.na(segment_id), !is.na(type))
+
+write_csv2(assessments_cycle2, "../../output/voortgang_mhq_aq_stromend_cycle2.csv")
+```
+
