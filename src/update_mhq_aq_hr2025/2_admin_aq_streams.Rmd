@@ -250,6 +250,7 @@ mq_streams_assessments_output %>%
     write_vc(file = "mhq_streams_assessments",
              root = "../../data/mhq_streams",
              sorting = c("assessment_date", "point_code"))
+
 ```
 
 
@@ -320,10 +321,11 @@ mhq_streams_popunits <-  mhq_streams_refpoints %>%
 ```
 
 ```{r}
-mhq_streams_refpoints_update %>%
-    write_vc(file = "mhq_streams_refpoints",
+mhq_streams_popunits %>%
+    write_vc(file = "mhq_streams_popunits",
              digits = 20,
              root = "../../data/mhq_streams",
+             strict = FALSE,
              sorting = c("grts_ranking", "point_code"))
 ```
 
