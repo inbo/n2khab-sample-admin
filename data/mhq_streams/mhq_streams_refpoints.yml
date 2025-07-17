@@ -5,11 +5,15 @@
   sorting:
   - grts_ranking
   - point_code
-  hash: 1faa4f786573a6968b49d5a4f2f9d3493cf7e71c
-  data_hash: 93b444fbb400f45de651079877ddc80a160561bb
-point_code:
-  class: character
+  hash: c44e3a5f283aaf754560b1b630e89cbc57177df1
+  data_hash: e70337caab8e331d18572586ab10eac10793b35b
 segment_id:
+  class: character
+rank:
+  class: integer
+segment_id_v1_7:
+  class: character
+point_code:
   class: character
 grts_ranking:
   class: numeric
