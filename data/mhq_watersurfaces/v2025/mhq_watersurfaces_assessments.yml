@@ -1,0 +1,32 @@
+..generic:
+  git2rdata: 0.5.0
+  optimize: yes
+  NA string: NA
+  sorting:
+  - assessment_date
+  - polygon_id
+  - type
+  hash: f636693f0bafe0fe0ead790ce51594e94a225383
+  data_hash: c1a7434e3dd5b46b7fd523df71991f32bc2ead94
+mhq_cycle:
+  class: numeric
+  digits: 6
+assessment_date:
+  class: Date
+  origin: '1970-01-01'
+polygon_id:
+  class: character
+type:
+  class: character
+is_present:
+  class: logical
+any_habitat:
+  class: logical
+assessment_source:
+  class: character
+inaccessible:
+  class: character
+not_measurable:
+  class: character
+reason_not_measurable:
+  class: character

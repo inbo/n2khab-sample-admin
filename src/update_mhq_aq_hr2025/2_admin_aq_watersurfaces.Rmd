@@ -1,0 +1,307 @@
+# Standing water
+
+## Read admin data
+
+The file `voortgang_mhq_watersurfaces_2025-10-07.csv` in [this google drive](https://drive.google.com/drive/folders/19NsppwrC47ZAjv8Ndoh6aChkdud801T2).
+
+It is the '2025-10-07' version of [this google sheet](https://docs.google.com/spreadsheets/d/1A0SUXxbs7Z4TB_lNPH11Wj0fTuFA9mfRslX-LzD4Rds/edit?gid=1191658174#gid=1191658174) in which the fieldwork progress of the 2nd monitoring cycle of mhq watersurfaces is documented.
+
+```{r}
+
+admin_cycle2_orig <- read_csv2("../../data/admin_mhq_watersurfaces/voortgang_mhq_watersurfaces_2025-10-07.csv")
+
+admin_cycle2 <- admin_cycle2_orig %>%
+    select(polygon_id = plygn_d, cycle1 = Meetnet_1, type_target = type_ll, screening = RednNM2, date_orig = `datum veldbezoek`, type_observed = `habtype veld`, lsvi_measurement = `LSVI-bepaling?`, reason_no_habitat = `reden geen habitat`, reason_not_measured = `geen opname wegens`, reason_not_measurable = `reden niet geschikt`, opmerking, in_inboveg =`ingevoerd in inboveg?`) %>%
+    filter(!is.na(polygon_id)) %>%
+    mutate(assessment_date = date_orig) %>%
+    separate_longer_delim(cols = assessment_date, delim = " & ") %>%
+    mutate(assessment_date = str_replace_all(assessment_date, "\\/", "\\-"),
+           assessment_date = as.Date(assessment_date, format = "%d-%m-%Y"),
+           lsvi_measurement = lsvi_measurement == "WAAR",
+           in_inboveg = in_inboveg == "WAAR") %>%
+    filter(!is.na(assessment_date) | !is.na(screening) | !is.na(reason_not_measurable)) %>%
+    mutate(type_observed = ifelse(str_detect(screening, "gh") & !is.na(screening), "gh", type_observed),
+           assessment_date = if_else(!is.na(screening) | is.na(assessment_date), as.Date("2024-01-30"), assessment_date)) %>% #type_observed niet ingevuld
+    group_by(polygon_id) %>%
+    filter(assessment_date == max(assessment_date)) %>%
+    ungroup() %>%
+    mutate(reason_not_measurable = ifelse(polygon_id == "LIMGNK0182", NA, reason_not_measurable))
+
+write_csv2(admin_cycle2, "../../output/voortgang_mhq_aq_stilstaand_cycle2.csv")
+
+```
+
+## Update assessments
+
+### Assessments cycle 2
+
+-   Standardize type observed:
+    -   separate row for each observed type
+    -   check if observed is a valid type
+    -   check if type observed is missing
+
+```{r}
+
+types <- read_types()
+
+assessments_cycle2 <- admin_cycle2 %>%
+    separate_longer_delim(cols = type_observed, delim = ",") %>%
+    separate_longer_delim(cols = type_observed, delim =  "; ") %>%
+    separate_longer_delim(cols = type_observed, delim =  "en ") %>%
+    mutate(type_observed = str_trim(type_observed),
+           is_valid_type = type_observed %in% c(as.character(types$type), "gh"))
+
+assessments_cycle2_unsure <- assessments_cycle2 %>%
+    filter(str_detect(type_observed, "\\?")) %>%
+    select(polygon_id, assessment_date, type_observed, lsvi_measurement, opmerking)
+
+# write_csv2(assessments_cycle2_unsure, "../../output/check_unsure.csv")
+```
+
+```{r}
+assessments_cycle2 %>%
+    filter(!is_valid_type) %>%
+    select(polygon_id, screening, assessment_date, type_observed, reason_no_habitat, reason_not_measured, reason_not_measurable) %>%
+    datatable(filter = "top",
+              rownames = FALSE)
+```
+
+-   Change `3130n` to `3130_na` and `3130a` to `3130_aom`
+-   Remove types ending with `?` (for example `3140?`): to be verified by field work coordinator
+
+```{r}
+assessments_cycle2 <- assessments_cycle2 %>%
+    filter(!str_detect(type_observed, "\\?") | is.na(type_observed)) %>% 
+    # filter((!reason_not_measurable %in% c("te hoge waterstand", "(grotendeels) drooggevallen")) | 
+    #            is.na(reason_not_measurable)) %>%
+    mutate(type_observed = ifelse(type_observed == "3130n", "3130_na",
+                                  ifelse(type_observed == "3130a", "3130_aom", type_observed)),
+           assessment_source = ifelse(str_detect(screening, "gh") & !is.na(screening), "orthophoto", "field assessment"),
+           inaccessible = ifelse(reason_not_measurable == "geen toestemming om te betreden", "long term", NA),
+           not_measurable = ifelse(reason_not_measured == "tijdelijk ongeschikt", "short term", NA))
+```
+
+-   Create records for target types that are absent.
+Two cases occur:
+    -   `type_observed` = `gh`
+        -   `is_present` is `FALSE` for all target types
+        -   `any_habitat` is `FALSE`
+    -   one or more types are observed but not all target types
+        -   `is_present` is `FALSE` for the target types that are not observed
+        -   `any_habitat` is `TRUE`
+
+```{r}
+
+assessments_cycle2_is_present <- assessments_cycle2 %>%
+    filter(str_sub(type_observed, 1, 2) == "31") %>%
+    mutate(is_present = TRUE,
+           any_habitat = TRUE)
+
+assessments_cycle2_target_absent <- assessments_cycle2 %>%
+    filter(str_sub(type_observed, 1, 2) == "31") %>%
+    mutate(type_observed = type_target) %>%
+    separate_longer_delim(cols = type_observed, delim =  "; ") %>%
+    anti_join(assessments_cycle2_is_present, by = c("polygon_id", "type_observed")) %>%
+    mutate(is_present = FALSE,
+           any_habitat = TRUE,
+           lsvi_measurement = FALSE) %>%
+    unique()
+    
+assessments_cycle2_gh <- assessments_cycle2 %>%
+    filter(type_observed == "gh") %>%
+    separate_longer_delim(cols = type_target, delim =  "; ") %>%
+    mutate(type_observed = type_target,
+           is_present = FALSE,
+           any_habitat = FALSE)
+
+assessments_cycle2_unknown <- assessments_cycle2 %>%
+    filter(is.na(type_observed)) %>%
+    separate_longer_delim(cols = type_target, delim =  "; ") %>%
+    mutate(type_observed = type_target,
+           is_present = NA,
+           any_habitat = NA,
+           assessment_source = NA)
+
+assessments_cycle2 <-  assessments_cycle2_is_present %>%
+    bind_rows(assessments_cycle2_target_absent) %>%
+    bind_rows(assessments_cycle2_gh) %>%
+    bind_rows(assessments_cycle2_unknown) %>%
+    arrange(assessment_date, polygon_id)
+
+assessments_cycle2_stdz <- assessments_cycle2 %>%
+    mutate(mhq_cycle = 2) %>%
+    select(mhq_cycle, assessment_date, polygon_id, type = type_observed, is_present, any_habitat, assessment_source, inaccessible, not_measurable, reason_not_measurable)
+
+check1 <- assessments_cycle2_stdz %>%
+    group_by(type, polygon_id) %>%
+    filter(n() > 1)
+
+check2 <- assessments_cycle2_stdz %>%
+    group_by(polygon_id) %>%
+    mutate(any_habitat_check = any(is_present)) %>%
+    ungroup() %>%
+    filter(any_habitat_check != any_habitat)
+
+check3 <- assessments_cycle2_stdz %>%
+    filter(!is.na(not_measurable) & !is.na(is_present))
+
+```
+
+### Assessments cycle 1
+
+The previous versions of `mhq_watersurfaces_assessments`:
+
+-   version 2023: all assessments in the first monitoring cycle
+    -   generated with script `20_admin_standingwater.Rmd` in `habitatwatersurfaces_cycle1/src` folder of` n2khab-mhq-design` github repo
+    -   note that watersurfaces have been visited for abiotic and biotic measurements in different years
+    and that the assessment date corresponds with the first visit (usely for abiotic measurements)
+-   version 2024: addition of rejected sampling units after desktop screening of selected sampling units
+in the second monitoring cycle
+
+```{r}
+
+# alles van cyclus 1: assessment_date = minimum van datum biotische en datum abiotische opname
+path_ws_c1 <- file.path(fileman_up("n2khab-mhq-design"), "habitatwatersurfaces_cycle1/output")
+
+assessments_cycle1 <- read_vc(file = "mhq_watersurfaces_assessments", path_ws_c1)
+measurements_cycle1 <- read_vc(file = "mhq_watersurfaces_measurements", path_ws_c1)
+refpoints_v5 <- read_vc(file = "watersurfaces_refpoints", path_ws_c1) 
+
+measurements_cycle1_biotic <- measurements_cycle1 %>%
+    filter(measurement_type == "biotic") %>%
+    distinct(polygon_id, measurement_date)
+
+compare_date <- assessments_cycle1 %>%
+    left_join(measurements_cycle1_biotic, by = "polygon_id")
+
+path_ws_c2 <- file.path(fileman_up("n2khab-mhq-design"), "habitatwatersurfaces_cycle2/output")
+
+# alles van cyclus 1 + desktop controle voor cyclus 2 van start ging
+assessments_cycle1_bis <- read_vc(file = "mhq_watersurfaces_assessments", path_ws_c2)
+popunits <- read_vc(file = "mhq_watersurfaces_populationunits", path_ws_c2) 
+
+assessments_cycle1 <- assessments_cycle1_bis %>%
+    group_by(polygon_id, assessment_date) %>%
+    mutate(any_habitat = any(is_present)) %>%
+    ungroup() %>%
+    mutate(mhq_cycle = ifelse(year(assessment_date) >= 2024, 2, 1))
+```
+
+### Combine
+
+We add new assessments to create version 2025 of `mhq_watersurfaces_assessments`.
+
+```{r}
+check_new <- assessments_cycle2 %>%
+    semi_join(assessments_cycle1, by = c("polygon_id", "assessment_date"))
+
+check_repeated <- assessments_cycle2_stdz %>%
+    bind_rows(assessments_cycle1) %>%
+    group_by(polygon_id) %>%
+    filter(n_distinct(assessment_date) > 1) %>%
+    ungroup() %>%
+    arrange(polygon_id, assessment_date)
+
+assessments_update <- assessments_cycle1 %>%
+    bind_rows(assessments_cycle2_stdz) %>%
+    arrange(assessment_date, polygon_id) %>%
+    select(mhq_cycle, everything())
+    
+```
+
+### Check
+
+-   Check reference points:
+    -   polygong_id `683951_v2014` has no reference point.
+    It is not clear where it comes from as it is absent in watersurfaces_hab (v3 to v6) en the habitatmap
+    -   we remove it from 'mhq_watersurfaces_assessments'
+    
+```{r}
+mhq_watersurfaces_refpoints <- assessments_update %>%
+    left_join(refpoints_v5, by = "polygon_id") 
+ 
+missing_refpoint <- mhq_watersurfaces_refpoints %>%
+    filter(is.na(grts_ranking))
+
+assessments_update <- assessments_update %>%
+    anti_join(missing_refpoint, by = "polygon_id")
+
+```
+
+```{r}
+#nakijken
+popunits_missing_polygon <- mhq_watersurfaces_refpoints %>%
+    anti_join(popunits, by = "polygon_id") %>%
+    filter(is_present & is.na(inaccessible))
+
+```
+
+### View result
+
+The map shows:
+
+-   assessments mhq cycle 1 (green circles)
+-   assessments mhq cycle 2 (blue circles)
+
+```{r}
+mhq_watersurfaces_refpoints %>%
+    filter(!is.na(x)) %>%
+    mutate(show_color = ifelse(mhq_cycle == 1, "green", "blue")) %>%
+    st_as_sf(coords = c("x", "y"), crs =31370) %>%
+    st_transform(4326) %>%
+    leaflet() %>%
+    addTiles() %>%
+    addCircleMarkers(color = ~show_color, label = ~str_c(type, ", is_present = ", is_present))
+```
+
+### Write results
+
+Let's save the different versions in separate folders:
+
+```{r}
+data_path <- "../../data/mhq_watersurfaces"
+
+if (!dir.exists(file.path(data_path, "v2023"))) {
+    
+    dir.create(file.path(data_path, "v2023"))
+    
+}
+
+assessments_cycle1 %>%
+    select(-mhq_cycle) %>%
+    write_vc(file = "mhq_watersurfaces_assessments",
+             root = file.path(data_path, "v2023"),
+             sorting = c("assessment_date", "polygon_id", "type"))
+```
+
+```{r}
+data_path <- "../../data/mhq_watersurfaces"
+
+if (!dir.exists(file.path(data_path, "v2024"))) {
+    
+    dir.create(file.path(data_path, "v2024"))
+    
+}
+
+assessments_cycle1_bis %>%
+    write_vc(file = "mhq_watersurfaces_assessments",
+             root = file.path(data_path, "v2024"),
+             sorting = c("assessment_date", "polygon_id", "type"))
+```
+
+
+```{r}
+
+if (!dir.exists(file.path(data_path, "v2025"))) {
+    
+    dir.create(file.path(data_path, "v2025"))
+    
+}
+
+assessments_update %>%
+    write_vc(file = "mhq_watersurfaces_assessments",
+             root = file.path(data_path, "v2025"),
+             sorting = c("assessment_date", "polygon_id", "type"),
+             strict = FALSE)
+```
+
