@@ -14,18 +14,18 @@ admin_cycle2 <- admin_cycle2_orig %>%
     select(polygon_id = plygn_d, cycle1 = Meetnet_1, type_target = type_ll, screening = RednNM2, date_orig = `datum veldbezoek`, type_observed = `habtype veld`, lsvi_measurement = `LSVI-bepaling?`, reason_no_habitat = `reden geen habitat`, reason_not_measured = `geen opname wegens`, reason_not_measurable = `reden niet geschikt`, opmerking, in_inboveg =`ingevoerd in inboveg?`) %>%
     filter(!is.na(polygon_id)) %>%
     mutate(assessment_date = date_orig) %>%
-    separate_longer_delim(cols = assessment_date, delim = " & ") %>%
     mutate(assessment_date = str_replace_all(assessment_date, "\\/", "\\-"),
            assessment_date = as.Date(assessment_date, format = "%d-%m-%Y"),
            lsvi_measurement = lsvi_measurement == "WAAR",
            in_inboveg = in_inboveg == "WAAR") %>%
     filter(!is.na(assessment_date) | !is.na(screening) | !is.na(reason_not_measurable)) %>%
     mutate(type_observed = ifelse(str_detect(screening, "gh") & !is.na(screening), "gh", type_observed),
-           assessment_date = if_else(!is.na(screening) | is.na(assessment_date), as.Date("2024-01-30"), assessment_date)) %>% #type_observed niet ingevuld
+           assessment_date = if_else(!is.na(screening) | is.na(assessment_date), as.Date("2024-01-30"), assessment_date)) %>% 
     group_by(polygon_id) %>%
     filter(assessment_date == max(assessment_date)) %>%
     ungroup() %>%
-    mutate(reason_not_measurable = ifelse(polygon_id == "LIMGNK0182", NA, reason_not_measurable))
+    mutate(reason_not_measured = ifelse(polygon_id == "LIMGNK0182", "tijdelijk ongeschikt", reason_not_measured),
+           lsvi_measurement = ifelse(polygon_id == "LIMGNK0182", FALSE, lsvi_measurement)) #geen geschikt opname
 
 write_csv2(admin_cycle2, "../../output/voortgang_mhq_aq_stilstaand_cycle2.csv")
 
