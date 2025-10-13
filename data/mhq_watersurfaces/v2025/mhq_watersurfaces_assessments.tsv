@@ -791,7 +791,7 @@ mhq_cycle	assessment_date	polygon_id	type	is_present	any_habitat	assessment_sour
 2	19951	ANTMOL0089	3140	0	1	field assessment	NA	NA	NA
 2	19951	ANTMOL0089	3150	0	1	field assessment	NA	NA	NA
 2	19954	LIMBRE0073	3130_na	1	1	field assessment	NA	NA	NA
-2	19954	LIMBRE0073	3150	0	1	field assessment	NA	NA	NA
+2	19954	LIMBRE0073	3150	1	1	field assessment	NA	NA	NA
 2	19954	LIMMSK0444	3130_aom	1	1	field assessment	NA	NA	NA
 2	19955	ANTKAS0463	3130_aom	1	1	field assessment	NA	NA	NA
 2	19955	ANTKAS0463	3160	1	1	field assessment	NA	NA	NA
@@ -833,6 +833,7 @@ mhq_cycle	assessment_date	polygon_id	type	is_present	any_habitat	assessment_sour
 2	19972	LIMMGR0376	3160	1	1	field assessment	NA	NA	NA
 2	19976	LIMZNH0516	3130_aom	1	1	field assessment	NA	NA	NA
 2	19976	LIMZNH0516	3130_na	1	1	field assessment	NA	NA	NA
+2	19976	LIMZNH0516	3140	1	1	field assessment	NA	NA	NA
 2	19976	LIMZNH0516	3150	0	1	field assessment	NA	NA	NA
 2	19976	LIMZNH0576	3130_na	1	1	field assessment	NA	NA	NA
 2	19976	LIMZNH0576	3150	0	1	field assessment	NA	NA	NA
@@ -866,15 +867,16 @@ mhq_cycle	assessment_date	polygon_id	type	is_present	any_habitat	assessment_sour
 2	20251	LIMGNK0119	3130_aom	1	1	field assessment	NA	NA	NA
 2	20251	LIMGNK0119	3130_na	1	1	field assessment	NA	NA	NA
 2	20251	LIMGNK0119	3140	1	1	field assessment	NA	NA	NA
-2	20251	LIMGNK0182	3130_na	1	1	field assessment	NA	NA	NA
-2	20251	LIMGNK0182	3140	0	1	field assessment	NA	NA	NA
+2	20251	LIMGNK0182	3130_na	1	1	field assessment	NA	short term	(grotendeels) drooggevallen
+2	20251	LIMGNK0182	3140	0	1	field assessment	NA	short term	(grotendeels) drooggevallen
 2	20252	ANTOTH0015	3130_aom	0	0	field assessment	NA	NA	NA
 2	20259	ANTBAA0046	3130_na	1	1	field assessment	NA	NA	NA
 2	20259	ANTBAA0046	3140	1	1	field assessment	NA	NA	NA
 2	20262	ANTHST0508	3130_aom	1	1	field assessment	NA	NA	NA
 2	20265	OVLBLE0280	3150	1	1	field assessment	NA	NA	NA
-2	20279	OVLBLE0077	3150	0	0	field assessment	NA	short term	te hoge waterstand
+2	20279	OVLBLE0077	3150	0	0	field assessment	NA	NA	NA
 2	20283	ANTGEE0193	3150	1	1	field assessment	NA	NA	NA
+2	20286	VBRSZI0277	3150	1	1	field assessment	NA	NA	NA
 2	20287	ANTARE0286	3150	1	1	field assessment	NA	NA	NA
 2	20287	LIMBOC0026	3140	1	1	field assessment	NA	NA	NA
 2	20287	LIMBOC0078	3140	NA	NA	NA	NA	short term	(grotendeels) drooggevallen
@@ -911,3 +913,4 @@ mhq_cycle	assessment_date	polygon_id	type	is_present	any_habitat	assessment_sour
 2	20350	OVLALT0344	3130_aom	1	1	field assessment	NA	NA	NA
 2	20350	OVLALT0344	3130_na	1	1	field assessment	NA	NA	NA
 2	20353	OVLBLE0018	3140	1	1	field assessment	NA	NA	NA
+2	20363	WVLDIK0110	3150	0	0	field assessment	NA	short term	(grotendeels) drooggevallen

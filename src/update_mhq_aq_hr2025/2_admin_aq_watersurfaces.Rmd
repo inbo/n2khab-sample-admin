@@ -8,7 +8,7 @@ It is the '2025-10-07' version of [this google sheet](https://docs.google.com/sp
 
 ```{r}
 
-admin_cycle2_orig <- read_csv2("../../data/admin_mhq_watersurfaces/voortgang_mhq_watersurfaces_2025-10-07.csv")
+admin_cycle2_orig <- read_csv2("../../data/admin_mhq_watersurfaces/voortgang_mhq_watersurfaces_2025-10-13.csv")
 
 admin_cycle2 <- admin_cycle2_orig %>%
     select(polygon_id = plygn_d, cycle1 = Meetnet_1, type_target = type_ll, screening = RednNM2, date_orig = `datum veldbezoek`, type_observed = `habtype veld`, lsvi_measurement = `LSVI-bepaling?`, reason_no_habitat = `reden geen habitat`, reason_not_measured = `geen opname wegens`, reason_not_measurable = `reden niet geschikt`, opmerking, in_inboveg =`ingevoerd in inboveg?`) %>%
