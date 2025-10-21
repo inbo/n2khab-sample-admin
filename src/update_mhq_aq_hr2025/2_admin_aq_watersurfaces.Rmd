@@ -304,4 +304,333 @@ assessments_update %>%
              sorting = c("assessment_date", "polygon_id", "type"),
              strict = FALSE)
 ```
+## Update measurements
+
+The admin table also provides information on:
+
+-   LSVI measurement
+-   data imported in INBOVEG
+
+To be checked: `lsvi_measurement = FALSE` `and in_inboveg = TRUE`
+
+```{r}
+assessments_cycle2 %>%
+    filter(!lsvi_measurement & is_present & in_inboveg) %>%
+    select(polygon_id, assessment_date, type_observed, lsvi_measurement, in_inboveg) %>%
+    datatable(rownames = FALSE)
+```
+
+```{r}
+measurements_cycle2 <- assessments_cycle2 %>%
+    mutate(lsvi_measurement = ifelse(polygon_id == "ANTTUR0296" & type_observed == "3160", FALSE, lsvi_measurement)) %>% #based on opmerking
+    mutate(lsvi_measurement = ifelse(polygon_id == "WVLHAR0329", TRUE, lsvi_measurement)) %>% #na controle
+    filter(lsvi_measurement) %>%
+    filter(is_present) %>%
+    filter(is.na(reason_not_measured)) %>%
+    select(polygon_id, measurement_date = assessment_date, type = type_observed, is_present, lsvi_measurement, reason_not_measured, reason_not_measurable, opmerking, inaccessible, not_measurable, in_inboveg) %>%
+    mutate(measurement_year = year(measurement_date))
+```
+
+### Check the measurements in INBOVEG
+
+We check which measurements are imported in INBOVEG.
+The `git2rdata` file `HT31xx_header` in the [n2khqb-mhq_data](https://github.com/inbo/n2khab-mhq-data/tree/master/processed/inboveg_mhq_aq) repo gives an overview of the mhq watersurfaces measurements imported in INBOVEG.
+
+```{r}
+path_inboveg <- file.path(fileman_up("n2khab-mhq-data"), "processed/inboveg_mhq_aq")
+
+ws_inboveg <- read_vc("HT31xx_header", 
+                      root = path_inboveg)
+
+ws_codes <- read_csv2(file.path(path_inboveg, "watervlakken_codes/mapping_table_inbocode.csv")) %>%
+    select(polygon_id = codeplas, inbocode)
+
+ws_inboveg <- ws_inboveg %>%
+    select(location, type = type_observed, measurement_date = date, reliability, suitable_mhq, measured, recording_givid, user_reference) %>%
+    left_join(ws_codes %>%
+                  rename(location = inbocode),
+              by = "location") %>%
+    mutate(polygon_id = ifelse(is.na(polygon_id), location, polygon_id)) %>%
+    mutate(measurement_date = as.Date(measurement_date),
+           measurement_year = year(measurement_date)) 
+```
+
+### Update measurements cycle 1
+
+We update mhq_watersurfaces_measurements for cycle 1:
+
+-   add recording_givid of INBOVEG
+-   add exact measurement date
+-   only select biotic measurements
+-   only select measurements that are imported in INBOVEG
+-   only select measurements with suitable_MHQ = TRUE
+
+```{r}
+
+measurements_cycle1_biotic <- measurements_cycle1 %>%
+    group_by(polygon_id) %>%
+    mutate(assessment_date = min(measurement_date),
+           measurement_year = year(measurement_date)) %>%
+    ungroup() %>%
+    filter(measurement_type == "biotic")
+
+# type is missing in some cases; this is the case when the target type is not present; to be removed
+check_missing_type <- measurements_cycle1_biotic %>%
+    filter(is.na(type)) %>%
+    select(-type) %>%
+    left_join(assessments_cycle1,
+              by = c("assessment_date", "polygon_id"))
+    
+check_presence <- measurements_cycle1_biotic %>%
+    left_join(assessments_cycle1 %>%
+                  select(assessment_date, polygon_id, type, is_present),
+              by = c("assessment_date", "polygon_id", "type"))
+
+measurements_cycle1_inboveg <- measurements_cycle1_biotic %>%
+    select(-measurement_date) %>%
+    left_join(assessments_cycle1 %>%
+                  select(assessment_date, polygon_id, type, is_present),
+              by = c("assessment_date", "polygon_id", "type")) %>%
+    left_join(ws_inboveg,
+              by = c("polygon_id", "type", "measurement_year")
+                  )
+
+measurements_cycle1_match <- measurements_cycle1_inboveg %>%
+    filter(!is.na(recording_givid)) %>%
+    filter(suitable_mhq) %>%
+    mutate(mhq_cycle = 1) %>%
+    select(mhq_cycle, polygon_id, measurement_date, type, user_reference, recording_givid, suitable_mhq)
+
+check_missing_inboveg <-  measurements_cycle1_inboveg %>%
+    filter(!is.na(type)) %>%
+    filter(is.na(recording_givid)) %>%
+    anti_join(measurements_cycle1_match, by = c("measurement_date", "polygon_id")) %>%
+    left_join(popunits, by = c("polygon_id", "type")) %>%
+    select(polygon_id, db_ref, type, measurement_year, assessment_date)
+    
+```
+
+These are the resulting measurements in cycle 1.
+
+```{r}
+measurements_cycle1_match %>%
+    datatable(rownames = FALSE,
+              filter = "top")
+```
+
+For the following measurements no INBOVEG record is found.
+
+```{r}
+check_missing_inboveg %>%
+    datatable(rownames = FALSE,
+              filter = "top")
+```
+
+
+### Measurements cycle2
+
+We first check for which measurements we find a record in INBOVEG for the same `polygon_id`, `type` and `measurement_date`.
+
+```{r}
+measurements_cycle2_match <- measurements_cycle2 %>%
+    inner_join(ws_inboveg, by = c("polygon_id", "type", "measurement_date")) %>%
+    filter(suitable_mhq) %>%
+    mutate(mhq_cycle = 2)
+```
+
+```{r}
+measurements_cycle2_match %>%
+    select(polygon_id, measurement_date, type, suitable_mhq, recording_givid) %>%
+    datatable(rownames = FALSE,
+              filter = "top") 
+```
+Next we check mismatches in `measurement_date`.
+
+```{r}
+check_date <- measurements_cycle2 %>%
+    anti_join(measurements_cycle2_match, by = c("polygon_id", "type", "measurement_date")) %>%
+    inner_join(ws_inboveg, by = c("polygon_id", "type", "measurement_year"), suffix = c("_admin", "_inboveg")) %>%
+    select(polygon_id, type, measurement_year, starts_with("measurement_date"))
+
+check_date %>%
+    datatable(rownames = FALSE)
+```
+
+```{r}
+check_type <- measurements_cycle2 %>%
+    anti_join(measurements_cycle2_match, by = c("polygon_id", "type", "measurement_date")) %>%
+    inner_join(ws_inboveg, by = c("polygon_id", "measurement_date"), suffix = c("_admin", "_inboveg")) %>%
+    select(polygon_id, starts_with("type"), starts_with("measurement_date"))
+```
+
+Following table gives an overview of the measurements not imported in INBOVEG yet.
+
+```{r}
+check_missing_inboveg <- measurements_cycle2 %>%
+    anti_join(measurements_cycle2_match, by = c("polygon_id", "type", "measurement_date")) %>%
+    anti_join(check_date, by =  c("polygon_id", "type", "measurement_year"))
+
+check_missing_inboveg %>%
+    select(polygon_id, type, measurement_date, in_inboveg) %>%
+    datatable(rownames = FALSE)
+```
+
+
+```{r}
+mhq_watersurfaces_cycle2_sf <- st_read("../../data/design_cycle2/mhq_standingwater_cycle2_2024-04-17.gpkg")
+
+mhq_watersurfaces_cycle2 <- mhq_watersurfaces_cycle2_sf %>%
+    st_drop_geometry() %>%
+    # separate_longer_delim(cols = type_all, delim = "; ") %>%
+    select(polygon_id, grts_ranking, grts_ranking_draw, type_all, area_class, sac, panel)
+
+watersurfaces <- read_watersurfaces()
+watersurfaces_hab <- read_watersurfaces_hab()
+sac <- read_admin_areas(dsn = "sac")
+
+ws_area_class <- watersurfaces %>%
+    filter(polygon_id %in% ws_inboveg$polygon_id) %>%
+    st_join(sac %>%
+                select(sac_code), 
+            largest = TRUE) %>%
+    mutate(in_sac = !is.na(sac_code),
+           area_ha = drop_units(st_area(geom) / 10000),
+           area_class = ifelse(area_ha <= 1, "area <= 1 ha",
+                               ifelse(area_ha <= 5, "1 ha < area <= 5 ha",
+                                      ifelse(area_ha <= 50, "5 ha < area < 50 ha",
+                                             "area >= 50 ha")))) %>%
+    st_drop_geometry() %>%
+    select(polygon_id, area_class, in_sac)
+
+wsh_types <- watersurfaces_hab$watersurfaces_types %>%
+    group_by(polygon_id) %>%
+    summarise(type_wsh = str_c(type, collapse = "; "))
+
+check_missing_admin <- ws_inboveg %>%
+    anti_join(measurements_cycle2_match, by = c("polygon_id", "type", "measurement_date")) %>%
+    anti_join(measurements_cycle1_match, by = c("polygon_id", "type", "measurement_date")) %>%
+    anti_join(check_date, by =  c("polygon_id", "type", "measurement_year")) %>%
+    # filter(measurement_year >= 2022) %>%
+    filter(suitable_mhq) %>%
+    left_join(ws_area_class,
+              by = "polygon_id") %>%
+    left_join(wsh_types,
+              by = "polygon_id") %>%
+    left_join(mhq_watersurfaces_cycle2 %>%
+                  select(polygon_id, type_target = type_all, panel),
+              by = c("polygon_id")) %>%
+    mutate(ws_in_c2 = !is.na(type_target),
+           ws_integraal = type == "3110" | 
+               area_class == "area >= 50 ha" | 
+               (area_class == "1 ha < area <= 5 ha" & type == "2190_a"),
+           type_target_in_c2 = str_detect(type_target, as.character(type)))
+
+```
+
+There are also measurements in INBOVEG that are not in the admin table.
+Mostly watersurfaces not included in the sample of mhq cycle 2, except for the measurements in the table below.
+
+```{r}
+check_missing_admin %>%
+    filter(ws_in_c2) %>%
+    arrange(measurement_date) %>%
+    select(polygon_id, location, type_observed = type, measurement_date, recording_givid, suitable_mhq, panel, type_target) %>%
+    filter(str_detect(type_target, as.character(type_observed))) %>%
+    datatable(rownames = FALSE,
+              filter = "top")
+```
+
+Some additional measurements belong to strata which are fully measured (type 3110 and watersurfaces >= 50 ha):
+
+```{r}
+
+check_missing_admin %>%
+    filter(!ws_in_c2) %>%
+    filter(ws_integraal) %>%
+    select(polygon_id, location, area_class, type_observed = type, measurement_date, recording_givid, suitable_mhq) %>%
+    datatable(rownames = FALSE,
+              filter = "top")
+
+```
+
+All other measurements:
+
+```{r}
+check_missing_admin %>%
+    filter(!ws_in_c2) %>%
+    filter(!ws_integraal) %>%
+    arrange(measurement_date) %>%
+    select(polygon_id, location, area_class, type_observed = type, measurement_date, recording_givid, suitable_mhq) %>%
+    datatable(rownames = FALSE,
+              filter = "top")
+```
+
+### Additional assessments based on INBOVEG measurements
+
+We add the assessments based on INBOVEG measurements to the standardized assessment table.
+
+```{r}
+mhq_assessmnets_add_presence <- check_missing_admin %>%
+    select(polygon_id, type, assessment_date = measurement_date) %>%
+    mutate(is_present = TRUE,
+           any_habitat = TRUE,
+           assessment_source = "field assessment",
+           mhq_cycle = ifelse(year(assessment_date) < 2022, 1, 2)) %>%
+    anti_join(assessments_update, by = c("polygon_id", "type", "assessment_date"))
+
+check <- assessments_update %>%
+    semi_join(mhq_assessmnets_add_presence, by = c("polygon_id", "type", "assessment_date"))
+
+check <- check_missing_admin %>%
+    mutate(assessment_date = measurement_date) %>%
+    inner_join(assessments_update, by =  c("polygon_id", "type", "assessment_date"))
+
+assessments_update2 <- assessments_update %>%
+    bind_rows(mhq_assessmnets_add_presence) 
+
+check <- assessments_update2 %>%
+    group_by(polygon_id, assessment_date, type) %>%
+    filter(n() > 1)
+
+assessments_update2 %>%
+    write_vc(file = "mhq_watersurfaces_assessments",
+             root = file.path(data_path, "v2025"),
+             sorting = c("assessment_date", "polygon_id", "type"),
+             strict = FALSE)
+
+assessments_update2 %>%
+    write_vc(file = "mhq_watersurfaces_assessments",
+             root = data_path,
+             sorting = c("assessment_date", "polygon_id", "type"),
+             strict = FALSE)
+```
+
+### Standardize measurement table
+
+```{r}
+
+measurements_update <- measurements_cycle1_match %>%
+    anti_join(measurements_cycle2_match, by = c("polygon_id", "measurement_date", "type")) %>%
+    bind_rows(measurements_cycle2_match) %>%
+    bind_rows(check_missing_admin %>%
+                 mutate(mhq_cycle = ifelse(year(measurement_date) < 2022, 1, 2))) %>%
+    select(mhq_cycle, polygon_id, measurement_date, type, user_reference, recording_givid)
+
+check <- measurements_update %>%
+    group_by(polygon_id, measurement_date, type) %>%
+    filter(n() > 1)
+
+measurements_update  %>%
+    write_vc(file = "mhq_watersurfaces_measurements",
+             root = data_path,
+             sorting = c("measurement_date", "polygon_id", "type"),
+             strict = FALSE)
+
+measurements_update  %>%
+    write_vc(file = "mhq_watersurfaces_measurements",
+             root = file.path(data_path, "v2025"),
+             sorting = c("measurement_date", "polygon_id", "type"),
+             strict = FALSE)
+
+```
 

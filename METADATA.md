@@ -38,7 +38,6 @@ Following variables are stored in the table:
 + `x-coordinate` (Lambert 72, `crs = 31370`)
 + `y-coordinate` (Lambert 72, `crs = 31370`)
 
-
 ### Assessments
 
 The table `mhq_terr_assessments` contains the assessments for MHQ and has following variables:
@@ -117,4 +116,42 @@ The table contains following variables:
     + only applies to `sfp v2`: here we check if the relative ranking within the habmap polygon is followed to replace the sampling unit. `TRUE` when the difference between the relative ranking of the measured sampling unit and the relative ranking of the original sampling unit is =< 10 (when > 10 it is highly improbable that the target type is not present in the 10 sampling units with the lowest relative ranking) 
 
 
+## MHQ aquatic habitats - watersurfaces
 
+### Assessments
+
+The table `mhq_watersurfaces_assessments` contains the assessments for MHQ and other surveys that use the same standardized field protocol.
+The table has following variables:
+
++ `mhq_cycle`: monitoring cycle of MHQ watersurfaces
++ `assessment_date`: date of the assessment
++ `polygon_id`: the id of the watersurface in the [watersurfaces_hab](https://zenodo.org/records/14621825) data source
++ `type`: the evaluated type
++ `is_present`:
+    + `TRUE` if the evaluated type was observed. 
+    Note that different types can be present in the same watersurface.
+    + `FALSE` if the evaluated type was not observed.
+    Note that we only add records with `is_present` = `FALSE` for the target types of the MHQ sampling unit.
+    All other 31xx habitat types that are not listed in a certain assessment can be considered absent.
+    + `NA` if no assessment could be performed (inaccessible) or if the type’s presence is unknown
++ `no_habitat`:
+    + `TRUE` if no habitat type was observed, although a regional import biotope (rib) type might be present (the presence of rib types was not evaluated)
+    + `FALSE` when any type is present,
+    + `NA` when the evaluated type is absent or unknown and it is not known if any other type is present (in case the point is inaccessible)
++ `assessment_source`: `field assessment` or `orthophoto`
++ `inaccessible`: `long term` or `short term`
++ `not_measurable`: `long term` or `short term`
++ `reason_not_measurable`: the reason why the sampling unit is not measurable 
+
+### Measurements
+
+The table `mhq_watersurfaces_measurements` contains the assessments for MHQ and other surveys that use the same standardized field protocol.
+The table has following variables:
+
++ `mhq_cycle`: monitoring cycle of MHQ watersurfaces
++ `measurement_date`: date of measurement
++ `polygon_id`: the id of the watersurface in the [watersurfaces_hab](https://zenodo.org/records/14621825) data source
++ `type`: the observed type.
+Note that different types can be measured in the same watersurface.
++ `user_reference`: the user reference in the INBOVEG database  
++ `recording_givid`: the recording_givid of the square and the circle plot in the INBOVEG database

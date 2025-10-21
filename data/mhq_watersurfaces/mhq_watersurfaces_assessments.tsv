@@ -1,565 +1,1220 @@
-code_watersurfaces	type_target	assessment_source	assessment_date	inaccessible	type_observed_all	is_type_target
-ANTANT0297	3140	field assessment	16436	NA	3140;3150	1
-ANTANT0297	3150	field assessment	16436	NA	3140;3150	1
-ANTANT0383	3150	field assessment	16801	NA	3150	1
-ANTARE0025	3130_aom	field assessment	17167	NA	3130_aom	1
-ANTARE0200	3140	field assessment	16436	NA	3130_aom;3130_na	0
-ANTARE0278	3130_aom	field assessment	NA	NA	gh	0
-ANTARE0340	3130_aom	field assessment	NA	NA	gh	0
-ANTBAA0036	3140	field assessment	16801	NA	3130_aom;3140	1
-ANTBAA0044	3150	field assessment	17167	NA	3130_na	0
-ANTBAL0373	3150	field assessment	17167	NA	3150	1
-ANTBAL0505	3150	field assessment	17167	NA	3150	1
-ANTBAL0592	3150	field assessment	17167	NA	3150	1
-ANTBAL0594	3150	field assessment	NA	NA	gh	0
-ANTBAL0595	3150	field assessment	17167	NA	3150	1
-ANTBAL0596	3150	field assessment	NA	NA	gh	0
-ANTBAL0711	3130_aom	field assessment	16071	NA	gh	0
-ANTBCT0028	NA	field assessment	16801	NA	3160	0
-ANTBCT0231	NA	field assessment	16801	NA	3160	0
-ANTBCT0252	3140	field assessment	16436	NA	3140;3150	1
-ANTBCT0404	3130_aom	field assessment	16436	NA	3130_na	0
-ANTBCT0458	3140	field assessment	16436	NA	3130_aom	0
-ANTBCT0528	3140	field assessment	16436	NA	gh	0
-ANTBCT0544	3130_na	field assessment	16436	NA	3130_na	1
-ANTBCT0559	3130_na	field assessment	NA	NA	gh	0
-ANTBCT0572	3130_na	field assessment	16071	NA	3130_na	1
-ANTBCT0579	3130_na	field assessment	NA	NA	gh	0
-ANTBCT0600	3130_na	field assessment	NA	NA	gh	0
-ANTBCT0610	3130_na	field assessment	NA	NA	gh	0
-ANTBON0239	3150	field assessment	NA	NA	gh	0
-ANTBRM0238	3150	field assessment	NA	NA	gh	0
-ANTBRM0255	3150	field assessment	NA	NA	gh	0
-ANTBRM0421	3150	field assessment	16071	NA	gh	0
-ANTBRS0068	3130_aom	field assessment	16071	NA	3130_aom;3130_na;3140	1
-ANTBRS0121	3130_aom	field assessment	NA	NA	gh	0
-ANTBRS0178	3130_aom	field assessment	17532	NA	3130_aom	1
-ANTBSE0021	3130_na	field assessment	NA	NA	gh	0
-ANTBSE0061	3130_na	field assessment	16436	NA	3130_aom;3130_na;3140	1
-ANTBSE0109	3130_aom	field assessment	NA	NA	gh	0
-ANTBSE0165	3130_na	field assessment	16436	NA	3130_na	1
-ANTBSE0197	3150	field assessment	NA	NA	gh	0
-ANTBSE0215	3130_na	field assessment	16436	NA	3130_aom;3130_na	1
-ANTBSE0227	3130_na	field assessment	16436	NA	3130_aom	0
-ANTBSE0314	3130_na	field assessment	16071	NA	3130_aom;3130_na	1
-ANTBSE0333	3150	field assessment	NA	NA	gh	0
-ANTBSE0334	3130_na	field assessment	16071	NA	3130_aom;3130_na	1
-ANTBSE0335	3130_na	field assessment	16436	NA	gh	0
-ANTBSE0336	3130_na	field assessment	16071	NA	3130_na	1
-ANTBSE0338	3130_na	field assessment	16436	NA	3130_aom;3130_na	1
-ANTBSE0366	3130_na	field assessment	NA	NA	gh	0
-ANTDES0075	3150	field assessment	16071	NA	3150	1
-ANTDES0096	3150	field assessment	NA	NA	gh	0
-ANTDES0098	3130_aom	field assessment	NA	NA	gh	0
-ANTDES0098	3150	field assessment	NA	NA	gh	0
-ANTDUF0188	3150	field assessment	NA	NA	gh	0
-ANTESS0009	3130_aom	field assessment	17167	NA	3130_aom	1
-ANTESS0033	3130_aom	field assessment	NA	NA	gh	0
-ANTESS0062	3130_aom	field assessment	17167	NA	3130_aom;3160	1
-ANTESS0225	3160	field assessment	NA	NA	gh	0
-ANTGEE0046	3150	field assessment	17167	NA	3150	1
-ANTGEE0069	3150	field assessment	17167	NA	3150	1
-ANTGEE0105	3140	field assessment	16071	NA	3150	0
-ANTGEE0105	3150	field assessment	16071	NA	3150	1
-ANTGEE0107	3150	field assessment	17167	NA	3130_aom;3130_na;3150	1
-ANTGEE0126	3150	field assessment	17167	NA	3130_aom;3150	1
-ANTGEE0140	3150	field assessment	NA	NA	gh	0
-ANTGEE0141	3150	field assessment	NA	NA	gh	0
-ANTGEE0193	3150	field assessment	17167	NA	3150	1
-ANTGEE0305	3150	field assessment	16801	NA	3150	1
-ANTGEE0422	3150	field assessment	NA	NA	gh	0
-ANTGEE0477	3130_aom	field assessment	NA	NA	gh	0
-ANTGEE0889	3150	field assessment	16436	NA	3150	1
-ANTGEE1026	3130_aom	NA	NA	long term	gh	0
-ANTGRO0161	3130_aom	field assessment	NA	NA	gh	0
-ANTGRO0180	3130_aom	field assessment	NA	NA	gh	0
-ANTHGS0196	3160	field assessment	16801	NA	3130_aom;3160	1
-ANTHGS0622	3130_aom	field assessment	16801	NA	3130_aom	1
-ANTHST0069	3130_aom	field assessment	NA	NA	gh	0
-ANTHST0141	3130_aom	field assessment	16436	NA	gh	0
-ANTHST0346	3130_aom	field assessment	16436	NA	3130_aom	1
-ANTHST0458	3130_aom	field assessment	16071	NA	gh	0
-ANTHST0460	3130_aom	field assessment	16071	NA	3130_aom	1
-ANTHST0506	3130_aom	field assessment	NA	NA	gh	0
-ANTHST0508	3130_aom	field assessment	16071	NA	3130_aom	1
-ANTHST0665	3130_aom	field assessment	16436	NA	3130_aom;3140	1
-ANTHTS0097	3160	field assessment	17167	NA	3130_aom;3160	1
-ANTHTS0138	3130_aom	field assessment	NA	NA	gh	0
-ANTHTS0151	3130_aom	field assessment	16436	NA	3130_aom;3160	1
-ANTHUL0132	3130_aom	field assessment	16071	NA	3130_aom	1
-ANTHUL0219	3130_aom	field assessment	16071	NA	gh	0
-ANTHUL0273	3130_aom	field assessment	NA	NA	gh	0
-ANTHUL0276	3130_aom	field assessment	16071	NA	gh	0
-ANTKAL0004	3160	field assessment	16436	NA	3160	1
-ANTKAL0247	3160	field assessment	17167	NA	3160	1
-ANTKAL0269	3160	field assessment	17167	NA	3160	1
-ANTKAL0288	3160	field assessment	17532	NA	3160	1
-ANTKAL0319	3160	field assessment	NA	NA	gh	0
-ANTKAL0330	3160	field assessment	16436	NA	3160	1
-ANTKAL0383	3160	field assessment	16436	NA	3160	1
-ANTKAP0220	3130_aom	field assessment	NA	NA	gh	0
-ANTKAS0008	3130_aom	field assessment	16801	NA	3130_aom	1
-ANTKAS0017	3160	field assessment	16436	NA	gh	0
-ANTKAS0030	3160	field assessment	16801	NA	3130_aom;3160	1
-ANTKAS0033	3160	field assessment	16801	NA	3160	1
-ANTKAS0213	3150	field assessment	16801	NA	3130_na;3150	1
-ANTKAS0268	3130_aom	field assessment	17167	NA	3130_aom	1
-ANTKAS0295	3160	field assessment	16801	NA	3160	1
-ANTKAS0302	3130_aom	field assessment	16071	NA	3130_aom	1
-ANTKAS0321	3130_aom	field assessment	NA	NA	gh	0
-ANTKAS0377	3160	field assessment	NA	NA	gh	0
-ANTKAS0403	3130_aom	field assessment	16436	NA	3130_aom	1
-ANTKAS0431	3150	field assessment	16801	NA	3150	1
-ANTKAS0462	3130_aom	field assessment	16436	NA	3130_aom;3160	1
-ANTKAS0467	3160	field assessment	16436	NA	3130_aom;3160	1
-ANTKAS0474	3130_aom	field assessment	17532	NA	3130_aom	1
-ANTKAS0501	3130_aom	field assessment	16801	NA	3130_aom	1
-ANTKAS0616	3160	field assessment	16071	NA	3160	1
-ANTKON0008	3150	field assessment	NA	NA	gh	0
-ANTKON0018	3150	field assessment	16801	NA	gh	0
-ANTLIL0004	3130_aom	field assessment	17167	NA	3130_aom;3140	1
-ANTLIL0064	3140	field assessment	NA	NA	gh	0
-ANTLIL0362	3130_aom	field assessment	16436	NA	3130_aom;3140	1
-ANTLIL0415	3130_aom	field assessment	16801	NA	3130_aom;3130_na	1
-ANTLIL0528	3130_aom	field assessment	16436	NA	3130_aom	1
-ANTLIL0547	3130_aom	field assessment	16801	NA	3130_aom	1
-ANTMAL0136	3130_na	field assessment	16071	NA	3130_na	1
-ANTMAL0275	3130_na	field assessment	16801	NA	3130_na	1
-ANTMEC0030	3140	field assessment	16801	NA	3140	1
-ANTMEC0180	3140	field assessment	16436	NA	3140	1
-ANTMEC0257	3150	field assessment	17167	NA	3150	1
-ANTMEC0388	3140	field assessment	16436	NA	3130_na;3140	1
-ANTMEC0388	3150	field assessment	16436	NA	3130_na;3140	0
-ANTMOL0032	3130_na	field assessment	NA	NA	gh	0
-ANTMOL0036	3150	field assessment	16071	NA	3150	1
-ANTMOL0066	3140	field assessment	16801	NA	3140	1
-ANTMOL0067	3130_na	field assessment	NA	NA	gh	0
-ANTMOL0068	3140	field assessment	16801	NA	3140	1
-ANTMOL0088	3130_aom	field assessment	16071	NA	3130_aom;3130_na	1
-ANTMOL0089	3130_aom	field assessment	17167	NA	3140;3150	0
-ANTMOL0089	3150	field assessment	17167	NA	3140;3150	1
-ANTMOL0099	3150	field assessment	16801	NA	3130_na	0
-ANTMOL0138	3130_na	field assessment	16071	NA	3130_na;3140;3150	1
-ANTMOL0138	3140	field assessment	16071	NA	3130_na;3140;3150	1
-ANTMOL0138	3150	field assessment	16071	NA	3130_na;3140;3150	1
-ANTMOL0143	3130_aom	field assessment	16436	NA	3130_aom;3130_na;3140;3150	1
-ANTMOL0143	3150	field assessment	16436	NA	3130_aom;3130_na;3140;3150	1
-ANTMOL0152	3130_aom	field assessment	16071	NA	3130_aom;3130_na;3140	1
-ANTMOL0163	3130_na	field assessment	NA	NA	gh	0
-ANTMOL0163	3140	field assessment	NA	NA	gh	0
-ANTMOL0163	3150	field assessment	NA	NA	gh	0
-ANTMOL0539	3130_na	field assessment	NA	NA	gh	0
-ANTMOL0568	3130_aom	field assessment	16801	NA	3130_aom;3130_na	1
-ANTMOL0570	3130_aom	field assessment	NA	NA	gh	0
-ANTMOL0570	3160	field assessment	NA	NA	gh	0
-ANTMOL0659	3130_na	field assessment	NA	NA	gh	0
-ANTMOL0720	3130_aom	field assessment	16071	NA	3130_aom	1
-ANTOTH0015	3130_aom	field assessment	16071	NA	3130_aom	1
-ANTOTH0270	3160	field assessment	16436	NA	3160	1
-ANTOTH0271	3160	field assessment	16071	NA	3160	1
-ANTOTH0306	3130_aom	field assessment	16436	NA	3130_aom	1
-ANTOTH0324	3130_aom	field assessment	17167	NA	3130_aom	1
-ANTRAN0277	3130_na	field assessment	16071	NA	3130_aom	0
-ANTRAV0052	3130_aom	field assessment	16436	NA	3130_aom;3130_na	1
-ANTRAV0209	3150	field assessment	NA	NA	gh	0
-ANTRAV0293	3130_na	field assessment	NA	NA	gh	0
-ANTRAV0297	3130_aom	field assessment	17167	NA	3130_aom;3160	1
-ANTRAV0297	3160	field assessment	17167	NA	3130_aom;3160	1
-ANTRAV0369	3130_aom	field assessment	17167	NA	3130_aom	1
-ANTRAV0381	3150	field assessment	16801	NA	3150	1
-ANTRAV0382	3150	field assessment	NA	NA	gh	0
-ANTRAV0383	3130_aom	field assessment	NA	NA	gh	0
-ANTRET0186	3130_aom	field assessment	16071	NA	3130_aom;3140	1
-ANTRET0199	3130_aom	field assessment	16071	NA	3130_aom	1
-ANTRET0236	3130_aom	field assessment	16071	NA	3140	0
-ANTRET0249	3130_aom	field assessment	NA	NA	gh	0
-ANTRET0250	3130_aom	field assessment	NA	NA	gh	0
-ANTRET0273	3130_aom	field assessment	NA	NA	gh	0
-ANTRIJ0005	3130_aom	field assessment	16801	NA	3130_na	0
-ANTRIJ0006	3150	field assessment	16436	NA	3130_na;3140	0
-ANTRIJ0030	3130_na	field assessment	16801	NA	3150	0
-ANTRIJ0041	3130_aom	field assessment	16436	NA	3130_aom;3130_na	1
-ANTRIJ0053	3130_na	field assessment	16801	NA	3130_na	1
-ANTRIJ0072	3130_na	field assessment	16071	NA	3130_na	1
-ANTRIJ0076	3130_na	field assessment	16436	NA	3130_na	1
-ANTRIJ0171	3130_na	field assessment	16436	NA	3130_na	1
-ANTRIJ0308	3130_aom	field assessment	16071	NA	3130_aom;3130_na	1
-ANTSIL0316	3130_aom	field assessment	NA	NA	gh	0
-ANTSIL0322	3130_aom	field assessment	17532	NA	3130_aom	1
-ANTSTB0002	3130_aom	field assessment	NA	NA	gh	0
-ANTTUR0065	3130_aom	field assessment	16071	NA	3130_aom;3130_na	1
-ANTTUR0082	3130_aom	field assessment	16436	NA	3130_aom	1
-ANTTUR0127	3150	field assessment	16071	NA	gh	0
-ANTTUR0142	3150	field assessment	16071	NA	3150	1
-ANTTUR0207	3130_aom	field assessment	16071	NA	3130_aom;3130_na;3140	1
-ANTTUR0207	3140	field assessment	16071	NA	3130_aom;3130_na;3140	1
-ANTTUR0275	3130_aom	field assessment	NA	NA	gh	0
-ANTTUR0296	NA	field assessment	16436	NA	3110;3130_aom;3130_na;3160	0
-ANTTUR0301	3130_aom	field assessment	16071	NA	3130_aom	1
-ANTTUR0304	3130_aom	field assessment	16071	NA	3110;3130_aom;3130_na	1
-ANTTUR0347	3150	field assessment	NA	NA	gh	0
-ANTVOR0058	3130_aom	field assessment	16071	NA	gh	0
-ANTWES0062	3150	field assessment	NA	NA	gh	0
-ANTWES0133	3130_aom	field assessment	NA	NA	gh	0
-ANTWIL0020	3140	field assessment	16801	NA	3140	1
-ANTWIL0084	3150	field assessment	NA	NA	gh	0
-ANTWIL0124	3150	field assessment	NA	NA	gh	0
-ANTWIL0176	3150	field assessment	NA	NA	gh	0
-ANTWUU0140	3130_aom	field assessment	17167	NA	3130_aom	1
-ANTWUU0153	3130_aom	field assessment	16436	NA	3130_aom;3150	1
-ANTZAN0122	3150	field assessment	16801	NA	3130_na;3150	1
-ANTZAN0172	3150	field assessment	17167	NA	gh	0
-ANTZAN0175	3150	field assessment	17167	NA	3130_na;3150	1
-ANTZAN0176	NA	field assessment	16801	NA	3150	0
-LIMASS2024	3160	field assessment	16801	NA	3160	1
-LIMBIL0100	3150	field assessment	16801	NA	gh	0
-LIMBIL0336	3150	field assessment	16801	NA	3130_na	0
-LIMBRE0077	3150	field assessment	16801	NA	3130_na	0
-LIMBRE0283	3150	field assessment	16436	NA	3130_na	0
-LIMBRE0285	3150	field assessment	16801	NA	3130_aom;3130_na	0
-LIMBRG0182	3160	field assessment	16436	NA	3160	1
-LIMBRG0192	3160	field assessment	NA	NA	gh	0
-LIMDPB0057	3150	field assessment	16071	NA	3150	1
-LIMDPB0100	3130_aom	field assessment	NA	NA	gh	0
-LIMDPB0158	3130_aom	field assessment	16801	NA	3130_na	0
-LIMDPB0249	3130_aom	field assessment	NA	NA	gh	0
-LIMDPB0311	3130_aom	field assessment	16071	NA	3130_na;3150	0
-LIMDPB0315	3130_aom	field assessment	16071	NA	3150	0
-LIMDST0104	3160	field assessment	16436	NA	3160	1
-LIMDST0108	3130_aom	field assessment	16071	NA	3110;3130_aom	1
-LIMDST0178	3150	field assessment	16436	NA	3150	1
-LIMGNK0010	3130_aom	field assessment	16436	NA	gh	0
-LIMGNK0021	3130_aom	field assessment	NA	NA	gh	0
-LIMGNK0025	3130_aom	field assessment	16071	NA	3150	0
-LIMGNK0035	3150	field assessment	16436	NA	3140;3150	1
-LIMGNK0046	3130_aom	field assessment	NA	NA	gh	0
-LIMGNK0050	3130_aom	field assessment	16436	NA	3130_na	0
-LIMGNK0055	3130_aom	field assessment	16801	NA	3130_na	0
-LIMGNK0060	3130_aom	field assessment	NA	NA	gh	0
-LIMGNK0062	3130_aom	field assessment	16071	NA	3150	0
-LIMGNK0064	3130_aom	field assessment	16071	NA	3150	0
-LIMGNK0066	3130_aom	field assessment	16436	NA	3160	0
-LIMGNK0067	3130_aom	field assessment	NA	NA	gh	0
-LIMGNK0081	3130_aom	field assessment	17167	NA	3130_na	0
-LIMGNK0089	3130_aom	field assessment	16436	NA	3130_aom	1
-LIMGNK0095	3130_aom	field assessment	16071	NA	3130_aom	1
-LIMGNK0103	3130_aom	field assessment	16801	NA	3130_aom;3130_na	1
-LIMGNK0118	3130_aom	field assessment	17167	NA	3130_na	0
-LIMGNK0119	3130_aom	field assessment	16071	NA	3130_na	0
-LIMGNK0127	3130_aom	field assessment	16436	NA	3130_na	0
-LIMGNK0131	3130_aom	field assessment	NA	NA	gh	0
-LIMGNK0134	3130_aom	field assessment	NA	NA	gh	0
-LIMGNK0139	3130_aom	field assessment	NA	NA	gh	0
-LIMGNK0142	3130_aom	field assessment	16801	NA	3130_aom;3130_na	1
-LIMGNK0147	3130_aom	field assessment	16436	NA	3130_na	0
-LIMGNK0152	3130_aom	field assessment	16071	NA	3130_aom	1
-LIMGNK0167	3130_aom	field assessment	16801	NA	gh	0
-LIMGNK0169	3130_aom	field assessment	NA	NA	gh	0
-LIMGNK0173	3130_aom	field assessment	NA	NA	gh	0
-LIMGNK0173	3150	field assessment	NA	NA	gh	0
-LIMGNK0177	3130_aom	field assessment	16436	NA	3130_aom	1
-LIMGNK0180	3130_aom	field assessment	17167	NA	3130_na	0
-LIMGNK0180	3150	field assessment	17167	NA	3130_na	0
-LIMGNK0182	3130_aom	field assessment	16071	NA	3130_aom;3130_na;3140	1
-LIMGNK0372	3130_aom	field assessment	16071	NA	3130_aom	1
-LIMGNK0373	3130_aom	field assessment	NA	NA	gh	0
-LIMGNK0374	3130_aom	field assessment	16071	NA	3130_aom;3130_na	1
-LIMGNK0396	3150	field assessment	16071	NA	3130_na	0
-LIMGNK0397	3130_aom	field assessment	16801	NA	3130_aom;3130_na	1
-LIMGNK0848	3130_aom	field assessment	16436	NA	gh	0
-LIMGNK0896	3130_aom	field assessment	NA	NA	gh	0
-LIMHAS0103	NA	field assessment	17167	NA	3150	0
-LIMHAS0281	NA	field assessment	17167	NA	3130_aom;3150	0
-LIMHAS0453	3130_aom	field assessment	NA	NA	gh	0
-LIMHAS0456	3130_aom	field assessment	NA	NA	gh	0
-LIMHAS0462	3130_aom	field assessment	16071	NA	3130_aom	1
-LIMHAS0463	3130_na	field assessment	16801	NA	3130_na	1
-LIMHAS0479	3130_aom	field assessment	NA	NA	gh	0
-LIMHAS0482	3130_aom	field assessment	16801	NA	3130_aom;3130_na	1
-LIMHAS0540	3130_aom	field assessment	NA	NA	gh	0
-LIMHAS0541	NA	field assessment	16071	NA	3130_aom	0
-LIMHAS0544	3130_aom	field assessment	16071	NA	3130_na	0
-LIMHAS0545	3130_aom	field assessment	NA	NA	gh	0
-LIMHAS0569	3130_aom	field assessment	NA	NA	gh	0
-LIMHAS0570	3130_aom	field assessment	NA	NA	gh	0
-LIMHAS0619	3130_aom	field assessment	16801	NA	3130_aom;3130_na;3140	1
-LIMHAS0629	3130_aom	field assessment	16436	NA	3140?;3150	0
-LIMHAS0669	3130_aom	field assessment	NA	NA	gh	0
-LIMHAS0671	3130_aom	field assessment	NA	NA	gh	0
-LIMHAS0672	3130_aom	field assessment	16436	NA	3130_na	0
-LIMHAS0846	3130_aom	field assessment	NA	NA	gh	0
-LIMHAS0849	3130_aom	field assessment	16436	NA	3130_aom;3130_na;3140	1
-LIMHAS0854	3130_aom	field assessment	NA	NA	gh	0
-LIMHEC0128	NA	field assessment	17167	NA	3150	0
-LIMHEC0201	3150	field assessment	17167	NA	3150	1
-LIMHEC0537	3130_aom	field assessment	17532	NA	3130_aom	1
-LIMHEC0578	3160	field assessment	16436	NA	3130_aom;3150;3160	1
-LIMHHE0001	3160	field assessment	16071	NA	3160	1
-LIMHHE0002	3130_aom	field assessment	16436	NA	3130_aom;3160	1
-LIMHHE0005	3160	field assessment	16436	NA	3160	1
-LIMHHE0008	3160	field assessment	16436	NA	3130_aom;3160	1
-LIMHHE0112	3160	field assessment	16436	NA	3130_aom;3160	1
-LIMHHE0114	3130_na	field assessment	16436	NA	3130_aom;3130_na	1
-LIMHHE0285	3150	field assessment	16801	NA	3150	1
-LIMHHE0286	3130_aom	field assessment	16071	NA	3130_aom;3130_na;3140	1
-LIMHHE0330	3130_aom	field assessment	17167	NA	3130_aom	1
-LIMHHE0375	3130_aom	field assessment	16071	NA	3160	0
-LIMHHE0375	3160	field assessment	16071	NA	3160	1
-LIMHLN0068	3150	field assessment	17167	NA	3150	1
-LIMHMA0012	3130_aom	field assessment	NA	NA	gh	0
-LIMHMA0271	3130_aom	field assessment	NA	NA	gh	0
-LIMHMA0273	3130_aom	field assessment	16071	NA	gh	0
-LIMHVL0092	3130_aom	field assessment	16436	NA	3130_na;3150;3160	0
-LIMHVL0092	3160	field assessment	16436	NA	3130_na;3150;3160	1
-LIMHVL0144	3130_aom	field assessment	NA	NA	gh	0
-LIMKIN0231	3150	field assessment	17167	NA	3150	1
-LIMLNK0018	3150	field assessment	16801	NA	3150	1
-LIMLNK0083	3130_aom	field assessment	16071	NA	3130_aom	1
-LIMLNK0086	3160	field assessment	16801	NA	3130_aom;3160	1
-LIMLNK0105	3130_aom	field assessment	16801	NA	3130_aom	1
-LIMLNK0237	3130_aom	field assessment	16801	NA	3130_aom;3130_na	1
-LIMLOM0030	3130_aom	field assessment	17167	NA	3130_aom	1
-LIMLOM0211	3160	field assessment	16801	NA	3130_aom;3160	1
-LIMLOM0239	3130_aom	field assessment	17167	NA	3130_aom	1
-LIMLOM0467	3130_na	field assessment	16801	NA	3130_na	1
-LIMLOM0467	3140	field assessment	16801	NA	3130_na	0
-LIMLOM0475	3130_na	field assessment	16801	NA	3130_aom;3130_na	1
-LIMLUM0054	3130_na	field assessment	16071	NA	gh	0
-LIMLUM0151	3130_aom	field assessment	NA	NA	gh	0
-LIMLUM0240	3150	field assessment	NA	NA	gh	0
-LIMLUM0401	3150	field assessment	16071	NA	3130_aom;3150	1
-LIMMGR0011	3160	field assessment	16801	NA	3130_aom;3130_na	0
-LIMMGR0035	3160	field assessment	16071	NA	gh	0
-LIMMGR0253	3130_aom	field assessment	16071	NA	gh	0
-LIMMGR0253	3160	field assessment	16071	NA	gh	0
-LIMMGR0261	3160	field assessment	NA	NA	gh	0
-LIMMGR0262	3160	field assessment	16436	NA	3160	1
-LIMMGR0376	3160	field assessment	16436	NA	3130_aom;3130_aom;3160;3160	1
-LIMMSK0007	3130_aom	field assessment	16071	NA	3130_aom;3130_na	1
-LIMMSK0134	3130_aom	field assessment	17167	NA	3130_na;3140	0
-LIMMSK0151	NA	field assessment	17167	NA	3150	0
-LIMMSK0353	3130_aom	field assessment	16436	NA	3130_aom;3130_na	1
-LIMMSK0456	3150	field assessment	17167	NA	3150	1
-LIMMSM0026	3130_aom	field assessment	16071	NA	3130_aom;3130_na	1
-LIMMSM0061	3160	field assessment	NA	NA	gh	0
-LIMMSM0197	3160	field assessment	16071	NA	3160	1
-LIMMSM0198	3160	field assessment	16436	NA	3160	1
-LIMMSM0247	3130_aom	field assessment	NA	NA	gh	0
-LIMNEE0011	3160	field assessment	17167	NA	3160	1
-LIMOPG0016	3160	field assessment	16801	NA	3160	1
-LIMOVP0094	3160	field assessment	16801	NA	3160	1
-LIMTES0026	3160	field assessment	16436	NA	3160	1
-LIMTON0188	NA	field assessment	17167	NA	3140	0
-LIMWEL0154	3140	field assessment	16801	NA	gh	0
-LIMZNH0013	3130_na	field assessment	NA	NA	gh	0
-LIMZNH0036	3150	field assessment	16801	NA	3130_na	0
-LIMZNH0040	3130_aom	field assessment	NA	NA	gh	0
-LIMZNH0046	3130_aom	field assessment	NA	NA	gh	0
-LIMZNH0055	3130_aom	field assessment	NA	NA	gh	0
-LIMZNH0061	3130_na	field assessment	NA	NA	gh	0
-LIMZNH0062	3130_na	field assessment	NA	NA	gh	0
-LIMZNH0065	3150	field assessment	16801	NA	3130_aom;3130_na	0
-LIMZNH0115	3140	field assessment	NA	NA	gh	0
-LIMZNH0127	3130_aom	field assessment	16801	NA	gh	0
-LIMZNH0138	3130_aom	field assessment	16071	NA	gh	0
-LIMZNH0139	3130_aom	field assessment	NA	NA	gh	0
-LIMZNH0150	3130_na	field assessment	NA	NA	gh	0
-LIMZNH0158	3130_aom	field assessment	NA	NA	gh	0
-LIMZNH0206	3150	field assessment	16801	NA	3130_na	0
-LIMZNH0220	3130_aom	field assessment	NA	NA	gh	0
-LIMZNH0225	3130_aom	field assessment	16436	NA	3130_na	0
-LIMZNH0231	3130_aom	field assessment	NA	NA	gh	0
-LIMZNH0238	3130_na	field assessment	16436	NA	3130_aom;3130_na	1
-LIMZNH0304	3130_aom	field assessment	16801	NA	gh	0
-LIMZNH0333	3130_aom	field assessment	16071	NA	3130_aom;3160	1
-LIMZNH0338	3130_aom	field assessment	16436	NA	3110;3160	0
-LIMZNH0356	3130_aom	field assessment	NA	NA	gh	0
-LIMZNH0360	3130_aom	field assessment	16071	NA	3130_aom;3160	1
-LIMZNH0374	3130_aom	field assessment	17167	NA	3130_aom;3160	1
-LIMZNH0385	3130_aom	field assessment	16071	NA	3130_aom	1
-LIMZNH0404	3130_aom	field assessment	NA	NA	gh	0
-LIMZNH0405	3130_aom	field assessment	NA	NA	gh	0
-LIMZNH0406	3130_aom	field assessment	NA	NA	gh	0
-LIMZNH0407	3130_aom	field assessment	NA	NA	gh	0
-LIMZNH0408	3130_aom	field assessment	NA	NA	gh	0
-LIMZNH0432	3130_aom	field assessment	16436	NA	3130_aom;3130_na	1
-LIMZNH0477	3130_na	field assessment	16436	NA	3130_aom;3130_na;3140	1
-LIMZNH0478	3130_na	field assessment	16071	NA	3130_aom;3130_na	1
-LIMZNH0507	3150	field assessment	16436	NA	3150	1
-LIMZNH0508	3150	field assessment	16436	NA	3130_aom	0
-LIMZNH0519	3130_aom	field assessment	NA	NA	gh	0
-LIMZNH0536	3130_aom	field assessment	NA	NA	gh	0
-LIMZNH0539	3130_aom	field assessment	16071	NA	3130_na;3150	0
-LIMZNH0563	3130_aom	field assessment	17167	NA	3130_aom;3140	1
-LIMZUT0080	3130_aom	field assessment	16801	NA	3130_aom;3140	1
-OVLALT0109	3130_aom	field assessment	NA	NA	gh	0
-OVLALT0332	3130_aom	field assessment	16436	NA	3130_aom;3130_na	1
-OVLALT0344	3130_aom	field assessment	16071	NA	3130_aom;3130_na	1
-OVLBLE0018	3140	field assessment	16436	NA	3140	1
-OVLBLE0139	NA	field assessment	17167	NA	3150	0
-OVLBLE0248	NA	field assessment	17532	NA	3150	0
-OVLBVN0466	NA	field assessment	17167	NA	3140	0
-OVLDEI0194	3150	field assessment	16436	NA	3150	1
-OVLDNL0075	3150	field assessment	NA	NA	gh	0
-OVLDNL0080	3150	field assessment	NA	NA	gh	0
-OVLDSB0184	3150	field assessment	16436	NA	3150	1
-OVLGNT0197	3140	field assessment	NA	NA	gh	0
-OVLGNT0817	3140	field assessment	16436	NA	3140	1
-OVLLOK0063	NA	field assessment	17167	NA	3150	0
-OVLLOK0348	3150	field assessment	16071	NA	3150	1
-OVLLOK0354	3150	field assessment	16436	NA	3150	1
-OVLMOE0016	3150	field assessment	16801	NA	3150	1
-OVLNAZ0048	3140	field assessment	16436	NA	gh	0
-OVLSIN0011	NA	field assessment	17167	NA	3150	0
-OVLSIN0269	NA	field assessment	17167	NA	3140	0
-OVLSTK0268	3130_aom	field assessment	16801	NA	3130_aom;3140	1
-OVLTEM0088	3150	field assessment	NA	NA	gh	0
-OVLTEM0140	3150	field assessment	NA	NA	gh	0
-VBRARS0052	3150	field assessment	17532	NA	3130_aom;3150	1
-VBRARS0370	3130_aom	field assessment	17167	NA	3130_aom;3140;3150	1
-VBRARS0544	3130_aom	field assessment	NA	NA	gh	0
-VBRBEG0217	3130_aom	field assessment	NA	NA	gh	0
-VBRDIE0220	NA	field assessment	17167	NA	3150	0
-VBRDIE0330	3150	field assessment	17167	NA	3150	1
-VBRDIE0443	3130_na	field assessment	16071	NA	3130_aom	0
-VBRHIL0031	3140	field assessment	NA	NA	gh	0
-VBRKAM0021	3140	field assessment	16801	NA	3140	1
-VBRKAM0057	3140	field assessment	16436	NA	3140	1
-VBRKAM0120	3140	field assessment	16801	NA	gh	0
-VBRKRB0081	3140	field assessment	NA	NA	gh	0
-VBROHV0050	3150	field assessment	16436	NA	unknown	0
-VBRSZI0197	3130_aom	field assessment	NA	NA	gh	0
-VBRSZI0213	3150	field assessment	16436	NA	3150	1
-VBRSZI0235	3150	field assessment	16071	NA	3130_aom	0
-VBRSZI0243	3150	field assessment	16801	NA	3150	1
-VBRSZI0277	3150	field assessment	16071	NA	3150	1
-VBRSZI0297	3150	field assessment	16436	NA	3130_aom;3150	1
-VBRSZI0315	3150	field assessment	16436	NA	3150	1
-VBRSZI0401	3150	field assessment	16071	NA	3150	1
-VBRSZI0433	3130_aom	field assessment	NA	NA	gh	0
-VBRSZI0435	3150	field assessment	16801	NA	3150	1
-VBRTRV0025	3150	field assessment	NA	NA	gh	0
-VBRZOU0028	3150	field assessment	16071	NA	gh	0
-VBRZOU0046	3150	field assessment	17532	NA	3150	1
-WVLBLA0081	2190	field assessment	NA	NA	gh	0
-WVLBLA0206	2190	field assessment	17532	NA	2190	1
-WVLBRD0031	2190	field assessment	NA	NA	gh	0
-WVLBRD0035	2190	field assessment	17532	NA	2190	1
-WVLBRD0039	2190	field assessment	17532	NA	2190	1
-WVLBRD0077	2190	field assessment	17167	NA	2190	1
-WVLBRD0089	2190	field assessment	17532	NA	2190	1
-WVLBRN0145	3130_aom	field assessment	16071	NA	3130_aom	1
-WVLBRU0368	2190	field assessment	17167	NA	2190	1
-WVLBRU0369	2190	field assessment	17532	NA	2190	1
-WVLBRU0374	2190	field assessment	17167	NA	2190	1
-WVLBRU1212	3150	field assessment	16071	NA	3150	1
-WVLDAM0090	3150	field assessment	17167	NA	3150	1
-WVLDEH0011	2190	field assessment	17532	NA	2190	1
-WVLDEH0012	2190	field assessment	17532	NA	2190	1
-WVLDEH0013	2190	NA	NA	long term	gh	0
-WVLDEH0024	2190	field assessment	NA	NA	gh	0
-WVLDEH0220	2190	field assessment	17167	NA	2190	1
-WVLDEH0221	2190	field assessment	NA	NA	gh	0
-WVLDEH0238	2190	field assessment	NA	NA	gh	0
-WVLDEH0242	2190	field assessment	NA	NA	gh	0
-WVLDEP0003	2190	field assessment	NA	NA	gh	0
-WVLDEP0007	2190	NA	NA	long term	gh	0
-WVLDEP0008	2190	field assessment	NA	NA	gh	0
-WVLDEP0012	2190	field assessment	17532	NA	2190	1
-WVLDEP0047	2190	field assessment	17532	NA	2190	1
-WVLDEP0051	2190	field assessment	17532	NA	2190	1
-WVLDEP0057	2190	field assessment	17532	NA	2190	1
-WVLDEP0058	2190	field assessment	17532	NA	2190	1
-WVLDEP0061	2190	field assessment	17532	NA	2190	1
-WVLDEP0065	2190	field assessment	17532	NA	2190	1
-WVLDEP0067	2190	field assessment	17532	NA	2190	1
-WVLDEP0070	2190	field assessment	17167	NA	2190	1
-WVLDEP0073	2190	field assessment	17532	NA	2190	1
-WVLDEP0074	2190	field assessment	NA	NA	gh	0
-WVLDEP0075	2190	field assessment	17167	NA	2190	1
-WVLDEP0097	2190	field assessment	17532	NA	2190	1
-WVLDEP0111	2190	NA	NA	NA	gh	0
-WVLDEP0119	2190	field assessment	17532	NA	2190	1
-WVLDEP0167	2190	field assessment	17532	NA	2190	1
-WVLDIK0136	3150	field assessment	17167	NA	3150	1
-WVLDIK0153	3140	field assessment	NA	NA	gh	0
-WVLDIK0187	3140	field assessment	NA	NA	gh	0
-WVLDIK0219	3140	field assessment	NA	NA	gh	0
-WVLDIK1027	3150	field assessment	17167	NA	3150	1
-WVLDIK1044	3140	field assessment	NA	NA	gh	0
-WVLHAR0110	3150	field assessment	NA	NA	gh	0
-WVLHAR0329	3140	field assessment	16071	NA	3140;3150	1
-WVLHAR0329	3150	field assessment	16071	NA	3140;3150	1
-WVLHOU0087	3130_aom	field assessment	NA	NA	gh	0
-WVLHOU0157	3150	field assessment	NA	NA	gh	0
-WVLHOU0561	3130_aom	field assessment	17167	NA	3130_aom	1
-WVLJAB0140	3130_aom	field assessment	16071	NA	3130_aom	1
-WVLJAB0174	3130_aom	field assessment	16071	NA	3130_aom	1
-WVLJAB0206	3130_aom	field assessment	16071	NA	3130_aom	1
-WVLKNO0002	2190	field assessment	17532	NA	2190	1
-WVLKNO0003	2190	field assessment	17532	NA	2190	1
-WVLKNO0011	2190	NA	NA	long term	gh	0
-WVLKNO0014	2190	field assessment	16801	NA	2190	1
-WVLKNO0016	2190	NA	NA	long term	gh	0
-WVLKNO0019	2190	field assessment	17532	NA	2190	1
-WVLKNO0020	2190	field assessment	17532	NA	2190	1
-WVLKNO0022	2190	field assessment	17532	NA	2190	1
-WVLKNO0025	2190	field assessment	17532	NA	2190	1
-WVLKNO0028	2190	field assessment	17532	NA	2190	1
-WVLKNO0033	2190	NA	NA	NA	gh	0
-WVLKNO0039	2190	field assessment	17532	NA	2190	1
-WVLKNO0049	2190	NA	NA	NA	gh	0
-WVLKNO0058	2190	field assessment	17167	NA	2190	1
-WVLKNO0061	2190	field assessment	17167	NA	2190	1
-WVLKNO0065	2190	field assessment	17532	NA	2190	1
-WVLKNO0197	2190	NA	NA	long term	gh	0
-WVLKNO0205	2190	field assessment	17167	NA	2190	1
-WVLKNO0257	2190	NA	NA	long term	gh	0
-WVLKNO0265	2190	field assessment	17167	NA	2190	1
-WVLKNO0271	2190	field assessment	NA	NA	gh	0
-WVLKNO0272	2190	NA	NA	NA	gh	0
-WVLKNO0275	2190	field assessment	17532	NA	2190	1
-WVLKNO0276	2190	NA	NA	NA	gh	0
-WVLKNO0280	2190	field assessment	17532	NA	2190	1
-WVLKNO0283	2190	field assessment	17532	NA	2190	1
-WVLKNO0284	2190	field assessment	NA	NA	gh	0
-WVLKNO0288	2190	field assessment	NA	NA	gh	0
-WVLKNO0289	2190	field assessment	NA	NA	gh	0
-WVLKNO0365	2190	field assessment	17532	NA	2190	1
-WVLKNO0380	2190	field assessment	17532	NA	2190	1
-WVLKNO0388	2190	field assessment	17167	NA	2190	1
-WVLKOK0001	2190	field assessment	17532	NA	2190	1
-WVLKOK0010	2190	field assessment	17532	NA	2190	1
-WVLKOK0017	2190	field assessment	17532	NA	2190	1
-WVLKOK0021	2190	NA	NA	long term	gh	0
-WVLKOK0028	2190	field assessment	17167	NA	2190	1
-WVLKOK0041	2190	field assessment	NA	NA	gh	0
-WVLKOK0041	3150	field assessment	NA	NA	gh	0
-WVLKOK0042	2190	NA	NA	long term	gh	0
-WVLKOK0049	2190	field assessment	NA	NA	gh	0
-WVLKOK0065	2190	field assessment	17532	NA	2190	1
-WVLKOK0075	2190	field assessment	NA	NA	gh	0
-WVLKOK0098	2190	field assessment	NA	NA	gh	0
-WVLKOK0114	2190	field assessment	NA	NA	gh	0
-WVLKOK0125	2190	field assessment	17532	NA	2190	1
-WVLKOK0133	2190	field assessment	NA	NA	gh	0
-WVLKOK0150	2190	field assessment	NA	NA	gh	0
-WVLKOK0172	2190	NA	NA	long term	gh	0
-WVLMID0075	2190	field assessment	17532	NA	2190	1
-WVLMID0089	2190	field assessment	17532	NA	2190	1
-WVLMID0117	2190	NA	NA	NA	gh	0
-WVLMID0123	2190	NA	NA	NA	gh	0
-WVLMID0135	2190	field assessment	17532	NA	2190	1
-WVLMID0136	2190	field assessment	17532	NA	2190	1
-WVLMID0204	2190	field assessment	17532	NA	2190	1
-WVLMID0220	2190	field assessment	17532	NA	2190	1
-WVLNWP0001	2190	NA	NA	long term	gh	0
-WVLNWP0009	2190	field assessment	17532	NA	2190	1
-WVLNWP0026	2190	field assessment	17167	NA	2190	1
-WVLNWP0032	2190	field assessment	17167	NA	2190	1
-WVLNWP0077	2190	field assessment	NA	NA	gh	0
-WVLOSK0053	NA	field assessment	17167	NA	3150	0
-WVLOSK0186	3150	field assessment	NA	NA	gh	0
-WVLOSK0526	NA	field assessment	17167	NA	3150	0
-WVLOSK0532	3150	field assessment	16801	NA	3150	1
-WVLZED0171	3130_aom	field assessment	NA	NA	gh	0
+assessment_source	assessment_date	inaccessible	mhq_cycle	polygon_id	type	is_present	any_habitat	not_measurable	reason_not_measurable
+field assessment	15706	NA	1	WVLBRN0145	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	ANTBAL0711	3130_aom	0	0	NA	NA
+NA	16071	long term	1	ANTBCT0572	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	ANTBRM0421	3150	0	0	NA	NA
+field assessment	16071	NA	1	ANTBRS0068	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	ANTBRS0068	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	ANTBRS0068	3140	1	1	NA	NA
+field assessment	16071	NA	1	ANTBSE0314	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	ANTBSE0314	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	ANTBSE0334	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	ANTBSE0334	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	ANTBSE0336	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	ANTDES0075	3150	1	1	NA	NA
+field assessment	16071	NA	1	ANTGEE0105	3140	0	1	NA	NA
+field assessment	16071	NA	1	ANTGEE0105	3150	1	1	NA	NA
+field assessment	16071	NA	1	ANTHST0458	3130_aom	0	0	NA	NA
+field assessment	16071	NA	1	ANTHST0460	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	ANTHST0508	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	ANTHUL0132	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	ANTHUL0219	3130_aom	0	0	NA	NA
+field assessment	16071	NA	1	ANTHUL0276	3130_aom	0	0	NA	NA
+field assessment	16071	NA	1	ANTKAS0302	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	ANTKAS0616	3160	1	1	NA	NA
+field assessment	16071	NA	1	ANTMAL0136	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	ANTMOL0036	3150	1	1	NA	NA
+field assessment	16071	NA	1	ANTMOL0088	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	ANTMOL0088	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	ANTMOL0138	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	ANTMOL0138	3140	1	1	NA	NA
+field assessment	16071	NA	1	ANTMOL0138	3150	1	1	NA	NA
+field assessment	16071	NA	1	ANTMOL0152	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	ANTMOL0152	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	ANTMOL0152	3140	1	1	NA	NA
+field assessment	16071	NA	1	ANTMOL0720	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	ANTOTH0015	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	ANTOTH0271	3160	1	1	NA	NA
+field assessment	16071	NA	1	ANTRAN0277	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	ANTRAN0277	3130_na	0	1	NA	NA
+field assessment	16071	NA	1	ANTRET0186	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	ANTRET0186	3140	1	1	NA	NA
+field assessment	16071	NA	1	ANTRET0199	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	ANTRET0236	3130_aom	0	1	NA	NA
+field assessment	16071	NA	1	ANTRET0236	3140	1	1	NA	NA
+field assessment	16071	NA	1	ANTRIJ0072	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	ANTRIJ0308	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	ANTRIJ0308	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	ANTTUR0065	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	ANTTUR0065	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	ANTTUR0127	3150	0	0	NA	NA
+field assessment	16071	NA	1	ANTTUR0142	3150	1	1	NA	NA
+field assessment	16071	NA	1	ANTTUR0207	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	ANTTUR0207	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	ANTTUR0207	3140	1	1	NA	NA
+field assessment	16071	NA	1	ANTTUR0301	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	ANTTUR0304	3110	1	1	NA	NA
+field assessment	16071	NA	1	ANTTUR0304	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	ANTTUR0304	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	ANTVOR0058	3130_aom	0	0	NA	NA
+field assessment	16071	NA	1	ANTWIL0020	3140	1	1	NA	NA
+field assessment	16071	NA	1	LIMDPB0057	3150	1	1	NA	NA
+field assessment	16071	NA	1	LIMDPB0311	3130_aom	0	1	NA	NA
+field assessment	16071	NA	1	LIMDPB0311	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	LIMDPB0311	3150	1	1	NA	NA
+field assessment	16071	NA	1	LIMDPB0315	3130_aom	0	1	NA	NA
+field assessment	16071	NA	1	LIMDPB0315	3150	1	1	NA	NA
+field assessment	16071	NA	1	LIMDST0108	3110	1	1	NA	NA
+field assessment	16071	NA	1	LIMDST0108	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	LIMGNK0025	3130_aom	0	1	NA	NA
+field assessment	16071	NA	1	LIMGNK0025	3150	1	1	NA	NA
+field assessment	16071	NA	1	LIMGNK0062	3130_aom	0	1	NA	NA
+field assessment	16071	NA	1	LIMGNK0062	3150	1	1	NA	NA
+field assessment	16071	NA	1	LIMGNK0064	3130_aom	0	1	NA	NA
+field assessment	16071	NA	1	LIMGNK0064	3150	1	1	NA	NA
+field assessment	16071	NA	1	LIMGNK0095	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	LIMGNK0119	3130_aom	0	1	NA	NA
+field assessment	16071	NA	1	LIMGNK0119	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	LIMGNK0152	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	LIMGNK0182	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	LIMGNK0182	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	LIMGNK0182	3140	1	1	NA	NA
+field assessment	16071	NA	1	LIMGNK0372	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	LIMGNK0374	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	LIMGNK0374	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	LIMGNK0396	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	LIMGNK0396	3150	0	1	NA	NA
+field assessment	16071	NA	1	LIMHAS0462	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	LIMHAS0541	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	LIMHAS0544	3130_aom	0	1	NA	NA
+field assessment	16071	NA	1	LIMHAS0544	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	LIMHHE0001	3160	1	1	NA	NA
+field assessment	16071	NA	1	LIMHHE0286	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	LIMHHE0286	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	LIMHHE0286	3140	1	1	NA	NA
+field assessment	16071	NA	1	LIMHHE0375	3130_aom	0	1	NA	NA
+field assessment	16071	NA	1	LIMHHE0375	3160	1	1	NA	NA
+field assessment	16071	NA	1	LIMHMA0273	3130_aom	0	0	NA	NA
+field assessment	16071	NA	1	LIMLNK0083	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	LIMLUM0054	3130_na	0	0	NA	NA
+field assessment	16071	NA	1	LIMLUM0401	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	LIMLUM0401	3150	1	1	NA	NA
+field assessment	16071	NA	1	LIMMGR0035	3160	0	0	NA	NA
+field assessment	16071	NA	1	LIMMGR0253	3130_aom	0	0	NA	NA
+field assessment	16071	NA	1	LIMMGR0253	3160	0	0	NA	NA
+field assessment	16071	NA	1	LIMMSK0007	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	LIMMSK0007	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	LIMMSM0026	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	LIMMSM0026	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	LIMMSM0197	3160	1	1	NA	NA
+field assessment	16071	NA	1	LIMZNH0138	3130_aom	0	0	NA	NA
+field assessment	16071	NA	1	LIMZNH0238	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	LIMZNH0238	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	LIMZNH0333	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	LIMZNH0333	3160	1	1	NA	NA
+field assessment	16071	NA	1	LIMZNH0360	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	LIMZNH0360	3160	1	1	NA	NA
+field assessment	16071	NA	1	LIMZNH0385	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	LIMZNH0478	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	LIMZNH0478	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	LIMZNH0539	3130_aom	0	1	NA	NA
+field assessment	16071	NA	1	LIMZNH0539	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	LIMZNH0539	3150	1	1	NA	NA
+field assessment	16071	NA	1	OVLALT0344	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	OVLALT0344	3130_na	1	1	NA	NA
+field assessment	16071	NA	1	OVLLOK0348	3150	1	1	NA	NA
+field assessment	16071	NA	1	VBRDIE0443	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	VBRDIE0443	3130_na	0	1	NA	NA
+field assessment	16071	NA	1	VBRSZI0235	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	VBRSZI0235	3150	0	1	NA	NA
+field assessment	16071	NA	1	VBRSZI0277	3150	1	1	NA	NA
+field assessment	16071	NA	1	VBRSZI0401	3150	1	1	NA	NA
+field assessment	16071	NA	1	VBRZOU0028	3150	0	0	NA	NA
+field assessment	16071	NA	1	WVLBRU1212	3150	1	1	NA	NA
+field assessment	16071	NA	1	WVLHAR0329	3140	1	1	NA	NA
+field assessment	16071	NA	1	WVLHAR0329	3150	1	1	NA	NA
+field assessment	16071	NA	1	WVLJAB0140	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	WVLJAB0174	3130_aom	1	1	NA	NA
+field assessment	16071	NA	1	WVLJAB0206	3130_aom	1	1	NA	NA
+field assessment	16243	NA	1	LIMHAS0541	3130_na	1	1	NA	NA
+field assessment	16251	NA	1	VBRSZI0235	3150	1	1	NA	NA
+field assessment	16251	NA	1	VBRSZI0277	3130_aom	1	1	NA	NA
+field assessment	16292	NA	1	LIMLUM0401	3130_aom	1	1	NA	NA
+field assessment	16292	NA	1	LIMLUM0401	3150	1	1	NA	NA
+field assessment	16314	NA	1	ANTMOL0164	3130_na	1	1	NA	NA
+field assessment	16314	NA	1	ANTMOL0164	3140	1	1	NA	NA
+field assessment	16314	NA	1	ANTMOL0164	3150	1	1	NA	NA
+field assessment	16318	NA	1	ANTHST0507	3130_aom	1	1	NA	NA
+field assessment	16328	NA	1	LIMZNH0431	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	416016_v2020	3140	0	0	NA	NA
+field assessment	16436	NA	1	420329_v2023	3140	0	0	NA	NA
+field assessment	16436	NA	1	426190_v2020	3140	0	0	NA	NA
+field assessment	16436	NA	1	427747_v2020	3140	0	0	NA	NA
+field assessment	16436	NA	1	570572_v2018	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	645826_v2023	3160	0	0	NA	NA
+field assessment	16436	NA	1	ANTANT0297	3140	1	1	NA	NA
+field assessment	16436	NA	1	ANTANT0297	3150	1	1	NA	NA
+field assessment	16436	NA	1	ANTARE0200	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	ANTARE0200	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	ANTARE0200	3140	0	1	NA	NA
+field assessment	16436	NA	1	ANTARE0278	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTARE0340	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTBAL0594	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTBAL0596	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTBCT0252	3140	1	1	NA	NA
+field assessment	16436	NA	1	ANTBCT0252	3150	1	1	NA	NA
+field assessment	16436	NA	1	ANTBCT0404	3130_aom	0	1	NA	NA
+field assessment	16436	NA	1	ANTBCT0404	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	ANTBCT0458	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	ANTBCT0458	3140	0	1	NA	NA
+field assessment	16436	NA	1	ANTBCT0528	3140	0	0	NA	NA
+field assessment	16436	NA	1	ANTBCT0544	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	ANTBCT0559	3130_na	0	0	NA	NA
+field assessment	16436	NA	1	ANTBCT0579	3130_na	0	0	NA	NA
+field assessment	16436	NA	1	ANTBCT0600	3130_na	0	0	NA	NA
+field assessment	16436	NA	1	ANTBCT0610	3130_na	0	0	NA	NA
+field assessment	16436	NA	1	ANTBON0239	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTBRM0238	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTBRM0255	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTBRS0121	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTBSE0021	3130_na	0	0	NA	NA
+NA	16436	long term	1	ANTBSE0061	3130_aom	1	1	NA	NA
+NA	16436	long term	1	ANTBSE0061	3130_na	1	1	NA	NA
+NA	16436	long term	1	ANTBSE0061	3140	1	1	NA	NA
+field assessment	16436	NA	1	ANTBSE0109	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTBSE0165	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	ANTBSE0197	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTBSE0215	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	ANTBSE0215	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	ANTBSE0227	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	ANTBSE0227	3130_na	0	1	NA	NA
+field assessment	16436	NA	1	ANTBSE0333	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTBSE0335	3130_na	0	0	NA	NA
+field assessment	16436	NA	1	ANTBSE0338	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	ANTBSE0338	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	ANTBSE0366	3130_na	0	0	NA	NA
+field assessment	16436	NA	1	ANTDES0096	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTDES0098	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTDES0098	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTDUF0188	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTESS0033	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTESS0225	3160	0	0	NA	NA
+field assessment	16436	NA	1	ANTGEE0140	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTGEE0141	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTGEE0422	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTGEE0477	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTGEE0889	3150	1	1	NA	NA
+NA	16436	long term	1	ANTGEE1026	3130_aom	NA	NA	NA	NA
+field assessment	16436	NA	1	ANTGRO0161	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTGRO0180	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTHST0069	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTHST0141	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTHST0346	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	ANTHST0506	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTHST0665	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	ANTHST0665	3140	1	1	NA	NA
+field assessment	16436	NA	1	ANTHTS0138	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTHTS0151	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	ANTHTS0151	3160	1	1	NA	NA
+field assessment	16436	NA	1	ANTHUL0273	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTKAL0004	3160	1	1	NA	NA
+field assessment	16436	NA	1	ANTKAL0319	3160	0	0	NA	NA
+field assessment	16436	NA	1	ANTKAL0330	3160	1	1	NA	NA
+field assessment	16436	NA	1	ANTKAL0383	3160	1	1	NA	NA
+field assessment	16436	NA	1	ANTKAP0220	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTKAS0017	3160	0	0	NA	NA
+field assessment	16436	NA	1	ANTKAS0321	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTKAS0377	3160	0	0	NA	NA
+field assessment	16436	NA	1	ANTKAS0403	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	ANTKAS0431	3150	1	1	NA	NA
+field assessment	16436	NA	1	ANTKAS0462	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	ANTKAS0462	3160	1	1	NA	NA
+field assessment	16436	NA	1	ANTKAS0467	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	ANTKAS0467	3160	1	1	NA	NA
+field assessment	16436	NA	1	ANTKON0008	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTLIL0064	3140	0	0	NA	NA
+field assessment	16436	NA	1	ANTLIL0362	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	ANTLIL0362	3140	1	1	NA	NA
+field assessment	16436	NA	1	ANTLIL0528	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	ANTMEC0180	3140	1	1	NA	NA
+field assessment	16436	NA	1	ANTMEC0388	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	ANTMEC0388	3140	1	1	NA	NA
+field assessment	16436	NA	1	ANTMEC0388	3150	0	1	NA	NA
+field assessment	16436	NA	1	ANTMOL0032	3130_na	0	0	NA	NA
+field assessment	16436	NA	1	ANTMOL0067	3130_na	0	0	NA	NA
+field assessment	16436	NA	1	ANTMOL0143	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	ANTMOL0143	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	ANTMOL0143	3140	1	1	NA	NA
+field assessment	16436	NA	1	ANTMOL0143	3150	1	1	NA	NA
+field assessment	16436	NA	1	ANTMOL0163	3130_na	0	0	NA	NA
+field assessment	16436	NA	1	ANTMOL0163	3140	0	0	NA	NA
+field assessment	16436	NA	1	ANTMOL0163	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTMOL0539	3130_na	0	0	NA	NA
+field assessment	16436	NA	1	ANTMOL0570	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTMOL0570	3160	0	0	NA	NA
+field assessment	16436	NA	1	ANTMOL0659	3130_na	0	0	NA	NA
+field assessment	16436	NA	1	ANTOTH0270	3160	1	1	NA	NA
+field assessment	16436	NA	1	ANTOTH0306	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	ANTRAV0052	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	ANTRAV0052	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	ANTRAV0209	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTRAV0293	3130_na	0	0	NA	NA
+field assessment	16436	NA	1	ANTRAV0382	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTRAV0383	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTRET0249	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTRET0250	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTRET0273	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTRIJ0006	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	ANTRIJ0006	3140	1	1	NA	NA
+field assessment	16436	NA	1	ANTRIJ0006	3150	0	1	NA	NA
+field assessment	16436	NA	1	ANTRIJ0041	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	ANTRIJ0041	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	ANTRIJ0076	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	ANTRIJ0171	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	ANTSIL0316	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTSTB0002	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTTUR0082	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	ANTTUR0275	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTTUR0296	3110	1	1	NA	NA
+field assessment	16436	NA	1	ANTTUR0296	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	ANTTUR0296	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	ANTTUR0296	3160	1	1	NA	NA
+field assessment	16436	NA	1	ANTTUR0347	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTWES0062	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTWES0133	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	ANTWIL0084	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTWIL0124	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTWIL0176	3150	0	0	NA	NA
+field assessment	16436	NA	1	ANTWUU0153	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	ANTWUU0153	3150	1	1	NA	NA
+field assessment	16436	NA	1	LIMBRE0283	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	LIMBRE0283	3150	0	1	NA	NA
+field assessment	16436	NA	1	LIMBRG0182	3160	1	1	NA	NA
+field assessment	16436	NA	1	LIMBRG0192	3160	0	0	NA	NA
+field assessment	16436	NA	1	LIMDPB0100	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMDPB0249	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMDST0104	3160	1	1	NA	NA
+field assessment	16436	NA	1	LIMDST0178	3150	1	1	NA	NA
+field assessment	16436	NA	1	LIMGNK0010	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMGNK0021	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMGNK0035	3140	1	1	NA	NA
+field assessment	16436	NA	1	LIMGNK0035	3150	1	1	NA	NA
+field assessment	16436	NA	1	LIMGNK0046	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMGNK0050	3130_aom	0	1	NA	NA
+field assessment	16436	NA	1	LIMGNK0050	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	LIMGNK0060	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMGNK0066	3130_aom	0	1	NA	NA
+field assessment	16436	NA	1	LIMGNK0066	3160	1	1	NA	NA
+field assessment	16436	NA	1	LIMGNK0067	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMGNK0089	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	LIMGNK0127	3130_aom	0	1	NA	NA
+field assessment	16436	NA	1	LIMGNK0127	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	LIMGNK0131	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMGNK0134	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMGNK0139	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMGNK0147	3130_aom	0	1	NA	NA
+field assessment	16436	NA	1	LIMGNK0147	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	LIMGNK0169	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMGNK0173	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMGNK0173	3150	0	0	NA	NA
+field assessment	16436	NA	1	LIMGNK0177	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	LIMGNK0373	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMGNK0848	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMGNK0896	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMHAS0453	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMHAS0456	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMHAS0479	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMHAS0540	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMHAS0545	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMHAS0569	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMHAS0570	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMHAS0629	3130_aom	0	1	NA	NA
+field assessment	16436	NA	1	LIMHAS0629	3150	1	1	NA	NA
+field assessment	16436	NA	1	LIMHAS0669	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMHAS0671	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMHAS0672	3130_aom	0	1	NA	NA
+field assessment	16436	NA	1	LIMHAS0672	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	LIMHAS0846	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMHAS0849	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	LIMHAS0849	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	LIMHAS0849	3140	1	1	NA	NA
+field assessment	16436	NA	1	LIMHAS0854	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMHEC0578	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	LIMHEC0578	3150	1	1	NA	NA
+field assessment	16436	NA	1	LIMHEC0578	3160	1	1	NA	NA
+field assessment	16436	NA	1	LIMHHE0002	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	LIMHHE0002	3160	1	1	NA	NA
+field assessment	16436	NA	1	LIMHHE0005	3160	1	1	NA	NA
+field assessment	16436	NA	1	LIMHHE0008	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	LIMHHE0008	3160	1	1	NA	NA
+field assessment	16436	NA	1	LIMHHE0112	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	LIMHHE0112	3160	1	1	NA	NA
+field assessment	16436	NA	1	LIMHHE0114	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	LIMHHE0114	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	LIMHMA0012	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMHMA0271	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMHVL0092	3130_aom	0	1	NA	NA
+field assessment	16436	NA	1	LIMHVL0092	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	LIMHVL0092	3150	1	1	NA	NA
+field assessment	16436	NA	1	LIMHVL0092	3160	1	1	NA	NA
+NA	16436	long term	1	LIMHVL0144	3130_aom	NA	NA	NA	NA
+field assessment	16436	NA	1	LIMLUM0151	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMLUM0240	3150	0	0	NA	NA
+field assessment	16436	NA	1	LIMMGR0261	3160	0	0	NA	NA
+field assessment	16436	NA	1	LIMMGR0262	3160	1	1	NA	NA
+field assessment	16436	NA	1	LIMMGR0376	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	LIMMGR0376	3160	1	1	NA	NA
+field assessment	16436	NA	1	LIMMSK0353	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	LIMMSK0353	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	LIMMSM0061	3160	0	0	NA	NA
+field assessment	16436	NA	1	LIMMSM0198	3160	1	1	NA	NA
+field assessment	16436	NA	1	LIMMSM0247	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMOPG0016	3160	1	1	NA	NA
+field assessment	16436	NA	1	LIMTES0026	3160	1	1	NA	NA
+field assessment	16436	NA	1	LIMZNH0013	3130_na	0	0	NA	NA
+field assessment	16436	NA	1	LIMZNH0040	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMZNH0046	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMZNH0055	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMZNH0061	3130_na	0	0	NA	NA
+field assessment	16436	NA	1	LIMZNH0062	3130_na	0	0	NA	NA
+field assessment	16436	NA	1	LIMZNH0115	3140	0	0	NA	NA
+field assessment	16436	NA	1	LIMZNH0139	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMZNH0150	3130_na	0	0	NA	NA
+field assessment	16436	NA	1	LIMZNH0158	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMZNH0220	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMZNH0225	3130_aom	0	1	NA	NA
+field assessment	16436	NA	1	LIMZNH0225	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	LIMZNH0231	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMZNH0338	3110	1	1	NA	NA
+field assessment	16436	NA	1	LIMZNH0338	3130_aom	0	1	NA	NA
+field assessment	16436	NA	1	LIMZNH0338	3160	1	1	NA	NA
+field assessment	16436	NA	1	LIMZNH0356	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMZNH0404	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMZNH0405	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMZNH0406	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMZNH0407	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMZNH0408	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMZNH0432	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	LIMZNH0432	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	LIMZNH0477	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	LIMZNH0477	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	LIMZNH0477	3140	1	1	NA	NA
+field assessment	16436	NA	1	LIMZNH0507	3150	1	1	NA	NA
+field assessment	16436	NA	1	LIMZNH0508	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	LIMZNH0508	3150	0	1	NA	NA
+field assessment	16436	NA	1	LIMZNH0519	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	LIMZNH0536	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	OVLALT0109	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	OVLALT0332	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	OVLALT0332	3130_na	1	1	NA	NA
+field assessment	16436	NA	1	OVLBLE0018	3140	1	1	NA	NA
+field assessment	16436	NA	1	OVLDEI0194	3150	1	1	NA	NA
+field assessment	16436	NA	1	OVLDNL0075	3150	0	0	NA	NA
+field assessment	16436	NA	1	OVLDNL0080	3150	0	0	NA	NA
+field assessment	16436	NA	1	OVLDSB0184	3150	1	1	NA	NA
+field assessment	16436	NA	1	OVLGNT0197	3140	0	0	NA	NA
+field assessment	16436	NA	1	OVLGNT0817	3140	1	1	NA	NA
+field assessment	16436	NA	1	OVLLOK0354	3150	1	1	NA	NA
+field assessment	16436	NA	1	OVLNAZ0048	3140	0	0	NA	NA
+field assessment	16436	NA	1	OVLTEM0088	3150	0	0	NA	NA
+field assessment	16436	NA	1	OVLTEM0140	3150	0	0	NA	NA
+field assessment	16436	NA	1	VBRARS0544	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	VBRBEG0217	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	VBRHIL0031	3140	0	0	NA	NA
+field assessment	16436	NA	1	VBRKAM0057	3140	1	1	NA	NA
+field assessment	16436	NA	1	VBRKRB0081	3140	0	0	NA	NA
+field assessment	16436	NA	1	VBROHV0050	3150	0	0	NA	NA
+field assessment	16436	NA	1	VBRSZI0197	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	VBRSZI0213	3150	1	1	NA	NA
+field assessment	16436	NA	1	VBRSZI0297	3130_aom	1	1	NA	NA
+field assessment	16436	NA	1	VBRSZI0297	3150	1	1	NA	NA
+field assessment	16436	NA	1	VBRSZI0315	3150	1	1	NA	NA
+field assessment	16436	NA	1	VBRSZI0433	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	VBRTRV0025	3150	0	0	NA	NA
+field assessment	16436	NA	1	WVLBLA0081	2190_a	0	0	NA	NA
+field assessment	16436	NA	1	WVLBRD0031	2190_a	0	0	NA	NA
+NA	16436	long term	1	WVLDEH0013	2190_a	NA	NA	NA	NA
+field assessment	16436	NA	1	WVLDEH0024	2190_a	0	0	NA	NA
+field assessment	16436	NA	1	WVLDEH0221	2190_a	0	0	NA	NA
+field assessment	16436	NA	1	WVLDEH0238	2190_a	0	0	NA	NA
+field assessment	16436	NA	1	WVLDEH0242	2190_a	0	0	NA	NA
+field assessment	16436	NA	1	WVLDEP0003	2190_a	0	0	NA	NA
+NA	16436	long term	1	WVLDEP0007	2190_a	NA	NA	NA	NA
+field assessment	16436	NA	1	WVLDEP0008	2190_a	0	0	NA	NA
+field assessment	16436	NA	1	WVLDEP0074	2190_a	0	0	NA	NA
+field assessment	16436	NA	1	WVLDIK0153	3140	0	0	NA	NA
+field assessment	16436	NA	1	WVLDIK0187	3140	0	0	NA	NA
+field assessment	16436	NA	1	WVLDIK0219	3140	0	0	NA	NA
+field assessment	16436	NA	1	WVLDIK1044	3140	0	0	NA	NA
+field assessment	16436	NA	1	WVLHAR0110	3150	0	0	NA	NA
+field assessment	16436	NA	1	WVLHOU0087	3130_aom	0	0	NA	NA
+field assessment	16436	NA	1	WVLHOU0157	3150	0	0	NA	NA
+NA	16436	long term	1	WVLKNO0011	2190_a	NA	NA	NA	NA
+NA	16436	long term	1	WVLKNO0016	2190_a	NA	NA	NA	NA
+NA	16436	long term	1	WVLKNO0197	2190_a	NA	NA	NA	NA
+NA	16436	long term	1	WVLKNO0257	2190_a	NA	NA	NA	NA
+field assessment	16436	NA	1	WVLKNO0271	2190_a	0	0	NA	NA
+field assessment	16436	NA	1	WVLKNO0284	2190_a	0	0	NA	NA
+field assessment	16436	NA	1	WVLKNO0288	2190_a	0	0	NA	NA
+field assessment	16436	NA	1	WVLKNO0289	2190_a	0	0	NA	NA
+NA	16436	long term	1	WVLKOK0021	2190_a	NA	NA	NA	NA
+field assessment	16436	NA	1	WVLKOK0041	2190_a	0	0	NA	NA
+field assessment	16436	NA	1	WVLKOK0041	3150	0	0	NA	NA
+NA	16436	long term	1	WVLKOK0042	2190_a	NA	NA	NA	NA
+field assessment	16436	NA	1	WVLKOK0049	2190_a	0	0	NA	NA
+field assessment	16436	NA	1	WVLKOK0075	2190_a	0	0	NA	NA
+field assessment	16436	NA	1	WVLKOK0098	2190_a	0	0	NA	NA
+field assessment	16436	NA	1	WVLKOK0114	2190_a	0	0	NA	NA
+field assessment	16436	NA	1	WVLKOK0133	2190_a	0	0	NA	NA
+field assessment	16436	NA	1	WVLKOK0150	2190_a	0	0	NA	NA
+NA	16436	long term	1	WVLKOK0172	2190_a	NA	NA	NA	NA
+NA	16436	long term	1	WVLNWP0001	2190_a	NA	NA	NA	NA
+field assessment	16436	NA	1	WVLNWP0077	2190_a	0	0	NA	NA
+field assessment	16436	NA	1	WVLOSK0186	3150	0	0	NA	NA
+field assessment	16436	NA	1	WVLZED0171	3130_aom	0	0	NA	NA
+field assessment	16584	NA	1	ANTTUR0301	3160	1	1	NA	NA
+field assessment	16611	NA	1	LIMDST0108	3160	1	1	NA	NA
+field assessment	16668	NA	1	VBRSZI0297	3130_aom	1	1	NA	NA
+field assessment	16668	NA	1	VBRSZI0297	3150	1	1	NA	NA
+field assessment	16801	NA	1	ANTANT0383	3150	1	1	NA	NA
+field assessment	16801	NA	1	ANTBAA0036	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	ANTBAA0036	3140	1	1	NA	NA
+field assessment	16801	NA	1	ANTBCT0028	3160	1	1	NA	NA
+field assessment	16801	NA	1	ANTBCT0231	3160	1	1	NA	NA
+field assessment	16801	NA	1	ANTGEE0305	3150	1	1	NA	NA
+field assessment	16801	NA	1	ANTHGS0196	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	ANTHGS0196	3160	1	1	NA	NA
+field assessment	16801	NA	1	ANTHGS0622	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	ANTKAS0008	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	ANTKAS0030	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	ANTKAS0030	3160	1	1	NA	NA
+field assessment	16801	NA	1	ANTKAS0033	3160	1	1	NA	NA
+field assessment	16801	NA	1	ANTKAS0213	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	ANTKAS0213	3150	1	1	NA	NA
+field assessment	16801	NA	1	ANTKAS0295	3160	1	1	NA	NA
+field assessment	16801	NA	1	ANTKAS0501	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	ANTKON0018	3150	0	0	NA	NA
+field assessment	16801	NA	1	ANTLIL0415	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	ANTLIL0415	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	ANTLIL0547	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	ANTMAL0275	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	ANTMEC0030	3140	1	1	NA	NA
+field assessment	16801	NA	1	ANTMOL0066	3140	1	1	NA	NA
+field assessment	16801	NA	1	ANTMOL0068	3140	1	1	NA	NA
+field assessment	16801	NA	1	ANTMOL0099	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	ANTMOL0099	3150	0	1	NA	NA
+field assessment	16801	NA	1	ANTMOL0568	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	ANTMOL0568	3130_na	1	1	NA	NA
+NA	16801	long term	1	ANTRAV0381	3150	1	1	NA	NA
+field assessment	16801	NA	1	ANTRIJ0005	3130_aom	0	1	NA	NA
+field assessment	16801	NA	1	ANTRIJ0005	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	ANTRIJ0030	3130_na	0	1	NA	NA
+field assessment	16801	NA	1	ANTRIJ0030	3150	1	1	NA	NA
+field assessment	16801	NA	1	ANTRIJ0053	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	ANTZAN0122	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	ANTZAN0122	3150	1	1	NA	NA
+field assessment	16801	NA	1	ANTZAN0176	3150	1	1	NA	NA
+field assessment	16801	NA	1	LIMASS2024	3160	1	1	NA	NA
+field assessment	16801	NA	1	LIMBIL0100	3150	0	0	NA	NA
+field assessment	16801	NA	1	LIMBIL0336	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	LIMBIL0336	3150	0	1	NA	NA
+field assessment	16801	NA	1	LIMBRE0077	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	LIMBRE0077	3150	0	1	NA	NA
+field assessment	16801	NA	1	LIMBRE0285	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	LIMBRE0285	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	LIMBRE0285	3150	0	1	NA	NA
+field assessment	16801	NA	1	LIMDPB0158	3130_aom	0	1	NA	NA
+field assessment	16801	NA	1	LIMDPB0158	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	LIMGNK0055	3130_aom	0	1	NA	NA
+field assessment	16801	NA	1	LIMGNK0055	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	LIMGNK0103	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	LIMGNK0103	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	LIMGNK0142	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	LIMGNK0142	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	LIMGNK0167	3130_aom	0	0	NA	NA
+field assessment	16801	NA	1	LIMGNK0397	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	LIMGNK0397	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	LIMHAS0463	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	LIMHAS0482	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	LIMHAS0482	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	LIMHAS0619	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	LIMHAS0619	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	LIMHAS0619	3140	1	1	NA	NA
+field assessment	16801	NA	1	LIMHHE0285	3150	1	1	NA	NA
+field assessment	16801	NA	1	LIMLNK0018	3150	1	1	NA	NA
+field assessment	16801	NA	1	LIMLNK0086	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	LIMLNK0086	3160	1	1	NA	NA
+field assessment	16801	NA	1	LIMLNK0105	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	LIMLNK0237	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	LIMLNK0237	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	LIMLOM0211	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	LIMLOM0211	3160	1	1	NA	NA
+field assessment	16801	NA	1	LIMLOM0467	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	LIMLOM0467	3140	0	1	NA	NA
+field assessment	16801	NA	1	LIMLOM0475	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	LIMLOM0475	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	LIMMGR0011	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	LIMMGR0011	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	LIMMGR0011	3160	0	1	NA	NA
+field assessment	16801	NA	1	LIMOVP0094	3160	1	1	NA	NA
+field assessment	16801	NA	1	LIMWEL0154	3140	0	0	NA	NA
+field assessment	16801	NA	1	LIMZNH0036	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	LIMZNH0036	3150	0	1	NA	NA
+field assessment	16801	NA	1	LIMZNH0065	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	LIMZNH0065	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	LIMZNH0065	3150	0	1	NA	NA
+field assessment	16801	NA	1	LIMZNH0127	3130_aom	0	0	NA	NA
+field assessment	16801	NA	1	LIMZNH0206	3130_na	1	1	NA	NA
+field assessment	16801	NA	1	LIMZNH0206	3150	0	1	NA	NA
+field assessment	16801	NA	1	LIMZNH0304	3130_aom	0	0	NA	NA
+field assessment	16801	NA	1	LIMZUT0080	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	LIMZUT0080	3140	1	1	NA	NA
+field assessment	16801	NA	1	OVLMOE0016	3150	1	1	NA	NA
+field assessment	16801	NA	1	OVLSTK0268	3130_aom	1	1	NA	NA
+field assessment	16801	NA	1	OVLSTK0268	3140	1	1	NA	NA
+field assessment	16801	NA	1	VBRKAM0021	3140	1	1	NA	NA
+field assessment	16801	NA	1	VBRKAM0120	3140	0	0	NA	NA
+field assessment	16801	NA	1	VBRSZI0243	3150	1	1	NA	NA
+field assessment	16801	NA	1	VBRSZI0435	3150	1	1	NA	NA
+field assessment	16801	NA	1	WVLKNO0014	2190_a	1	1	NA	NA
+field assessment	16801	NA	1	WVLOSK0532	3150	1	1	NA	NA
+field assessment	16943	NA	1	VBRKAM0120	3140	1	1	NA	NA
+field assessment	17004	NA	1	LIMGNK0095	3130_na	1	1	NA	NA
+field assessment	17004	NA	1	LIMGNK0095	3150	1	1	NA	NA
+field assessment	17039	NA	1	WVLOSK0059	3130_aom	1	1	NA	NA
+field assessment	17052	NA	1	ANTOTH0271	3160	1	1	NA	NA
+field assessment	17052	NA	1	LIMGNK0040	3130_na	1	1	NA	NA
+field assessment	17052	NA	1	LIMGNK0144	3130_na	1	1	NA	NA
+field assessment	17056	NA	1	ANTKAS0349	3130_aom	1	1	NA	NA
+field assessment	17058	NA	1	WVLBRN0148	3130_aom	1	1	NA	NA
+field assessment	17059	NA	1	ANTMOL0716	3130_aom	1	1	NA	NA
+field assessment	17059	NA	1	ANTMOL0716	3160	1	1	NA	NA
+field assessment	17064	NA	1	ANTHGS0496	3130_na	1	1	NA	NA
+field assessment	17064	NA	1	LIMGNK0040	3130_aom	1	1	NA	NA
+field assessment	17064	NA	1	LIMGNK0060	3130_aom	1	1	NA	NA
+field assessment	17064	NA	1	LIMGNK0060	3130_na	1	1	NA	NA
+field assessment	17065	NA	1	ANTBSE0227	3130_aom	1	1	NA	NA
+field assessment	17065	NA	1	LIMHAS0514	3130_aom	1	1	NA	NA
+field assessment	17070	NA	1	LIMBRG0199	3160	1	1	NA	NA
+field assessment	17071	NA	1	ANTMOL0607	3130_aom	1	1	NA	NA
+field assessment	17071	NA	1	LIMZNH0231	3130_na	1	1	NA	NA
+field assessment	17073	NA	1	LIMOPG0009	3160	1	1	NA	NA
+field assessment	17087	NA	1	ANTMOL0555	3130_aom	1	1	NA	NA
+field assessment	17087	NA	1	ANTMOL0555	3140	1	1	NA	NA
+field assessment	17087	NA	1	ANTMOL0555	3160	1	1	NA	NA
+field assessment	17094	NA	1	ANTBSE0314	3130_aom	1	1	NA	NA
+field assessment	17094	NA	1	ANTBSE0314	3130_na	1	1	NA	NA
+field assessment	17094	NA	1	LIMZNH0437	3160	1	1	NA	NA
+field assessment	17095	NA	1	ANTHGS0465	3160	1	1	NA	NA
+field assessment	17108	NA	1	LIMOPG0020	3160	1	1	NA	NA
+field assessment	17109	NA	1	ANTKAL0019	3160	1	1	NA	NA
+field assessment	17167	NA	1	ANTARE0025	3130_aom	1	1	NA	NA
+field assessment	17167	NA	1	ANTBAA0044	3130_na	1	1	NA	NA
+field assessment	17167	NA	1	ANTBAA0044	3150	0	1	NA	NA
+field assessment	17167	NA	1	ANTBAL0373	3150	1	1	NA	NA
+field assessment	17167	NA	1	ANTBAL0505	3150	1	1	NA	NA
+field assessment	17167	NA	1	ANTBAL0592	3150	1	1	NA	NA
+field assessment	17167	NA	1	ANTBAL0595	3150	1	1	NA	NA
+field assessment	17167	NA	1	ANTESS0009	3130_aom	1	1	NA	NA
+NA	17167	long term	1	ANTESS0062	3130_aom	1	1	NA	NA
+NA	17167	long term	1	ANTESS0062	3160	1	1	NA	NA
+field assessment	17167	NA	1	ANTGEE0046	3150	1	1	NA	NA
+field assessment	17167	NA	1	ANTGEE0107	3130_aom	1	1	NA	NA
+field assessment	17167	NA	1	ANTGEE0107	3130_na	1	1	NA	NA
+field assessment	17167	NA	1	ANTGEE0107	3150	1	1	NA	NA
+field assessment	17167	NA	1	ANTGEE0126	3130_aom	1	1	NA	NA
+field assessment	17167	NA	1	ANTGEE0126	3150	1	1	NA	NA
+field assessment	17167	NA	1	ANTGEE0193	3150	1	1	NA	NA
+field assessment	17167	NA	1	ANTHTS0097	3130_aom	1	1	NA	NA
+field assessment	17167	NA	1	ANTHTS0097	3160	1	1	NA	NA
+field assessment	17167	NA	1	ANTKAL0247	3160	1	1	NA	NA
+field assessment	17167	NA	1	ANTKAL0269	3160	1	1	NA	NA
+field assessment	17167	NA	1	ANTKAS0268	3130_aom	1	1	NA	NA
+field assessment	17167	NA	1	ANTLIL0004	3130_aom	1	1	NA	NA
+field assessment	17167	NA	1	ANTLIL0004	3140	1	1	NA	NA
+field assessment	17167	NA	1	ANTMEC0257	3150	1	1	NA	NA
+field assessment	17167	NA	1	ANTMOL0089	3130_aom	0	1	NA	NA
+field assessment	17167	NA	1	ANTMOL0089	3140	1	1	NA	NA
+field assessment	17167	NA	1	ANTMOL0089	3150	1	1	NA	NA
+field assessment	17167	NA	1	ANTOTH0324	3130_aom	1	1	NA	NA
+field assessment	17167	NA	1	ANTRAV0297	3130_aom	1	1	NA	NA
+field assessment	17167	NA	1	ANTRAV0297	3160	1	1	NA	NA
+field assessment	17167	NA	1	ANTRAV0369	3130_aom	1	1	NA	NA
+field assessment	17167	NA	1	ANTWUU0140	3130_aom	1	1	NA	NA
+field assessment	17167	NA	1	ANTZAN0172	3150	0	0	NA	NA
+field assessment	17167	NA	1	ANTZAN0175	3130_na	1	1	NA	NA
+field assessment	17167	NA	1	ANTZAN0175	3150	1	1	NA	NA
+field assessment	17167	NA	1	LIMGNK0081	3130_aom	0	1	NA	NA
+field assessment	17167	NA	1	LIMGNK0081	3130_na	1	1	NA	NA
+field assessment	17167	NA	1	LIMGNK0118	3130_aom	0	1	NA	NA
+field assessment	17167	NA	1	LIMGNK0118	3130_na	1	1	NA	NA
+field assessment	17167	NA	1	LIMGNK0180	3130_aom	0	1	NA	NA
+field assessment	17167	NA	1	LIMGNK0180	3130_na	1	1	NA	NA
+field assessment	17167	NA	1	LIMGNK0180	3150	0	1	NA	NA
+field assessment	17167	NA	1	LIMHAS0103	3150	1	1	NA	NA
+field assessment	17167	NA	1	LIMHAS0281	3130_aom	1	1	NA	NA
+field assessment	17167	NA	1	LIMHAS0281	3150	1	1	NA	NA
+field assessment	17167	NA	1	LIMHEC0128	3150	1	1	NA	NA
+field assessment	17167	NA	1	LIMHHE0330	3130_aom	1	1	NA	NA
+field assessment	17167	NA	1	LIMHLN0068	3150	1	1	NA	NA
+field assessment	17167	NA	1	LIMKIN0231	3150	1	1	NA	NA
+field assessment	17167	NA	1	LIMLOM0030	3130_aom	1	1	NA	NA
+field assessment	17167	NA	1	LIMLOM0239	3130_aom	1	1	NA	NA
+field assessment	17167	NA	1	LIMMSK0134	3130_aom	0	1	NA	NA
+field assessment	17167	NA	1	LIMMSK0134	3130_na	1	1	NA	NA
+field assessment	17167	NA	1	LIMMSK0134	3140	1	1	NA	NA
+field assessment	17167	NA	1	LIMMSK0151	3150	1	1	NA	NA
+field assessment	17167	NA	1	LIMMSK0456	3150	1	1	NA	NA
+field assessment	17167	NA	1	LIMNEE0011	3160	1	1	NA	NA
+field assessment	17167	NA	1	LIMTON0188	3140	1	1	NA	NA
+field assessment	17167	NA	1	LIMZNH0374	3130_aom	1	1	NA	NA
+field assessment	17167	NA	1	LIMZNH0374	3160	1	1	NA	NA
+field assessment	17167	NA	1	LIMZNH0563	3130_aom	1	1	NA	NA
+field assessment	17167	NA	1	LIMZNH0563	3140	1	1	NA	NA
+field assessment	17167	NA	1	OVLBLE0139	3150	1	1	NA	NA
+field assessment	17167	NA	1	OVLBVN0466	3140	1	1	NA	NA
+field assessment	17167	NA	1	OVLLOK0063	3150	1	1	NA	NA
+field assessment	17167	NA	1	OVLSIN0011	3150	1	1	NA	NA
+field assessment	17167	NA	1	OVLSIN0269	3140	1	1	NA	NA
+field assessment	17167	NA	1	VBRARS0370	3130_aom	1	1	NA	NA
+field assessment	17167	NA	1	VBRARS0370	3140	1	1	NA	NA
+field assessment	17167	NA	1	VBRARS0370	3150	1	1	NA	NA
+field assessment	17167	NA	1	VBRDIE0220	3150	1	1	NA	NA
+field assessment	17167	NA	1	VBRDIE0330	3150	1	1	NA	NA
+field assessment	17167	NA	1	WVLBRD0077	2190_a	1	1	NA	NA
+field assessment	17167	NA	1	WVLBRU0368	2190_a	1	1	NA	NA
+field assessment	17167	NA	1	WVLBRU0374	2190_a	1	1	NA	NA
+field assessment	17167	NA	1	WVLDAM0090	3150	1	1	NA	NA
+field assessment	17167	NA	1	WVLDEH0220	2190_a	1	1	NA	NA
+field assessment	17167	NA	1	WVLDEP0070	2190_a	1	1	NA	NA
+field assessment	17167	NA	1	WVLDEP0075	2190_a	1	1	NA	NA
+field assessment	17167	NA	1	WVLDIK0136	3150	1	1	NA	NA
+field assessment	17167	NA	1	WVLDIK1027	3150	1	1	NA	NA
+field assessment	17167	NA	1	WVLHOU0561	3130_aom	1	1	NA	NA
+field assessment	17167	NA	1	WVLKNO0058	2190_a	1	1	NA	NA
+field assessment	17167	NA	1	WVLKNO0061	2190_a	1	1	NA	NA
+field assessment	17167	NA	1	WVLKNO0205	2190_a	1	1	NA	NA
+field assessment	17167	NA	1	WVLKNO0265	2190_a	1	1	NA	NA
+field assessment	17167	NA	1	WVLKNO0388	2190_a	1	1	NA	NA
+field assessment	17167	NA	1	WVLKOK0028	2190_a	1	1	NA	NA
+field assessment	17167	NA	1	WVLNWP0026	2190_a	1	1	NA	NA
+field assessment	17167	NA	1	WVLNWP0032	2190_a	1	1	NA	NA
+field assessment	17167	NA	1	WVLOSK0053	3150	1	1	NA	NA
+field assessment	17167	NA	1	WVLOSK0526	3150	1	1	NA	NA
+field assessment	17335	NA	1	OVLMOE0016	3150	1	1	NA	NA
+field assessment	17340	NA	1	ANTLIL0243	3130_aom	1	1	NA	NA
+field assessment	17340	NA	1	ANTLIL0243	3140	1	1	NA	NA
+field assessment	17344	NA	1	LIMTON0189	3140	1	1	NA	NA
+field assessment	17346	NA	1	ANTMEE0180	3130_aom	1	1	NA	NA
+field assessment	17367	NA	1	LIMZNH0231	3130_aom	1	1	NA	NA
+field assessment	17367	NA	1	LIMZNH0231	3130_na	1	1	NA	NA
+field assessment	17380	NA	1	ANTGEE0069	3150	1	1	NA	NA
+field assessment	17381	NA	1	LIMMSK0425	3130_aom	1	1	NA	NA
+field assessment	17382	NA	1	OVLSTK0295	3130_aom	1	1	NA	NA
+field assessment	17382	NA	1	OVLSTK0295	3140	1	1	NA	NA
+field assessment	17386	NA	1	LIMHEC0120	3130_aom	1	1	NA	NA
+field assessment	17386	NA	1	LIMHEC0120	3160	1	1	NA	NA
+field assessment	17389	NA	1	LIMMSM0036	3130_aom	1	1	NA	NA
+field assessment	17389	NA	1	LIMMSM0036	3160	1	1	NA	NA
+field assessment	17394	NA	1	VBRARS0043	3150	1	1	NA	NA
+field assessment	17394	NA	1	VBRARS0364	3150	1	1	NA	NA
+field assessment	17394	NA	1	VBRHOL0202	3150	1	1	NA	NA
+field assessment	17399	NA	1	ANTNIJ0045	3150	1	1	NA	NA
+field assessment	17406	NA	1	LIMZNH0318	3130_aom	1	1	NA	NA
+field assessment	17406	NA	1	LIMZNH0318	3160	1	1	NA	NA
+field assessment	17406	NA	1	LIMZNH0437	3130_aom	1	1	NA	NA
+field assessment	17406	NA	1	LIMZNH0437	3160	1	1	NA	NA
+field assessment	17410	NA	1	ANTBCT0544	3130_na	1	1	NA	NA
+field assessment	17415	NA	1	ANTARE0309	3130_na	1	1	NA	NA
+field assessment	17415	NA	1	ANTARE0309	3140	1	1	NA	NA
+field assessment	17415	NA	1	ANTMOL0546	3130_aom	1	1	NA	NA
+field assessment	17415	NA	1	ANTMOL0546	3130_na	1	1	NA	NA
+field assessment	17415	NA	1	ANTMOL0546	3140	1	1	NA	NA
+field assessment	17415	NA	1	ANTMOL0546	3160	1	1	NA	NA
+field assessment	17415	NA	1	ANTMOL0576	3130_aom	1	1	NA	NA
+field assessment	17415	NA	1	ANTMOL0576	3130_na	1	1	NA	NA
+field assessment	17415	NA	1	ANTMOL0576	3150	1	1	NA	NA
+field assessment	17420	NA	1	LIMNEE0254	3130_aom	1	1	NA	NA
+field assessment	17424	NA	1	ANTRAV0230	3130_aom	1	1	NA	NA
+field assessment	17424	NA	1	ANTRAV0230	3160	1	1	NA	NA
+field assessment	17424	NA	1	LIMGNK0384	3130_na	1	1	NA	NA
+field assessment	17427	NA	1	LIMHHE0322	3160	1	1	NA	NA
+field assessment	17428	NA	1	LIMHHE0315	3130_aom	1	1	NA	NA
+field assessment	17428	NA	1	LIMMSK0113	3130_aom	1	1	NA	NA
+field assessment	17430	NA	1	LIMHAS0514	3130_na	1	1	NA	NA
+field assessment	17431	NA	1	ANTBAL0715	3130_aom	1	1	NA	NA
+field assessment	17431	NA	1	LIMHEC0201	3150	1	1	NA	NA
+field assessment	17438	NA	1	ANTBCT0464	3160	1	1	NA	NA
+field assessment	17443	NA	1	WVLRUI0009	3130_aom	1	1	NA	NA
+field assessment	17443	NA	1	WVLWIN0255	3130_aom	1	1	NA	NA
+field assessment	17443	NA	1	WVLWIN0255	3130_na	1	1	NA	NA
+field assessment	17444	NA	1	ANTKAS0463	3130_aom	1	1	NA	NA
+field assessment	17444	NA	1	ANTKAS0463	3160	1	1	NA	NA
+field assessment	17448	NA	1	ANTBAL0595	3150	1	1	NA	NA
+field assessment	17449	NA	1	WVLDAM0090	3150	1	1	NA	NA
+field assessment	17457	NA	1	WVLBRN0392	3130_aom	1	1	NA	NA
+field assessment	17457	NA	1	WVLBRN0422	3130_aom	1	1	NA	NA
+field assessment	17457	NA	1	WVLBRN0422	3130_na	1	1	NA	NA
+field assessment	17457	NA	1	WVLOSK0273	3130_aom	1	1	NA	NA
+field assessment	17459	NA	1	WVLBRN0148	3130_aom	1	1	NA	NA
+field assessment	17466	NA	1	ANTKAL0387	3160	1	1	NA	NA
+field assessment	17532	NA	1	ANTBRS0178	3130_aom	1	1	NA	NA
+field assessment	17532	NA	1	ANTKAL0288	3160	1	1	NA	NA
+field assessment	17532	NA	1	ANTKAS0474	3130_aom	1	1	NA	NA
+field assessment	17532	NA	1	ANTSIL0322	3130_aom	1	1	NA	NA
+field assessment	17532	NA	1	LIMHEC0537	3130_aom	1	1	NA	NA
+field assessment	17532	NA	1	VBRARS0052	3130_aom	1	1	NA	NA
+field assessment	17532	NA	1	VBRARS0052	3150	1	1	NA	NA
+field assessment	17532	NA	1	WVLBLA0206	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLBRD0035	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLBRD0039	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLBRD0089	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLBRU0369	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLDEH0011	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLDEH0012	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLDEP0012	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLDEP0047	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLDEP0051	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLDEP0057	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLDEP0058	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLDEP0061	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLDEP0065	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLDEP0067	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLDEP0073	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLDEP0097	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLDEP0119	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLDEP0167	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLKNO0002	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLKNO0003	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLKNO0019	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLKNO0020	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLKNO0022	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLKNO0025	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLKNO0028	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLKNO0039	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLKNO0065	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLKNO0275	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLKNO0280	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLKNO0283	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLKNO0365	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLKNO0380	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLKOK0001	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLKOK0010	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLKOK0017	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLKOK0065	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLKOK0125	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLMID0075	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLMID0089	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLMID0135	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLMID0136	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLMID0204	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLMID0220	2190_a	1	1	NA	NA
+field assessment	17532	NA	1	WVLNWP0009	2190_a	1	1	NA	NA
+field assessment	17675	NA	1	LIMTON0189	3140	1	1	NA	NA
+field assessment	17675	NA	1	OVLBVN0467	3140	1	1	NA	NA
+field assessment	17687	NA	1	LIMLOM0234	3130_aom	1	1	NA	NA
+field assessment	17687	NA	1	LIMLOM0234	3130_na	1	1	NA	NA
+field assessment	17700	NA	1	ANTOLE0052	3130_aom	1	1	NA	NA
+field assessment	17707	NA	1	LIMNEE0213	3160	1	1	NA	NA
+field assessment	17730	NA	1	ANTBAL0559	3160	1	1	NA	NA
+field assessment	17730	NA	1	ANTMOL0353	3130_na	1	1	NA	NA
+field assessment	17744	NA	1	LIMGNK0156	3130_aom	1	1	NA	NA
+field assessment	17744	NA	1	LIMKIN0100	3130_na	1	1	NA	NA
+field assessment	17744	NA	1	LIMKIN0192	3130_aom	1	1	NA	NA
+field assessment	17744	NA	1	LIMKIN0192	3160	1	1	NA	NA
+field assessment	17745	NA	1	LIMMSK0030	3130_aom	1	1	NA	NA
+field assessment	17745	NA	1	LIMMSK0341	3130_na	1	1	NA	NA
+field assessment	17746	NA	1	LIMBIL0097	3130_aom	1	1	NA	NA
+field assessment	17751	NA	1	OVLBLE0193	3150	1	1	NA	NA
+field assessment	17759	NA	1	LIMLNK0086	3130_na	1	1	NA	NA
+field assessment	17759	NA	1	LIMLNK0105	3130_na	1	1	NA	NA
+field assessment	17765	NA	1	VBRKRB0004	3150	1	1	NA	NA
+field assessment	17767	NA	1	ANTHTS0090	3130_aom	1	1	NA	NA
+field assessment	17767	NA	1	ANTHTS0090	3160	1	1	NA	NA
+field assessment	17774	NA	1	WVLKOK0001	2190_a	1	1	NA	NA
+field assessment	17780	NA	1	OVLALT0332	3130_aom	1	1	NA	NA
+field assessment	17780	NA	1	OVLALT0332	3130_na	1	1	NA	NA
+field assessment	17792	NA	1	LIMHHE0322	3130_aom	1	1	NA	NA
+field assessment	17798	NA	1	ANTMEE0178	3130_aom	1	1	NA	NA
+field assessment	17798	NA	1	LIMHEE0063	3150	1	1	NA	NA
+field assessment	17798	NA	1	VBRARS0052	3130_aom	1	1	NA	NA
+field assessment	17798	NA	1	VBRARS0052	3150	1	1	NA	NA
+field assessment	17798	NA	1	VBRZOU0046	3150	1	1	NA	NA
+field assessment	17799	NA	1	ANTKAL0235	3160	1	1	NA	NA
+field assessment	17807	NA	1	OVLALT0344	3130_aom	1	1	NA	NA
+field assessment	17807	NA	1	OVLALT0344	3130_na	1	1	NA	NA
+field assessment	17816	NA	1	LIMLOM0467	3130_na	1	1	NA	NA
+field assessment	18032	NA	1	LIMLNK0245	3130_aom	1	1	NA	NA
+field assessment	18037	NA	1	ANTBRS0179	3130_aom	1	1	NA	NA
+field assessment	18040	NA	1	ANTHGS0569	3130_aom	1	1	NA	NA
+field assessment	18044	NA	1	OVLBLE0248	3150	1	1	NA	NA
+field assessment	18053	NA	1	WVLKOK0017	2190_a	1	1	NA	NA
+field assessment	18061	NA	1	WVLKNO0022	2190_a	1	1	NA	NA
+field assessment	18064	NA	1	LIMHLN0163	3150	1	1	NA	NA
+field assessment	18066	NA	1	ANTLIL0293	3130_aom	1	1	NA	NA
+field assessment	18067	NA	1	ANTBSE0132	3130_aom	1	1	NA	NA
+field assessment	18067	NA	1	ANTBSE0132	3140	1	1	NA	NA
+field assessment	18067	NA	1	ANTLIL0303	3130_aom	1	1	NA	NA
+field assessment	18067	NA	1	ANTLIL0303	3140	1	1	NA	NA
+field assessment	18071	NA	1	LIMMSM0167	3130_aom	1	1	NA	NA
+field assessment	18071	NA	1	LIMMSM0167	3160	1	1	NA	NA
+field assessment	18078	NA	1	ANTRAV0293	3130_aom	1	1	NA	NA
+field assessment	18078	NA	1	ANTRAV0296	3130_aom	1	1	NA	NA
+field assessment	18078	NA	1	ANTRAV0296	3160	1	1	NA	NA
+field assessment	18079	NA	1	LIMLNK0101	3150	1	1	NA	NA
+field assessment	18079	NA	1	WVLZNB0856	3130_aom	1	1	NA	NA
+field assessment	18080	NA	1	ANTHGS0010	3130_aom	1	1	NA	NA
+field assessment	18080	NA	1	ANTHGS0029	3130_aom	1	1	NA	NA
+field assessment	18080	NA	1	ANTHST0479	3130_aom	1	1	NA	NA
+field assessment	18080	NA	1	ANTHUL0218	3130_aom	1	1	NA	NA
+field assessment	18081	NA	1	WVLKNO0012	2190_a	1	1	NA	NA
+field assessment	18081	NA	1	WVLKNO0364	2190_a	1	1	NA	NA
+field assessment	18082	NA	1	VBRSZI0235	3150	1	1	NA	NA
+field assessment	18082	NA	1	VBRSZI0401	3150	1	1	NA	NA
+field assessment	18099	NA	1	ANTGEE0105	3150	1	1	NA	NA
+field assessment	18100	NA	1	ANTGEE0854	3130_aom	1	1	NA	NA
+field assessment	18100	NA	1	ANTKAS0515	3130_na	1	1	NA	NA
+field assessment	18115	NA	1	ANTMAL0060	3130_aom	1	1	NA	NA
+field assessment	18120	NA	1	LIMOVP0232	3150	1	1	NA	NA
+field assessment	18148	NA	1	VBRKAM0057	3140	1	1	NA	NA
+field assessment	18164	NA	1	VBRARS0370	3130_aom	1	1	NA	NA
+field assessment	18164	NA	1	VBRARS0370	3140	1	1	NA	NA
+field assessment	18164	NA	1	VBRARS0370	3150	1	1	NA	NA
+field assessment	18165	NA	1	LIMHMA0271	3130_aom	1	1	NA	NA
+field assessment	18165	NA	1	LIMHMA0271	3140	1	1	NA	NA
+field assessment	18376	NA	1	ANTANT0315	3140	1	1	NA	NA
+field assessment	18376	NA	1	ANTANT0319	3140	1	1	NA	NA
+field assessment	18379	NA	1	OV_TOLYPELLA_001	3140	1	1	NA	NA
+field assessment	18379	NA	1	OV_TOLYPELLA_003	3140	1	1	NA	NA
+field assessment	18386	NA	1	OVLBVN0469	3140	1	1	NA	NA
+field assessment	18389	NA	1	OV_TOLYPELLA_002	3140	1	1	NA	NA
+field assessment	18389	NA	1	OVLBVN0304	3140	1	1	NA	NA
+field assessment	18389	NA	1	OVLBVN0468	3140	1	1	NA	NA
+field assessment	18389	NA	1	OVLBVN0471	3140	1	1	NA	NA
+field assessment	18390	NA	1	OV_TOLYPELLA_004	3140	1	1	NA	NA
+field assessment	18390	NA	1	OVLBVN0053	3140	1	1	NA	NA
+field assessment	18390	NA	1	OVLBVN0180	3140	1	1	NA	NA
+field assessment	18390	NA	1	OVLBVN0184	3140	1	1	NA	NA
+field assessment	18390	NA	1	OVLBVN0197	3140	1	1	NA	NA
+field assessment	18390	NA	1	OVLBVN0213	3140	1	1	NA	NA
+field assessment	18390	NA	1	OVLBVN0217	3140	1	1	NA	NA
+field assessment	18390	NA	1	OVLBVN0228	3140	1	1	NA	NA
+field assessment	18394	NA	1	ANTBRM0350	3140	1	1	NA	NA
+field assessment	18394	NA	1	WVLKNO0102	3140	1	1	NA	NA
+field assessment	18394	NA	1	WVLKNO0106	3140	1	1	NA	NA
+field assessment	18394	NA	1	WVLKNO0352	3140	1	1	NA	NA
+field assessment	18395	NA	1	OVLBVN0301	3140	1	1	NA	NA
+field assessment	18395	NA	1	OVLBVN0302	3140	1	1	NA	NA
+field assessment	18395	NA	1	OVLBVN0305	3140	1	1	NA	NA
+field assessment	18404	NA	1	OVLSTL0322	3140	1	1	NA	NA
+field assessment	18416	NA	1	LIMLNK0167	3160	1	1	NA	NA
+field assessment	18420	NA	1	OVLBVN0470	3140	1	1	NA	NA
+field assessment	18488	NA	1	LIMDST0215	3160	1	1	NA	NA
+field assessment	18491	NA	1	OVLLOK0354	3150	1	1	NA	NA
+field assessment	18506	NA	1	WVLBLA0206	2190_a	1	1	NA	NA
+field assessment	18507	NA	1	LIMOPG0016	3160	1	1	NA	NA
+field assessment	18551	NA	1	ANTMOL0068	3130_aom	1	1	NA	NA
+field assessment	18794	NA	1	OVLBVN0202	3140	1	1	NA	NA
+field assessment	18799	NA	1	OVLBVN0430	3140	1	1	NA	NA
+field assessment	18803	NA	1	OVLBVN0235	3140	1	1	NA	NA
+field assessment	18806	NA	1	OVLBVN0679	3140	1	1	NA	NA
+field assessment	18807	NA	1	OVLBVN0680	3140	1	1	NA	NA
+field assessment	18808	NA	1	LIMDST0108	3110	1	1	NA	NA
+field assessment	18808	NA	1	LIMDST0108	3130_aom	1	1	NA	NA
+field assessment	18808	NA	1	LIMDST0108	3130_na	1	1	NA	NA
+field assessment	18841	NA	1	WVLHOU0552	3130_aom	1	1	NA	NA
+field assessment	18864	NA	1	LIMKIN0235	3150	1	1	NA	NA
+field assessment	18908	NA	1	ANTBSE0159	3130_aom	1	1	NA	NA
+field assessment	18908	NA	1	ANTBSE0159	3130_na	1	1	NA	NA
+field assessment	18908	NA	1	ANTBSE0227	3130_aom	1	1	NA	NA
+field assessment	18908	NA	1	ANTBSE0399	3130_aom	1	1	NA	NA
+field assessment	19134	NA	2	OVLBVN0466	3140	1	1	NA	NA
+field assessment	19170	NA	2	LIMDST0108	3110	1	1	NA	NA
+field assessment	19170	NA	2	LIMDST0108	3130_aom	1	1	NA	NA
+field assessment	19170	NA	2	LIMDST0108	3130_na	1	1	NA	NA
+field assessment	19202	NA	2	ANTTUR0046	3130_aom	1	1	NA	NA
+field assessment	19202	NA	2	ANTTUR0046	3130_na	1	1	NA	NA
+field assessment	19222	NA	2	WVLHAR0329	3140	1	1	NA	NA
+field assessment	19222	NA	2	WVLHAR0329	3150	1	1	NA	NA
+field assessment	19235	NA	2	ANTRAV0230	3130_aom	1	1	NA	NA
+field assessment	19235	NA	2	ANTRAV0230	3130_na	1	1	NA	NA
+field assessment	19236	NA	2	ANTRAV0188	3160	1	1	NA	NA
+field assessment	19237	NA	2	ANTTUR0305	3130_aom	1	1	NA	NA
+field assessment	19240	NA	2	ANTMRK0177	3130_aom	1	1	NA	NA
+field assessment	19240	NA	2	ANTMRK0177	3130_na	1	1	NA	NA
+field assessment	19240	NA	2	ANTTUR0287	3130_aom	1	1	NA	NA
+field assessment	19240	NA	2	ANTTUR0287	3130_na	1	1	NA	NA
+field assessment	19241	NA	2	ANTTUR0079	3130_aom	1	1	NA	NA
+field assessment	19250	NA	2	ANTTUR0296	3110	1	1	NA	NA
+field assessment	19250	NA	2	ANTTUR0296	3130_aom	1	1	NA	NA
+field assessment	19250	NA	2	ANTTUR0296	3130_na	1	1	NA	NA
+field assessment	19250	NA	2	ANTTUR0296	3160	1	1	NA	NA
+field assessment	19258	NA	2	ANTTUR0018	3130_aom	1	1	NA	NA
+field assessment	19258	NA	2	ANTTUR0018	3160	1	1	NA	NA
+field assessment	19262	NA	2	ANTTUR0065	3130_aom	1	1	NA	NA
+field assessment	19262	NA	2	ANTTUR0065	3130_na	1	1	NA	NA
+field assessment	19270	NA	2	ANTTUR0277	3130_na	1	1	NA	NA
+field assessment	19275	NA	2	ANTTUR0301	3130_aom	1	1	NA	NA
+field assessment	19275	NA	2	ANTTUR0301	3130_na	1	1	NA	NA
+field assessment	19275	NA	2	ANTTUR0301	3160	1	1	NA	NA
+field assessment	19276	NA	2	ANTTUR0304	3130_aom	1	1	NA	NA
+field assessment	19276	NA	2	ANTTUR0304	3130_na	1	1	NA	NA
+field assessment	19520	NA	2	ANTTUR0292	3130_aom	1	1	NA	NA
+field assessment	19523	NA	2	ANTTUR0022	3160	1	1	NA	NA
+field assessment	19524	NA	2	ANTTUR0282	3130_aom	1	1	NA	NA
+field assessment	19535	NA	2	ANTTUR0257	3130_aom	1	1	NA	NA
+field assessment	19538	NA	2	ANTTUR0295	3130_aom	1	1	NA	NA
+field assessment	19541	NA	2	ANTTUR0270	3130_aom	1	1	NA	NA
+field assessment	19542	NA	2	ANTTUR0273	3130_aom	1	1	NA	NA
+field assessment	19548	NA	2	ANTRAV0122	3130_aom	1	1	NA	NA
+field assessment	19550	NA	2	ANTTUR0077	3130_aom	1	1	NA	NA
+field assessment	19553	NA	2	ANTTUR0022	3130_aom	1	1	NA	NA
+field assessment	19556	NA	2	ANTOTH0306	3130_aom	1	1	NA	NA
+field assessment	19556	NA	2	ANTTUR0299	3130_aom	1	1	NA	NA
+field assessment	19557	NA	2	ANTTUR0082	3130_aom	1	1	NA	NA
+field assessment	19557	NA	2	ANTTUR0082	3130_na	0	1	NA	NA
+field assessment	19557	NA	2	ANTTUR0300	3130_aom	1	1	NA	NA
+field assessment	19557	NA	2	ANTTUR0302	3130_aom	1	1	NA	NA
+field assessment	19557	NA	2	ANTTUR0302	3130_na	1	1	NA	NA
+field assessment	19564	NA	2	ANTRAV0134	3130_aom	1	1	NA	NA
+field assessment	19564	NA	2	ANTRAV0208	3130_aom	1	1	NA	NA
+field assessment	19564	NA	2	ANTRAV0293	3130_aom	1	1	NA	NA
+field assessment	19578	NA	2	VBRZOU0028	3150	1	1	NA	NA
+field assessment	19578	NA	2	VBRZOU0212	3150	1	1	NA	NA
+field assessment	19579	NA	2	ANTKAL0289	3130_aom	1	1	NA	NA
+field assessment	19579	NA	2	ANTKAL0306	3130_aom	1	1	NA	NA
+field assessment	19594	NA	2	ANTKAL0344	3130_aom	1	1	NA	NA
+field assessment	19594	NA	2	ANTKAL0344	3160	1	1	NA	NA
+field assessment	19613	NA	2	ANTKAL0492	3130_aom	1	1	NA	NA
+field assessment	19613	NA	2	ANTKAL0492	3160	1	1	NA	NA
+field assessment	19620	NA	2	ANTRAV0052	3130_aom	1	1	NA	NA
+field assessment	19620	NA	2	ANTRAV0052	3130_na	1	1	NA	NA
+field assessment	19628	NA	2	LIMHHE0002	3130_aom	1	1	NA	NA
+field assessment	19628	NA	2	LIMHHE0002	3160	1	1	NA	NA
+field assessment	19632	NA	2	ANTRAV0211	3110	1	1	NA	NA
+field assessment	19632	NA	2	ANTRAV0211	3130_aom	1	1	NA	NA
+field assessment	19632	NA	2	ANTRAV0211	3130_na	1	1	NA	NA
+field assessment	19639	NA	2	ANTOTH0324	3130_aom	1	1	NA	NA
+field assessment	19641	NA	2	ANTOTH0271	3160	1	1	NA	NA
+field assessment	19723	NA	2	ANTMEC0421	3140	0	0	NA	NA
+orthophoto	19752	NA	2	403930_v2020	3130_aom	0	0	NA	NA
+orthophoto	19752	NA	2	454362_v2014	3150	0	0	NA	NA
+orthophoto	19752	NA	2	511991_v2018	3150	0	0	NA	NA
+orthophoto	19752	NA	2	ANTBAL0415	3150	0	0	NA	NA
+orthophoto	19752	NA	2	ANTBCT0319	3160	0	0	NA	NA
+orthophoto	19752	NA	2	ANTBCT0529	3160	0	0	NA	NA
+orthophoto	19752	NA	2	ANTBCT0572	3130_na	0	0	NA	NA
+orthophoto	19752	NA	2	ANTBSE0321	3130_aom	0	0	NA	NA
+NA	19752	long term	2	ANTBSE0334	3130_aom	NA	NA	NA	NA
+NA	19752	long term	2	ANTBSE0334	3130_na	NA	NA	NA	NA
+NA	19752	long term	2	ANTESS0062	3130_aom	NA	NA	NA	NA
+NA	19752	long term	2	ANTESS0062	3160	NA	NA	NA	NA
+NA	19752	long term	2	ANTHST0290	3130_aom	NA	NA	NA	geen toestemming om te betreden
+orthophoto	19752	NA	2	ANTKAS0201	3150	0	0	NA	NA
+field assessment	19752	NA	2	LIMBOC0077	3140	1	1	NA	NA
+NA	19752	long term	2	LIMHVL0092	3150	NA	NA	NA	NA
+NA	19752	long term	2	LIMHVL0092	3160	NA	NA	NA	NA
+NA	19752	long term	2	LIMHVL0144	3130_aom	NA	NA	NA	NA
+NA	19752	long term	2	LIMHVL0144	3150	NA	NA	NA	NA
+orthophoto	19752	NA	2	LIMNEE0147	3160	0	0	NA	NA
+orthophoto	19752	NA	2	LIMZNH0220	3150	0	0	NA	NA
+orthophoto	19752	NA	2	LIMZNH0539	3150	0	0	NA	NA
+NA	19752	long term	2	OVLTEM0066	3140	NA	NA	NA	geen toestemming om te betreden
+orthophoto	19752	NA	2	WVLBRU0368	2190_a	0	0	NA	NA
+orthophoto	19752	NA	2	WVLBRU0369	2190_a	0	0	NA	NA
+orthophoto	19752	NA	2	WVLBRU0374	2190_a	0	0	NA	NA
+NA	19752	long term	2	WVLDEP0007	2190_a	NA	NA	NA	NA
+orthophoto	19752	NA	2	WVLDIK1039	3150	0	0	NA	NA
+field assessment	19886	NA	2	LIMZNH0446	3130_aom	1	1	NA	NA
+field assessment	19886	NA	2	LIMZNH0446	3130_na	1	1	NA	NA
+field assessment	19888	NA	2	ANTBAL0396	3150	1	1	NA	NA
+field assessment	19888	NA	2	ANTBAL0592	3150	1	1	NA	NA
+field assessment	19888	NA	2	ANTBAL0595	3150	1	1	NA	NA
+field assessment	19899	NA	2	OVLBVN0464	3140	1	1	NA	NA
+field assessment	19905	NA	2	ANTRAV0014	3130_aom	1	1	NA	NA
+field assessment	19906	NA	2	ANTKAL0330	3130_aom	1	1	NA	NA
+field assessment	19906	NA	2	ANTKAL0330	3160	1	1	NA	NA
+field assessment	19906	NA	2	ANTKAL0356	3130_aom	1	1	NA	NA
+field assessment	19906	NA	2	ANTKAL0356	3160	1	1	NA	NA
+field assessment	19907	NA	2	ANTKAL0478	3160	1	1	NA	NA
+field assessment	19908	NA	2	LIMGNK0064	3150	1	1	NA	NA
+field assessment	19908	NA	2	LIMZNH0379	3110	1	1	NA	NA
+field assessment	19908	NA	2	LIMZNH0379	3130_aom	1	1	NA	NA
+field assessment	19908	NA	2	LIMZNH0379	3160	1	1	NA	NA
+field assessment	19908	NA	2	LIMZNH0563	3130_aom	1	1	NA	NA
+field assessment	19908	NA	2	LIMZNH0563	3140	1	1	NA	NA
+field assessment	19909	NA	2	ANTBSE0132	3130_na	0	0	NA	NA
+field assessment	19909	NA	2	ANTBSE0132	3140	0	0	NA	NA
+field assessment	19909	NA	2	ANTLIL0230	3130_aom	1	1	NA	NA
+field assessment	19912	NA	2	ANTKAL0004	3160	1	1	NA	NA
+field assessment	19912	NA	2	ANTKAL0123	3160	1	1	NA	NA
+field assessment	19912	NA	2	ANTMOL0092	3130_aom	1	1	NA	NA
+field assessment	19912	NA	2	ANTMOL0092	3130_na	1	1	NA	NA
+field assessment	19912	NA	2	ANTMOL0092	3150	1	1	NA	NA
+field assessment	19914	NA	2	LIMZNH0338	3110	1	1	NA	NA
+field assessment	19914	NA	2	LIMZNH0338	3160	1	1	NA	NA
+field assessment	19914	NA	2	LIMZNH0619	3130_aom	1	1	NA	NA
+field assessment	19916	NA	2	ANTARE0069	3130_aom	0	0	short term	te hoge waterstand
+field assessment	19919	NA	2	LIMDST0108	3110	1	1	NA	NA
+field assessment	19919	NA	2	LIMDST0108	3130_aom	1	1	NA	NA
+field assessment	19919	NA	2	LIMDST0108	3130_na	1	1	NA	NA
+field assessment	19921	NA	2	ANTKAL0019	3160	1	1	NA	NA
+field assessment	19921	NA	2	ANTKAL0284	3160	1	1	NA	NA
+field assessment	19922	NA	2	ANTKAL0001	3160	1	1	NA	NA
+field assessment	19922	NA	2	ANTKAL0021	3160	1	1	NA	NA
+field assessment	19923	NA	2	ANTKAS0302	3130_aom	0	0	NA	NA
+field assessment	19926	NA	2	LIMZNH0150	3130_aom	1	1	NA	NA
+field assessment	19926	NA	2	LIMZNH0150	3130_na	1	1	NA	NA
+field assessment	19928	NA	2	ANTKAL0288	3160	1	1	NA	NA
+field assessment	19928	NA	2	ANTKAL0383	3160	1	1	NA	NA
+field assessment	19928	NA	2	OVLMOE0016	3150	1	1	NA	NA
+field assessment	19929	NA	2	ANTKAL0387	3160	1	1	NA	NA
+field assessment	19930	NA	2	ANTTUR0348	3130_aom	1	1	NA	NA
+field assessment	19930	NA	2	LIMBOC0019	3130_na	1	1	NA	NA
+field assessment	19930	NA	2	LIMBOC0019	3140	1	1	NA	NA
+field assessment	19940	NA	2	LIMZUT0080	3130_aom	1	1	NA	NA
+field assessment	19940	NA	2	LIMZUT0080	3140	0	1	NA	NA
+field assessment	19951	NA	2	ANTMOL0089	3130_aom	1	1	NA	NA
+field assessment	19951	NA	2	ANTMOL0089	3140	0	1	NA	NA
+field assessment	19951	NA	2	ANTMOL0089	3150	0	1	NA	NA
+field assessment	19954	NA	2	LIMBRE0073	3130_na	1	1	NA	NA
+field assessment	19954	NA	2	LIMBRE0073	3150	1	1	NA	NA
+field assessment	19954	NA	2	LIMMSK0444	3130_aom	1	1	NA	NA
+field assessment	19955	NA	2	ANTKAS0463	3130_aom	1	1	NA	NA
+field assessment	19955	NA	2	ANTKAS0463	3160	1	1	NA	NA
+field assessment	19956	NA	2	ANTKAL0385	3160	1	1	NA	NA
+field assessment	19956	NA	2	ANTKAL0386b	3130_aom	1	1	NA	NA
+field assessment	19956	NA	2	ANTKAL0386b	3160	1	1	NA	NA
+field assessment	19957	NA	2	LIMHHE0286	3130_aom	0	1	NA	NA
+field assessment	19957	NA	2	LIMHHE0286	3130_na	1	1	NA	NA
+field assessment	19957	NA	2	LIMHHE0286	3140	0	1	NA	NA
+field assessment	19957	NA	2	LIMZNH0043	3130_na	1	1	NA	NA
+field assessment	19957	NA	2	LIMZNH0043	3140	1	1	NA	NA
+field assessment	19958	NA	2	ANTBCT0464	3160	1	1	NA	NA
+field assessment	19958	NA	2	ANTBCT0525	3160	1	1	NA	NA
+field assessment	19958	NA	2	ANTBCT0698	3160	1	1	NA	NA
+field assessment	19958	NA	2	ANTHTS0151	3130_aom	1	1	NA	NA
+field assessment	19958	NA	2	ANTHTS0151	3160	1	1	NA	NA
+field assessment	19958	NA	2	ANTKAS0610	3160	1	1	NA	NA
+field assessment	19958	NA	2	ANTKAS0616	3160	1	1	NA	NA
+field assessment	19961	NA	2	ANTKAL0233	3160	1	1	NA	NA
+field assessment	19961	NA	2	ANTKAL0235	3160	1	1	NA	NA
+field assessment	19961	NA	2	ANTMEC0388	3130_na	1	1	NA	NA
+field assessment	19961	NA	2	ANTMEC0388	3140	1	1	NA	NA
+field assessment	19963	NA	2	ANTANT0480	3140	1	1	NA	NA
+field assessment	19964	NA	2	ANTDES0075	3150	0	0	NA	NA
+field assessment	19964	NA	2	ANTMOL0747	3130_aom	1	1	NA	NA
+field assessment	19964	NA	2	ANTMOL0747	3140	1	1	NA	NA
+field assessment	19964	NA	2	ANTMOL0747	3160	0	1	NA	NA
+field assessment	19965	NA	2	ANTBAA0044	3130_aom	1	1	NA	NA
+field assessment	19965	NA	2	ANTBAA0044	3130_na	0	1	NA	NA
+field assessment	19965	NA	2	ANTBAA0048	3130_aom	1	1	NA	NA
+field assessment	19965	NA	2	ANTBAA0048	3130_na	1	1	NA	NA
+field assessment	19965	NA	2	ANTBAA0048	3140	1	1	NA	NA
+field assessment	19965	NA	2	OVLBVN0461	3140	1	1	NA	NA
+field assessment	19965	NA	2	OVLBVN0463	3140	1	1	NA	NA
+field assessment	19968	NA	2	ANTKAL0386a	3130_aom	1	1	NA	NA
+field assessment	19968	NA	2	ANTKAL0386a	3160	1	1	NA	NA
+field assessment	19969	NA	2	LIMGNK0062	3130_aom	1	1	NA	NA
+field assessment	19969	NA	2	LIMGNK0062	3130_na	1	1	NA	NA
+field assessment	19969	NA	2	LIMGNK0062	3150	0	1	NA	NA
+field assessment	19969	NA	2	LIMGNK0182	3130_na	1	1	NA	NA
+field assessment	19970	NA	2	ANTKAS0501	3130_aom	1	1	NA	NA
+field assessment	19970	NA	2	ANTKAS0501	3130_na	1	1	NA	NA
+field assessment	19970	NA	2	ANTKAS0501	3160	1	1	NA	NA
+field assessment	19971	NA	2	LIMHAS0165	3130_aom	1	1	NA	NA
+field assessment	19971	NA	2	LIMHAS0165	3130_na	1	1	NA	NA
+field assessment	19971	NA	2	LIMHAS0462	3130_aom	1	1	NA	NA
+field assessment	19971	NA	2	LIMHAS0462	3130_na	1	1	NA	NA
+field assessment	19971	NA	2	LIMHAS0462	3140	0	1	NA	NA
+field assessment	19972	NA	2	LIMMGR0376	3130_aom	0	1	NA	NA
+field assessment	19972	NA	2	LIMMGR0376	3160	1	1	NA	NA
+field assessment	19976	NA	2	LIMZNH0516	3130_aom	1	1	NA	NA
+field assessment	19976	NA	2	LIMZNH0516	3130_na	1	1	NA	NA
+field assessment	19976	NA	2	LIMZNH0516	3140	1	1	NA	NA
+field assessment	19976	NA	2	LIMZNH0516	3150	0	1	NA	NA
+field assessment	19976	NA	2	LIMZNH0576	3130_aom	1	1	NA	NA
+field assessment	19976	NA	2	LIMZNH0576	3130_na	1	1	NA	NA
+field assessment	19976	NA	2	LIMZNH0576	3150	0	1	NA	NA
+field assessment	19977	NA	2	ANTBCT0275	3160	1	1	NA	NA
+field assessment	19978	NA	2	LIMDPB0311	3150	1	1	NA	NA
+field assessment	19978	NA	2	LIMDPB0315	3150	1	1	NA	NA
+field assessment	19978	NA	2	OVLBVN0462	3140	1	1	NA	NA
+field assessment	19978	NA	2	OVLBVN0465	3140	1	1	NA	NA
+field assessment	19979	NA	2	LIMZNH0318	3130_aom	1	1	NA	NA
+field assessment	19979	NA	2	LIMZNH0318	3160	1	1	NA	NA
+field assessment	19982	NA	2	LIMLOM0067	3130_aom	1	1	NA	NA
+field assessment	19982	NA	2	LIMLOM0067	3130_na	1	1	NA	NA
+field assessment	19982	NA	2	LIMLOM0067	3150	0	1	NA	NA
+field assessment	19985	NA	2	ANTBCT0019	3130_aom	0	1	NA	NA
+field assessment	19985	NA	2	ANTBCT0019	3160	1	1	NA	NA
+field assessment	19985	NA	2	ANTBCT0136	3160	0	0	NA	NA
+field assessment	19986	NA	2	ANTKAL0384	3160	1	1	NA	NA
+field assessment	19990	NA	2	LIMLUM0210	3150	1	1	NA	NA
+field assessment	19991	NA	2	ANTMOL0068	3130_aom	1	1	NA	NA
+field assessment	19991	NA	2	ANTMOL0068	3140	1	1	NA	NA
+field assessment	19992	NA	2	LIMKIN0231	3140	1	1	NA	NA
+field assessment	19992	NA	2	LIMKIN0231	3150	1	1	NA	NA
+field assessment	19999	NA	2	ANTMRK0228	3130_na	1	1	NA	NA
+field assessment	19999	NA	2	ANTMRK0228	3140	1	1	NA	NA
+field assessment	19999	NA	2	ANTMRK0228	3150	1	1	NA	NA
+field assessment	20213	NA	2	ANTANT0315	3140	1	1	NA	NA
+field assessment	20217	NA	2	ANTKAS0033	3160	1	1	NA	NA
+field assessment	20217	NA	2	LIMTON0188	3140	0	0	NA	NA
+field assessment	20220	NA	2	ANTKAS0105	3130_aom	1	1	NA	NA
+field assessment	20220	NA	2	ANTKAS0105	3150	0	1	NA	NA
+field assessment	20220	NA	2	ANTTUR0142	3150	1	1	NA	NA
+field assessment	20242	NA	2	ANTRUM0038	3140	1	1	NA	NA
+field assessment	20244	NA	2	ANTMOL0165	3130_na	1	1	NA	NA
+field assessment	20244	NA	2	ANTMOL0165	3140	1	1	NA	NA
+NA	20251	NA	2	LIMGNK0025	3150	NA	NA	short term	te hoge waterstand
+field assessment	20251	NA	2	LIMGNK0119	3130_aom	1	1	NA	NA
+field assessment	20251	NA	2	LIMGNK0119	3130_na	1	1	NA	NA
+field assessment	20251	NA	2	LIMGNK0119	3140	1	1	NA	NA
+field assessment	20251	NA	2	LIMGNK0182	3130_na	1	1	short term	(grotendeels) drooggevallen
+field assessment	20251	NA	2	LIMGNK0182	3140	0	1	short term	(grotendeels) drooggevallen
+field assessment	20252	NA	2	ANTOTH0015	3130_aom	0	0	NA	NA
+field assessment	20259	NA	2	ANTBAA0046	3130_na	1	1	NA	NA
+field assessment	20259	NA	2	ANTBAA0046	3140	1	1	NA	NA
+field assessment	20262	NA	2	ANTHST0508	3130_aom	1	1	NA	NA
+field assessment	20265	NA	2	OVLBLE0280	3150	1	1	NA	NA
+field assessment	20279	NA	2	OVLBLE0077	3150	0	0	NA	NA
+field assessment	20283	NA	2	ANTGEE0193	3150	1	1	NA	NA
+field assessment	20286	NA	2	VBRSZI0277	3150	1	1	NA	NA
+field assessment	20287	NA	2	ANTARE0286	3150	1	1	NA	NA
+field assessment	20287	NA	2	LIMBOC0026	3140	1	1	NA	NA
+NA	20287	NA	2	LIMBOC0078	3140	NA	NA	short term	(grotendeels) drooggevallen
+NA	20287	NA	2	LIMBRE0185	3130_aom	NA	NA	short term	(grotendeels) drooggevallen
+field assessment	20294	NA	2	ANTMRK0285	3130_aom	1	1	short term	(grotendeels) drooggevallen
+field assessment	20294	NA	2	ANTMRK0285	3130_na	1	1	short term	(grotendeels) drooggevallen
+field assessment	20294	NA	2	LIMHHE0001	3160	1	1	NA	NA
+field assessment	20294	NA	2	LIMHHE0375	3160	1	1	NA	NA
+NA	20297	NA	2	LIMHAS0544	3130_na	NA	NA	short term	(grotendeels) drooggevallen
+field assessment	20297	NA	2	LIMZNH0105	3130_aom	1	1	NA	NA
+field assessment	20297	NA	2	LIMZNH0105	3130_na	1	1	NA	NA
+NA	20297	NA	2	LIMZNH0432	3130_aom	NA	NA	short term	(grotendeels) drooggevallen
+NA	20297	NA	2	LIMZNH0432	3130_na	NA	NA	short term	(grotendeels) drooggevallen
+field assessment	20299	NA	2	LIMMSK0456	3140	1	1	NA	NA
+field assessment	20299	NA	2	LIMMSK0456	3150	1	1	NA	NA
+NA	20304	NA	2	WVLJAB0436	3130_aom	NA	NA	short term	(grotendeels) drooggevallen
+field assessment	20304	NA	2	WVLZED0215	3130_aom	0	0	NA	NA
+field assessment	20307	NA	2	ANTMOL0720	3130_aom	1	1	NA	NA
+field assessment	20307	NA	2	ANTMOL0720	3130_na	1	1	NA	NA
+field assessment	20307	NA	2	WVLBRU1212	3150	0	0	NA	NA
+field assessment	20308	NA	2	OVLGNT0211	3130_aom	0	0	NA	NA
+field assessment	20313	NA	2	ANTRAV0369	3130_aom	1	1	NA	NA
+field assessment	20314	NA	2	ANTBCT0508	3160	1	1	NA	NA
+field assessment	20319	NA	2	LIMGNK0066	3130_aom	1	1	NA	NA
+field assessment	20319	NA	2	LIMGNK0066	3130_na	1	1	NA	NA
+field assessment	20319	NA	2	LIMGNK0066	3150	1	1	NA	NA
+field assessment	20319	NA	2	LIMGNK0066	3160	0	1	NA	NA
+field assessment	20328	NA	2	WVLKNO0126	2190_a	0	0	NA	NA
+NA	20328	NA	2	WVLKNO0265	2190_a	NA	NA	short term	(grotendeels) drooggevallen
+NA	20328	NA	2	WVLKNO0388	2190_a	NA	NA	short term	(grotendeels) drooggevallen
+field assessment	20332	NA	2	ANTMAL0136	3130_na	1	1	NA	NA
+field assessment	20350	NA	2	LIMBIL0336	3130_aom	1	1	NA	NA
+field assessment	20350	NA	2	LIMBIL0336	3130_na	1	1	NA	NA
+field assessment	20350	NA	2	OVLALT0344	3130_aom	1	1	NA	NA
+field assessment	20350	NA	2	OVLALT0344	3130_na	1	1	NA	NA
+field assessment	20353	NA	2	OVLBLE0018	3140	1	1	NA	NA
+field assessment	20363	NA	2	WVLDIK0110	3150	0	0	short term	(grotendeels) drooggevallen
