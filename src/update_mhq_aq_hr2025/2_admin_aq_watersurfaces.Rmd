@@ -78,7 +78,8 @@ assessments_cycle2 <- assessments_cycle2 %>%
                                   ifelse(type_observed == "3130a", "3130_aom", type_observed)),
            assessment_source = ifelse(str_detect(screening, "gh") & !is.na(screening), "orthophoto", "field assessment"),
            inaccessible = ifelse(reason_not_measurable == "geen toestemming om te betreden", "long term", NA),
-           not_measurable = ifelse(reason_not_measured == "tijdelijk ongeschikt", "short term", NA))
+           not_measurable = ifelse(reason_not_measured == "tijdelijk ongeschikt", "short term", NA),
+           is_valid_type = type_observed %in% c(as.character(types$type), "gh"))
 ```
 
 -   Create records for target types that are absent.
