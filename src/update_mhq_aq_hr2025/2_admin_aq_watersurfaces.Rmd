@@ -155,7 +155,7 @@ The previous versions of `mhq_watersurfaces_assessments`:
 -   version 2023: all assessments in the first monitoring cycle
     -   generated with script `20_admin_standingwater.Rmd` in `habitatwatersurfaces_cycle1/src` folder of` n2khab-mhq-design` github repo
     -   note that watersurfaces have been visited for abiotic and biotic measurements in different years
-    and that the assessment date corresponds with the first visit (usely for abiotic measurements)
+    and that the assessment date corresponds with the first visit (usually for abiotic measurements)
 -   version 2024: addition of rejected sampling units after desktop screening of selected sampling units
 in the second monitoring cycle
 
@@ -213,7 +213,7 @@ assessments_update <- assessments_cycle1 %>%
 ### Check
 
 -   Check reference points:
-    -   polygong_id `683951_v2014` has no reference point.
+    -   polygon_id `683951_v2014` has no reference point.
     It is not clear where it comes from as it is absent in watersurfaces_hab (v3 to v6) en the habitatmap
     -   we remove it from 'mhq_watersurfaces_assessments'
     
