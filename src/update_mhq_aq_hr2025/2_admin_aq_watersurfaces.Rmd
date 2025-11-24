@@ -2,9 +2,9 @@
 
 ## Read admin data
 
-The file `voortgang_mhq_watersurfaces_2025-10-07.csv` in [this google drive](https://drive.google.com/drive/folders/19NsppwrC47ZAjv8Ndoh6aChkdud801T2).
+The file `voortgang_mhq_watersurfaces_2025-10-13.csv` is in [this google drive](https://drive.google.com/drive/folders/19NsppwrC47ZAjv8Ndoh6aChkdud801T2).
 
-It is the '2025-10-07' version of [this google sheet](https://docs.google.com/spreadsheets/d/1A0SUXxbs7Z4TB_lNPH11Wj0fTuFA9mfRslX-LzD4Rds/edit?gid=1191658174#gid=1191658174) in which the fieldwork progress of the 2nd monitoring cycle of mhq watersurfaces is documented.
+It is the '2025-10-13' version of [this google sheet](https://docs.google.com/spreadsheets/d/1A0SUXxbs7Z4TB_lNPH11Wj0fTuFA9mfRslX-LzD4Rds/edit?gid=1191658174#gid=1191658174) in which the fieldwork progress of the 2nd monitoring cycle of mhq watersurfaces is documented.
 
 ```{r}
 
@@ -78,7 +78,8 @@ assessments_cycle2 <- assessments_cycle2 %>%
                                   ifelse(type_observed == "3130a", "3130_aom", type_observed)),
            assessment_source = ifelse(str_detect(screening, "gh") & !is.na(screening), "orthophoto", "field assessment"),
            inaccessible = ifelse(reason_not_measurable == "geen toestemming om te betreden", "long term", NA),
-           not_measurable = ifelse(reason_not_measured == "tijdelijk ongeschikt", "short term", NA))
+           not_measurable = ifelse(reason_not_measured == "tijdelijk ongeschikt", "short term", NA),
+           is_valid_type = type_observed %in% c(as.character(types$type), "gh"))
 ```
 
 -   Create records for target types that are absent.
@@ -154,7 +155,7 @@ The previous versions of `mhq_watersurfaces_assessments`:
 -   version 2023: all assessments in the first monitoring cycle
     -   generated with script `20_admin_standingwater.Rmd` in `habitatwatersurfaces_cycle1/src` folder of` n2khab-mhq-design` github repo
     -   note that watersurfaces have been visited for abiotic and biotic measurements in different years
-    and that the assessment date corresponds with the first visit (usely for abiotic measurements)
+    and that the assessment date corresponds with the first visit (usually for abiotic measurements)
 -   version 2024: addition of rejected sampling units after desktop screening of selected sampling units
 in the second monitoring cycle
 
@@ -212,7 +213,7 @@ assessments_update <- assessments_cycle1 %>%
 ### Check
 
 -   Check reference points:
-    -   polygong_id `683951_v2014` has no reference point.
+    -   polygon_id `683951_v2014` has no reference point.
     It is not clear where it comes from as it is absent in watersurfaces_hab (v3 to v6) en the habitatmap
     -   we remove it from 'mhq_watersurfaces_assessments'
     
