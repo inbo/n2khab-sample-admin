@@ -3,11 +3,12 @@
   optimize: yes
   NA string: NA
   sorting:
+  - mhq_cycle
   - assessment_date
   - polygon_id
   - type
-  hash: f636693f0bafe0fe0ead790ce51594e94a225383
-  data_hash: 44f2cc6fba1a06b9aea5d445bf9f9f1eaaddcbce
+  hash: ebe70f51ed67e330b4bdaa50084ed04d51f9ac4d
+  data_hash: 5157e4cfce67260cb31ccf3e4289541473832499
 mhq_cycle:
   class: numeric
   digits: 6
