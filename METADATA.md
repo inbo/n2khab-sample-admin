@@ -132,11 +132,12 @@ The table has following variables:
     Note that different types can be present in the same watersurface.
     + `FALSE` if the evaluated type was not observed.
     Note that we only add records with `is_present` = `FALSE` for the target types of the MHQ sampling unit.
-    All other 31xx habitat types that are not listed in a certain assessment can be considered absent.
+    All other 31xx habitat types and habitat type 2190_a that are not listed in a certain assessment can be considered absent.
+    The presence of regionally import biotope (rib) types was not evaluated.
     + `NA` if no assessment could be performed (inaccessible) or if the type’s presence is unknown
 + `no_habitat`:
-    + `TRUE` if no habitat type was observed, although a regional import biotope (rib) type might be present (the presence of rib types was not evaluated)
-    + `FALSE` when any type is present,
+    + `TRUE` if no habitat type was observed, although a rib type might be present
+    + `FALSE` when any type is present
     + `NA` when the evaluated type is absent or unknown and it is not known if any other type is present (in case the point is inaccessible)
 + `assessment_source`: `field assessment` or `orthophoto`
 + `inaccessible`: `long term` or `short term`
