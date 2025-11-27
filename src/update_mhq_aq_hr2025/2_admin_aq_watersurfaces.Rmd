@@ -86,10 +86,10 @@ assessments_cycle2 <- assessments_cycle2 %>%
 Two cases occur:
     -   `type_observed` = `gh`
         -   `is_present` is `FALSE` for all target types
-        -   `any_habitat` is `FALSE`
+        -   `no_habitat` is `TRUE`
     -   one or more types are observed but not all target types
         -   `is_present` is `FALSE` for the target types that are not observed
-        -   `any_habitat` is `TRUE`
+        -   `no_habitat` is `FALSE`
 
 ```{r}
 
@@ -97,7 +97,7 @@ assessments_cycle2_is_present <- assessments_cycle2 %>%
     filter(str_sub(type_observed, 1, 2) == "31" |
                type_observed == "2190_a") %>%
     mutate(is_present = TRUE,
-           any_habitat = TRUE)
+           no_habitat = FALSE)
 
 # in case a 31xx habitat is observed but another 31xx target habitat is not observed
 assessments_cycle2_target_absent <- assessments_cycle2 %>%
@@ -106,7 +106,7 @@ assessments_cycle2_target_absent <- assessments_cycle2 %>%
     separate_longer_delim(cols = type_observed, delim =  "; ") %>%
     anti_join(assessments_cycle2_is_present, by = c("polygon_id", "type_observed")) %>%
     mutate(is_present = FALSE,
-           any_habitat = TRUE,
+           no_habitat = FALSE,
            lsvi_measurement = FALSE) %>%
     unique()
     
@@ -115,14 +115,14 @@ assessments_cycle2_gh <- assessments_cycle2 %>%
     separate_longer_delim(cols = type_target, delim =  "; ") %>%
     mutate(type_observed = type_target,
            is_present = FALSE,
-           any_habitat = FALSE)
+           no_habitat = TRUE)
 
 assessments_cycle2_unknown <- assessments_cycle2 %>%
     filter(is.na(type_observed)) %>%
     separate_longer_delim(cols = type_target, delim =  "; ") %>%
     mutate(type_observed = type_target,
            is_present = NA,
-           any_habitat = NA,
+           no_habitat = NA,
            assessment_source = NA)
 
 assessments_cycle2 <-  assessments_cycle2_is_present %>%
@@ -133,7 +133,7 @@ assessments_cycle2 <-  assessments_cycle2_is_present %>%
 
 assessments_cycle2_stdz <- assessments_cycle2 %>%
     mutate(mhq_cycle = 2) %>%
-    select(mhq_cycle, assessment_date, polygon_id, type = type_observed, is_present, any_habitat, assessment_source, inaccessible, not_measurable, reason_not_measurable)
+    select(mhq_cycle, assessment_date, polygon_id, type = type_observed, is_present, no_habitat, assessment_source, inaccessible, not_measurable, reason_not_measurable)
 
 ```
 
@@ -147,14 +147,14 @@ Some checks:
     filter(n() > 1) %>%
     nrow()) == 0
 ```
--   If `any_habitat` = `TRUE`, we should have at least one record with `is_present` = `TRUE`
+-   If `no_habitat` = `FALSE`, we should have at least one record with `is_present` = `TRUE`
 
 ```{r}
 (assessments_cycle2_stdz %>%
     group_by(polygon_id) %>%
-    mutate(any_habitat_check = any(is_present)) %>%
+    mutate(no_habitat_check = !any(is_present)) %>%
     ungroup() %>%
-    filter(any_habitat_check != any_habitat) %>%
+    filter(no_habitat_check == no_habitat) %>%
      nrow()) == 0
 ```
 -   All polygon_id's in the original table are persent in the standardized table
@@ -180,7 +180,7 @@ in the second monitoring cycle
 # alles van cyclus 1: assessment_date = minimum van datum biotische en datum abiotische opname
 path_ws_c1 <- file.path(fileman_up("n2khab-mhq-design"), "habitatwatersurfaces_cycle1/output")
 
-assessments_cycle1 <- read_vc(file = "mhq_watersurfaces_assessments", path_ws_c1)
+assessments_cycle1_orig <- read_vc(file = "mhq_watersurfaces_assessments", path_ws_c1)
 measurements_cycle1 <- read_vc(file = "mhq_watersurfaces_measurements", path_ws_c1)
 refpoints_v5 <- read_vc(file = "watersurfaces_refpoints", path_ws_c1) 
 
@@ -188,7 +188,7 @@ measurements_cycle1_biotic <- measurements_cycle1 %>%
     filter(measurement_type == "biotic") %>%
     distinct(polygon_id, measurement_date)
 
-compare_date <- assessments_cycle1 %>%
+compare_date <- assessments_cycle1_orig %>%
     left_join(measurements_cycle1_biotic, by = "polygon_id")
 
 path_ws_c2 <- file.path(fileman_up("n2khab-mhq-design"), "habitatwatersurfaces_cycle2/output")
@@ -199,7 +199,7 @@ popunits <- read_vc(file = "mhq_watersurfaces_populationunits", path_ws_c2)
 
 assessments_cycle1 <- assessments_cycle1_bis %>%
     group_by(polygon_id, assessment_date) %>%
-    mutate(any_habitat = any(is_present)) %>%
+    mutate(no_habitat = !any(is_present)) %>%
     ungroup() %>%
     mutate(mhq_cycle = ifelse(year(assessment_date) >= 2024, 2, 1))
 ```
@@ -290,11 +290,11 @@ if (!dir.exists(file.path(data_path, "v2023"))) {
     
 }
 
-assessments_cycle1 %>%
-    select(-mhq_cycle) %>%
+assessments_cycle1_orig %>%
     write_vc(file = "mhq_watersurfaces_assessments",
              root = file.path(data_path, "v2023"),
-             sorting = c("assessment_date", "polygon_id", "type"))
+             sorting = c("assessment_date", "polygon_id", "type"),
+             strict = FALSE)
 ```
 
 ```{r}
@@ -322,9 +322,10 @@ if (!dir.exists(file.path(data_path, "v2025"))) {
 }
 
 assessments_update %>%
+    select(mhq_cycle, assessment_date, polygon_id, type, is_present, no_habitat, assessment_source, inaccessible, not_measurable, reason_not_measurable) %>%
     write_vc(file = "mhq_watersurfaces_assessments",
              root = file.path(data_path, "v2025"),
-             sorting = c("assessment_date", "polygon_id", "type"),
+             sorting = c("mhq_cycle", "assessment_date", "polygon_id", "type"),
              strict = FALSE)
 ```
 
@@ -568,7 +569,14 @@ check_missing_inboveg %>%
     datatable(rownames = FALSE,
               filter = "top")
 ```
+There are also measurements in INBOVEG that are not mentioned in the admin table (combination of `measurement_date`, `polygon_id`, `type` does not occur).
 
+We first check if the watersurface is included in the sample of the second monitoring cycle.
+For this we use the gpkg `mhq_standingwater_cycle2_2024-04-17.gpkg` which can be found in [this google drive folder](https://drive.google.com/drive/folders/1Nz6_QApHBdeg4oBmUlAcsgoEQQe3m9xI).
+
+We also determine the strata (`in_sac` and `area_class`) of the watersurfaces, as in some strata we measure all watersurfaces.
+All measurements in these strata are relevant for mhq.
+We determine the strata based on [version 2024 of the `watersurfaces` data source](https://zenodo.org/records/14203168).
 
 ```{r}
 mhq_watersurfaces_cycle2_sf <- st_read("../../data/design_cycle2/mhq_standingwater_cycle2_2024-04-17.gpkg")
@@ -622,8 +630,7 @@ check_missing_admin <- ws_inboveg %>%
 
 ```
 
-There are also measurements in INBOVEG that are not mentioned in the admin table.
-Mostly watersurfaces not included in the sample of mhq cycle 2, except for the measurements in the table below.
+For following measurements, the watersurfaces are included in the sample of mhq cycle 2.
 
 ```{r}
 check_missing_admin %>%
@@ -655,7 +662,7 @@ All other measurements:
 check_missing_admin %>%
     filter(!ws_in_c2) %>%
     filter(!ws_integraal) %>%
-    arrange(measurement_date) %>%
+    arrange(desc(measurement_date)) %>%
     select(polygon_id, location, area_class, type_observed = type, measurement_date, recording_givid, suitable_mhq) %>%
     datatable(rownames = FALSE,
               filter = "top")
@@ -666,7 +673,9 @@ check_missing_admin %>%
 #### Correct assessment date based on measurement date
 
 The admin table in cycle 1 only contains the year and not the exact date of the assessments.
+Therefore the assessment date was set as year-01-01 
 INBOVEG does contain the exact measurement date.
+We correct the assessment date based on the measurement date (for those watersurfaces that were assessed and measured).
 
 ```{r}
 assessments_update_corr_date <- assessments_update %>%
@@ -685,15 +694,18 @@ assessments_update <- assessments_update %>%
 #### Additional assessments based on measurements
 
 The admin table of cycle1 conains per location the date of the biotic and abiotic measurments.
-The minimum of both was added to the assessment table.
-Yet both dates are relvant as often there are several years between both measurement types.
+The minimum of both dates was added to the assessment table.
+In general this was the date of the abiotic measurement.
+
+However both dates are relevant, as often there are several years between both measurement types.
+We add the date of the measurement that was not included in the previous version of the assessment table, and consider this as an additional assessment.
 
 ```{r}
 new_assessments <- measurements_cycle1 %>%
     filter(year(assessment_date) != year(measurement_date)) %>%
     select(polygon_id, type, assessment_date = measurement_date) %>%
     mutate(is_present = TRUE,
-           any_habitat = TRUE,
+           no_habitat = FALSE,
            assessment_source = "field assessment",
            mhq_cycle = 1)  %>%
     anti_join(assessments_update, by = c("polygon_id", "type", "assessment_date"))
@@ -715,7 +727,7 @@ We also add assessments that are missing in the admin table.
 mhq_assessmnets_add_presence <- check_missing_admin %>%
     select(polygon_id, type, assessment_date = measurement_date) %>%
     mutate(is_present = TRUE,
-           any_habitat = TRUE,
+           no_habitat = FALSE,
            assessment_source = "field assessment",
            mhq_cycle = ifelse(year(assessment_date) < 2022, 1, 2)) %>%
     anti_join(assessments_update, by = c("polygon_id", "type", "assessment_date"))
@@ -725,6 +737,7 @@ check <- check_missing_admin %>%
     inner_join(assessments_update, by =  c("polygon_id", "type", "assessment_date"))
 
 assessments_update2 <- assessments_update %>%
+    select(mhq_cycle, assessment_date, polygon_id, type, is_present, no_habitat, assessment_source, inaccessible, not_measurable, reason_not_measurable) %>%
     bind_rows(mhq_assessmnets_add_presence) %>%
     arrange(mhq_cycle, assessment_date, polygon_id, type)
 
@@ -776,16 +789,40 @@ check <- measurements_update %>%
     filter(n() > 1)
 
 measurements_update  %>%
+    select(mhq_cycle, measurement_date, polygon_id, type, user_reference, recording_givid) %>%
     write_vc(file = "mhq_watersurfaces_measurements",
              root = data_path,
              sorting = c("measurement_date", "polygon_id", "type"),
              strict = FALSE)
 
 measurements_update  %>%
+    select(mhq_cycle, measurement_date, polygon_id, type, user_reference, recording_givid) %>%
     write_vc(file = "mhq_watersurfaces_measurements",
              root = file.path(data_path, "v2025"),
              sorting = c("measurement_date", "polygon_id", "type"),
              strict = FALSE)
 
 ```
+## Overview checksums
+
+```{r}
+
+hashes_data <-
+    tibble(filepath = str_c(data_path, "/",
+        list.files(path = data_path,
+            recursive = TRUE)
+      )) %>%
+    mutate(filename = str_match(filepath, "(.+\\/)*(.+)")[,3],
+           md5 = map(filepath, function(x) {
+                           file(x) %>% md5 %>% str_c(collapse = '')
+                         }) %>% as.character) %>%
+    filter(str_detect(filename, "measure|assess")) %>%
+    mutate(filepath = str_remove(filepath, "../../"),
+           folder = str_remove(filepath, filename)) %>%
+    select(folder, filename, md5)
+
+hashes_data %>%
+    kbl()
+```
+
 

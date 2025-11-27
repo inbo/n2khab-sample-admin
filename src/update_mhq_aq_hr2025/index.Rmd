@@ -48,10 +48,11 @@ library(DT)
 library(units)
 library(terra)
 library(leaflet)
+library(openssl)
 
 opts_chunk$set(
   warning = FALSE,
-  cache = TRUE,
+  cache = FALSE,
   echo = TRUE,
   dpi = 300
 )
