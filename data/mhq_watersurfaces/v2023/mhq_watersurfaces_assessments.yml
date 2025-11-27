@@ -6,8 +6,8 @@
   - assessment_date
   - polygon_id
   - type
-  hash: 61552552a303d3912e8c6b45c7384cebf02b69ce
-  data_hash: 7f5ff7ac02c54503a769011c1b26d0f21bd1e2a0
+  hash: 7f7052b388b40dd817e4dd3849a3a9eb058aef56
+  data_hash: abeb3cd0409328e34e02cf3f198280e9a9714379
 assessment_date:
   class: Date
   origin: '1970-01-01'
@@ -242,9 +242,9 @@ type:
   ordered: no
 is_present:
   class: logical
-any_habitat:
-  class: logical
 assessment_source:
   class: character
 inaccessible:
   class: character
+any_habitat:
+  class: logical
