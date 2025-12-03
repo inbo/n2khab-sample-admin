@@ -312,7 +312,7 @@ mhq_streams_popunits <-  mhq_streams_refpoints %>%
            is_active = ifelse(!is.na(inaccessible) & inaccessible == "short term", TRUE, is_active),
            is_active = ifelse(!is.na(not_measurable) & not_measurable == "long term", FALSE, is_active),
            is_active = ifelse(!is.na(not_measurable) & not_measurable == "short term", TRUE, is_active)) %>%
-    select(point_code, grts_ranking, grts_ranking_draw, sac_streams, legacy_site, type, segment_id, is_active, date = assessment_date) %>%
+    select(point_code, grts_ranking, grts_ranking_draw, sac_streams, legacy_site, type, segment_id, db_ref, is_active, date = assessment_date) %>%
     mutate(sac_streams = factor(ifelse(segment_id == "1_4_772", "outside", as.character(sac_streams))),
            legacy_site = FALSE,
            type = "3260",

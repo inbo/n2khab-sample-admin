@@ -3,11 +3,12 @@
   optimize: yes
   NA string: NA
   sorting:
+  - mhq_cycle
   - assessment_date
   - polygon_id
   - type
-  hash: f636693f0bafe0fe0ead790ce51594e94a225383
-  data_hash: e62c9ebe2e8ed1039aa2a1e3705a34aa6058ff01
+  hash: 17ba71bf7d09ef6c85eed9085222ee59be51da70
+  data_hash: 372a49350adae6f18d40ad8c1693a95d2ba2866f
 mhq_cycle:
   class: numeric
   digits: 6
@@ -20,8 +21,6 @@ type:
   class: character
 is_present:
   class: logical
-any_habitat:
-  class: logical
 assessment_source:
   class: character
 inaccessible:
@@ -30,3 +29,5 @@ not_measurable:
   class: character
 reason_not_measurable:
   class: character
+no_habitat:
+  class: logical
