@@ -554,6 +554,10 @@ check_is_present <- assessments_cycle2_stdz %>%
 check_is_present %>%
     select(assessment_date, polygon_id, type, is_present, measurement_date, suitable_mhq, measured) %>%
     datatable(rownames = FALSE)
+
+check_is_present %>%
+    select(assessment_date, polygon_id, type, is_present, measurement_date, recording_givid, suitable_mhq, measured) %>%
+    write_csv2("../../output/mhq_watersurfaces_check1.csv")
     
 ```
 
@@ -641,6 +645,18 @@ check_missing_admin %>%
     arrange(desc(measurement_date)) %>%
     datatable(rownames = FALSE,
               filter = "top")
+```
+
+```{r}
+check_missing_admin %>%
+    filter(ws_in_c2) %>%
+    arrange(measurement_date) %>%
+    select(polygon_id, location, type_observed = type, measurement_date, recording_givid, suitable_mhq, type_target) %>%
+    filter(year(measurement_date) >= 2025) %>%
+    filter(str_detect(type_target, as.character(type_observed))) %>%
+    anti_join(check_is_present, by = "polygon_id") %>%
+    filter(polygon_id != "LIMGNK0182") %>%
+    write_csv2("../../output/mhq_watersurfaces_check2.csv")
 ```
 
 Some additional measurements belong to strata which are fully measured (type 3110 and watersurfaces >= 50 ha):
