@@ -1,5 +1,5 @@
 ..generic:
-  git2rdata: 0.5.0
+  git2rdata: 0.5.1
   optimize: no
   NA string: NA
   sorting:
@@ -11,7 +11,7 @@
   - stratum
   - grts_address
   hash: 439f6f1a54ec13aa34d9826de72c05018754f8ca
-  data_hash: 082b764f8971bfb84a113370a9c0503d38005d55
+  data_hash: e62f63acbf73d09b3713ff729ff132477f06ccdd
 scheme:
   class: factor
   labels:
