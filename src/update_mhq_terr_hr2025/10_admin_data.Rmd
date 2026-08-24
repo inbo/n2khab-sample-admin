@@ -28,30 +28,29 @@ These tables contain the originally selected sampling units and the assessments 
 
 ```{r}
 
+path_mhq_terr <- "../../data/mhq_terr/v2024"
+
 mhq_terr_assessments <- read_vc("mhq_terr_assessments", 
-                                root = "../../data/mhq_terr")
+                                root = path_mhq_terr)
 
 mhq_terr_refpoints <- read_vc("mhq_terr_refpoints", 
-                                root = "../../data/mhq_terr") 
-
-# mhq_terr_refpoints_check_update <- read_vc("mhq_terr_refpoints_check_update", 
-#                                 root = "../../data")
+                                root = path_mhq_terr) 
     
 mhq_terr_measurements <- read_vc("mhq_terr_measurements", 
-                                root = "../../data/mhq_terr")
+                                root = path_mhq_terr)
 
 mhq_terr_measurements_validation <- read_vc("mhq_terr_measurements_validation", 
-                                root = "../../data/mhq_terr")
+                                root = path_mhq_terr)
 
 mhq_terr_popunits <- read_vc("mhq_terr_popunits", 
-                                root = "../../data/mhq_terr")
+                                root = path_mhq_terr)
 ```
 
 + Read google sheet data with mhq inbo assessments admin
 
 The INBO fieldwork coordinator uses [this googlesheet](https://docs.google.com/spreadsheets/d/1WkGPPYTb1Xytg5kJeOSxLvt3PUdFjlpPb4rwYG9znys/) to document which sampling units have been assessed.
 
-```{r, eval = TRUE}
+```{r, eval = FALSE}
 gs4_deauth()
 
 assessments_admin_inbo <- read_sheet(
@@ -62,6 +61,21 @@ assessments_admin_inbo <- read_sheet(
 assessments_admin_inbo <- assessments_admin_inbo %>%
     filter(!is.na(assessment_date)) %>%
     mutate(db_ref_orig = db_ref,
+        db_ref = ifelse(nchar(db_ref_orig) > 5 & str_detect(db_ref_orig, "_"), str_sub(db_ref_orig, end = str_locate(db_ref_orig, "_") - 1), db_ref_orig)
+       ) %>%
+    filter(fieldwork_team == "inbo" | is.na(fieldwork_team))
+
+```
+```{r, eval = TRUE}
+
+assessments_admin_inbo <- read_csv2("../../data/admin_mhq_terr/voortgang_mhq_terrestrisch_2025-12-03.csv")
+
+assessments_admin_inbo <- assessments_admin_inbo %>%
+    select(-starts_with("...")) %>%
+    filter(!is.na(assessment_date)) %>%
+    mutate(db_ref_orig = db_ref,
+           assessment_date = as.Date(assessment_date, format = "%d-%m-%Y"),
+           grts_ranking_draw = as.numeric(grts_ranking_draw),
         db_ref = ifelse(nchar(db_ref_orig) > 5 & str_detect(db_ref_orig, "_"), str_sub(db_ref_orig, end = str_locate(db_ref_orig, "_") - 1), db_ref_orig)
        ) %>%
     filter(fieldwork_team == "inbo" | is.na(fieldwork_team))
@@ -298,50 +312,7 @@ mhq_terr_refpoints_update <- mhq_terr_refpoints_corrected %>%
     bind_rows(mhq_terr_refpoints_anb_new)
 ```
 
-
-
 # Update assessments
-
-```{r, eval = FALSE}
-new_point_code <- mhq_terr_refpoints_check_update %>%
-    anti_join(mhq_terr_refpoints, by = "point_code")
-
-assessments_admin_basic <- assessments_admin %>%
-    mutate(db_ref = ifelse(db_ref_orig %in% check_measurements_doubles$db_ref, db_ref_orig, db_ref)) %>%
-    # mutate(point_code_original = ifelse(point_code %in% c(reference_points_update$point_code, su_2021$point_code), point_code,
-    #                                     str_c(str_sub(point_code, end = -2), "1"))) %>%
-    group_by(point_code, inaccessible) %>%
-    mutate(lsvi_measurement = any(lsvi_measurement),
-           check_type_observed = any(!is.na(type_observed))) %>%
-    ungroup() %>%
-    filter(!(is.na(type_observed) & check_type_observed)) %>%
-    filter((!reassessment_1) | is.na(reassessment_1)) %>%
-    distinct(fieldwork_team, point_code, db_ref, assessment_source, assessment_date, inaccessible, lsvi_measurement, type_observed,reassessment_1, relocation) %>%
-    # select(fieldwork_team, point_code = point_code_original, everything()) %>%
-    group_by(fieldwork_team, point_code) %>%
-    mutate(n_points = n()) %>%
-    ungroup() %>%
-    mutate(point_type = ifelse(point_code %in% new_point_code$point_code, "replacement", "original"))
-    # group_by(fieldwork_team, db_ref) %>%
-    # mutate(n_db_ref = n(db_ref)) %>%
-    # ungroup() %>%
-    # mutate(db_ref = ifelse(n_db_ref >= 2 & !is.na(type_observed), str_c(db_ref, "_", type_observed), db_ref)) %>%
-    # unique()
-
-check_doublepoint_code <- assessments_admin_basic %>%
-    filter(n_points >= 2)
-
-check_double_db_ref <- assessments_admin_basic %>%
-    group_by(fieldwork_team, db_ref) %>%
-    mutate(n_db_ref = n(),
-           n_measurement = sum(lsvi_measurement)) %>%
-    ungroup() %>%
-    filter(n_db_ref >= 2 & n_measurement >= 2)
-
-check <- assessments_admin_basic %>%
-    anti_join(reference_points_update, by = "point_code")
-
-```
 
 ## Assessments INBO
 
@@ -851,20 +822,6 @@ refpoints_assessed_all <- refpoints_assessed_all %>%
     anti_join(add_subtype_observed, by = c("point_code", "assessment_date")) %>%
     bind_rows(add_subtype_observed)
 
-# original_coordinates_replacement <- mhq_terr_refpoints %>%
-#     filter(is_centroid) %>%
-#     select(grts_ranking, x_orig = x, y_orig = y) %>%
-#     unique()
-# 
-# check <- original_coordinates_replacement %>% 
-#     group_by(grts_ranking) %>%
-#     filter(n() > 1)
-# 
-# refpoints_assessed_all <- refpoints_assessed_all %>%
-#     left_join(original_coordinates_replacement, by = "grts_ranking") %>%
-#     mutate(x = ifelse(!is.na(x_orig), x_orig, x),
-#            y = ifelse(!is.na(y_orig), y_orig, y),
-#            distance = sqrt((x - x_measured) ^ 2 + (y - y_measured) ^ 2))
 ```
 
 
@@ -972,9 +929,7 @@ new_refpoints_c2_invalid <- new_reference_points %>%
     select(survey, assessment_date, point_code, type_target_all, type_observed, relocation, x_orig, y_orig, x_measured, y_measured, distance, distance_centroid) %>%
     arrange(survey)
 
-new_reference_points_valid <- new_refpoints_c1 %>%
-    bind_rows(new_refpoints_c2) %>%
-    bind_rows(new_refpoints_c2_check) %>%
+new_reference_points <- new_reference_points %>%
     mutate(x = x_measured,
            y = y_measured) %>%
     group_by(ranking_code) %>%
@@ -986,15 +941,15 @@ new_reference_points_valid <- new_refpoints_c1 %>%
         ) %>%
     ungroup()
 
-check <- new_reference_points_valid %>%
+check <- new_reference_points %>%
     group_by(point_code_old) %>%
     filter(n() > 1)
 
-check <- new_reference_points_valid %>%
+check <- new_reference_points %>%
     semi_join(mhq_terr_refpoints_update, by = "point_code")
 
 original_reference_points <- refpoints_assessed_all %>%
-    semi_join(new_reference_points_valid, by = c("point_code" = "point_code_old", "year")) %>%
+    semi_join(new_reference_points, by = c("point_code" = "point_code_old", "year")) %>%
     mutate(lsvi_measurement = FALSE,
            type_observed = NA,
            distance = NA,
@@ -1011,7 +966,7 @@ check <- original_reference_points %>%
 refpoints_assessed_all <- refpoints_assessed_all %>%
     anti_join(original_reference_points, by = c("point_code", "year")) %>%
     bind_rows(original_reference_points) %>%
-    bind_rows(new_reference_points_valid)
+    bind_rows(new_reference_points)
 
 check_unique_point_code <- refpoints_assessed_all %>%
     group_by(point_code, year) %>%
@@ -1051,8 +1006,12 @@ check2 <- refpoints_assessed_all %>%
     ungroup()
 
 terr_refpoints <- refpoints_assessed_all %>%
-    mutate(x = ifelse(!is.na(x_measured), round(x_measured, 2), round(x, 2)),
-           y = ifelse(!is.na(y_measured), round(y_measured, 2), round(y, 2))) %>%
+    mutate(x = ifelse(!is.na(x_measured),
+                      round(x_measured, 2),
+                      round(x, 2)),
+           y = ifelse(!is.na(y_measured),
+                      round(y_measured, 2),
+                      round(y, 2))) %>%
     select(point_code, assessment_date, is_centroid, grts_ranking,  x, y) %>%
     unique() %>%
     group_by(point_code) %>% # when measured location < 1.1m from original location we keep the original location
