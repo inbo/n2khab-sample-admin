@@ -1,0 +1,45 @@
+---
+title: "Update mhq terrestrial habitats assessments and measurements"
+subtitle: "fieldwork 2025"
+date: "`r lubridate::now()`"
+site: bookdown::bookdown_site
+output:
+  bookdown::html_document2:
+    code_folding: hide
+    number_sections: yes
+    fig_caption: yes
+    toc: TRUE
+    toc_float:
+      collapsed: FALSE
+      smooth_scroll: FALSE
+---
+
+```{r setup, include=FALSE}
+
+library(sf)
+library(tidyverse)
+library(stringr)
+library(knitr)
+library(n2khab)
+library(git2rdata)
+library(kableExtra)
+library(RODBC)
+library(odbc)
+library(DBI)
+library(googlesheets4)
+library(lubridate)
+library(leaflet)
+library(crosstalk)
+library(DT)
+library(units)
+library(INBOtheme)
+
+conflicted::conflicts_prefer(dplyr::filter)
+
+opts_chunk$set(
+  warning = FALSE,
+  cache = TRUE,
+  echo = TRUE,
+  dpi = 300
+)
+```

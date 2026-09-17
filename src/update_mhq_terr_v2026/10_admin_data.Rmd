@@ -1,0 +1,806 @@
+# Data sources
+
++ Standardized table of mhq refpoints, assessments and measurements
+
+These tables contain the originally selected sampling units and the assessments and measurements.
+We start from version 'rapportage2025'.
+
+```{r}
+
+path_mhq_terr <- "../../data/mhq_terr/rapportage2025"
+
+mhq_terr_assessments <- read_vc("mhq_terr_assessments", 
+                                root = path_mhq_terr)
+
+mhq_terr_refpoints <- read_vc("mhq_terr_refpoints", 
+                                root = path_mhq_terr) 
+    
+mhq_terr_measurements <- read_vc("mhq_terr_measurements", 
+                                root = path_mhq_terr)
+
+mhq_terr_popunits <- read_vc("mhq_terr_popunits", 
+                                root = path_mhq_terr)
+```
+
++ Administration INBO fieldwork coordinator
+
+The INBO fieldwork coordinator uses [this googlesheet](https://docs.google.com/spreadsheets/d/1WkGPPYTb1Xytg5kJeOSxLvt3PUdFjlpPb4rwYG9znys/) to document which sampling units have been assessed.
+
+In order to reproduce the workflow, we save a copy from the google sheet, dating 2026-08-24.
+The file is saved in [this](https://drive.google.com/drive/folders/1wFZINPaR137csS3q79l8hpGkX24eEAaG) google drive folder.
+Copy the file to the folder 'data/admin_mhq_terr' in this R project.
+
+```{r}
+
+assessments_admin_inbo_orig <- read_csv2("../../data/admin_mhq_terr/voortgang_mhq_terrestrisch_2026.csv")
+
+```
+
+TO DO Explain db_ref
+TO DO user_reference instead of db_ref_orig?
+
+```{r}
+
+assessments_admin_inbo <- assessments_admin_inbo_orig %>%
+    select(-starts_with("...")) %>%
+    filter(!is.na(assessment_date)) %>%
+    mutate(db_ref_orig = db_ref,
+           fieldwork_team = str_to_lower(fieldwork_team),
+           assessment_date = as.Date(assessment_date, format = "%d-%m-%Y"),
+           grts_ranking_draw = as.numeric(grts_ranking_draw),
+        db_ref = ifelse(nchar(db_ref_orig) > 5 & str_detect(db_ref_orig, "_"), str_sub(db_ref_orig, end = str_locate(db_ref_orig, "_") - 1), db_ref_orig)
+       ) %>%
+    filter(fieldwork_team == "inbo" | is.na(fieldwork_team)) %>%
+    mutate(point_code = ifelse(point_code == "529473_2", "529473_1", point_code),
+           type_observed = ifelse(point_code == "470546_1", "6230_ha", type_observed)) # CHANGE in admin table!
+
+check_na <- assessments_admin_inbo %>%
+    filter(is.na(lsvi_measurement))
+#ok --> not measured yet
+
+assessments_admin_inbo <- assessments_admin_inbo %>%
+    filter(!is.na(lsvi_measurement))
+
+```
+
++ assessments and measurement ANB
+
+The assessment data and measurement data of ANB is exported from a Fieldmap database.
+
+```{r}
+
+path <- file.path(fileman_up("n2khab-mhq-data"), "processed/fieldmap_mhq")
+
+status_admin_anb <- read_vc(root = path, file = "sample_status") 
+assessments_admin_anb <- read_vc(root = path, file = "assessments") 
+
+type_observed <- read_vc(root = path, file = "type_observed") 
+
+coordinates_anb <- read_vc(root = path, file = "coordinates")  
+
+```
+
++ Measurements INBOVEG
+
+INBOVEG contains the actual collected data including the coordinates.
+
+```{r}
+
+path <- file.path(fileman_up("n2khab-mhq-data"), "processed/inboveg_mhq_terr")
+
+header_mhq_terr <- read_vc(root = path, file = "header_mhq_terr") %>%
+    mutate(assessment_date = as.Date(vague_date_begin))
+
+classif_mhq_terr <- read_vc(root = path, file = "classif_mhq_terr") %>%
+    select(-survey)
+
+visits_mhq_terr <- header_mhq_terr %>%
+    select(survey, user_reference, recording_givid, area, assessment_date, y = latitude, x = longitude) %>%
+    left_join(classif_mhq_terr, by = "recording_givid") %>%
+    select(-classif_key) %>%
+    mutate(user_reference = ifelse(user_reference == "1474526_2", "1474526", user_reference), #Change in INBOVEG
+           user_reference = ifelse(user_reference == "1346134_2", "1346134", user_reference), #Change in INBOVEG
+           type_observed = ifelse(user_reference == "2541138" & is.na(type_observed), "7140_meso", type_observed),
+           type_cover = ifelse(user_reference == "2541138" & is.na(type_cover), 100, type_cover)) %>% #Change in INBOVEG
+    mutate(db_ref = str_to_lower(user_reference),
+           db_ref = str_remove(db_ref, "double_"),
+           db_ref = ifelse(str_detect(str_sub(db_ref, 1, 1), "[a-z]"), str_sub(db_ref, 1, 5), db_ref),
+           db_ref = ifelse(nchar(db_ref) > 5 & str_detect(db_ref, "_"), str_sub(db_ref, end = str_locate(db_ref, "_") - 1), db_ref),
+           db_ref = ifelse(str_sub(user_reference, 1, 2) == "BV", str_to_lower(user_reference), db_ref),
+           year = year(assessment_date)
+           )
+
+check <- visits_mhq_terr %>%
+    group_by(user_reference, area, assessment_date, type_observed, y , x) %>%
+    filter(n() > 1)
+
+visits_mhq_terr <- visits_mhq_terr %>%
+    filter(!str_detect(user_reference, "double"))
+
+check_missing_area <- visits_mhq_terr %>%
+    filter(is.na(area))
+
+check_missing_coord <- visits_mhq_terr %>%
+    filter(x == 500 | y == 500)
+
+visits_mhq_terr_wide <- visits_mhq_terr %>%
+    mutate(cover_description = str_c(ifelse(is.na(type_cover), "?", type_cover), "% ", type_observed)) %>%
+    mutate(plot_type = ifelse(area <= 9 | is.na(area), "square", "circle")) %>%
+    mutate(plot_type = ifelse(recording_givid == "IV2025071010094321", "circle", plot_type)) %>% #!CHANGE IN INBOVEG
+    group_by(survey, db_ref, user_reference, recording_givid, plot_type, assessment_date, year, x, y) %>%
+    summarise(cover_description = str_c(cover_description, collapse = "; ")) %>%
+    ungroup() %>%
+    st_as_sf(coords = c("x", "y"), crs = 4326) %>%
+    st_transform(31370)
+
+check <- visits_mhq_terr_wide %>%
+    group_by(db_ref, user_reference, assessment_date, plot_type) %>%
+    filter(n() > 1)
+
+check2 <- visits_mhq_terr_wide %>%
+    st_drop_geometry() %>%
+    group_by(db_ref, survey, assessment_date) %>%
+    mutate(n = n_distinct(user_reference)) %>%
+    filter(n > 1)
+
+visits_mhq_terr_wide <- visits_mhq_terr_wide %>%
+    mutate(x_measured = round(st_coordinates(visits_mhq_terr_wide)[,1], 2),
+           y_measured = round(st_coordinates(visits_mhq_terr_wide)[,2], 2)) %>%
+    st_drop_geometry() %>%
+    mutate(recording_givid = str_c(plot_type, ": ", recording_givid)) %>%
+    group_by(db_ref, user_reference, assessment_date, year) %>%
+    mutate(recording_givid = str_c(recording_givid, collapse = "; "),
+           x_measured = mean(x_measured),
+           y_measured = mean(y_measured)) %>%
+    ungroup() %>%
+    pivot_wider(names_from = "plot_type", values_from = "cover_description") 
+
+mhq_terr_measurements <- mhq_terr_measurements %>%
+    mutate(assessment_date = measurement_date)
+
+visits_mhq_terr_new <- visits_mhq_terr_wide %>%
+    anti_join(mhq_terr_measurements, by = c("user_reference", "assessment_date")) %>%
+    anti_join(mhq_terr_measurements, by = c("db_ref", "assessment_date")) %>%
+    filter(!is.na(square))
+
+check_unique <- visits_mhq_terr_new %>%
+    group_by(assessment_date, db_ref) %>%
+    filter(n() > 1)
+
+check_na_square <- visits_mhq_terr_wide %>%
+    filter(is.na(square)) %>%
+    filter(str_detect(survey, "N2000"))
+
+# 36790 square measurement zit in survey 'N2000_grasland_fieldapp_3' --> nog toevoegen aan measurements
+
+```
+
+# Update assessments
+
+## Assessments INBO
+
+```{r}
+assessments_table_old <- mhq_terr_assessments %>%
+    mutate(grts_ranking_draw = as.numeric(str_sub(point_code, end = -3))) %>%
+    left_join(mhq_terr_refpoints, by = "point_code") %>%
+    mutate(year = year(assessment_date))
+
+assessments_admin_inbo_new <- assessments_admin_inbo %>%
+    mutate(year = year(assessment_date)) %>%
+    anti_join(assessments_table_old, by = c("point_code", "assessment_date")) %>%
+    left_join(select(assessments_table_old, point_code, year, x_exist = x, y_exist = y, assessment_date_exist = assessment_date), by = c("year", "point_code")) %>%
+    mutate(dist = ((x_exist - x)^2 + (y_exist - y)^2)^0.5)
+
+# here we check (unexpected) new assessments before 2025
+check_new <- assessments_admin_inbo_new %>%
+    filter(year < 2025)
+
+```
+
+Interpretation:
+
++ 1085366:
+    + 1085366_1: selected for 2330_bu (ANB) and for 6230_hn (INBO); visited by ANB on 20-7-2017 and measured; visited by INBO on 31-7-2017 and not measured but replaced to 1085366_2; INBO assessment of 1085366_1 can be added
+
++ 1381569: similar situation as for 1085366
+
++ 50102: 50102_1 was visited twice in cycle 2, in 2019 and in 2022. 2019 assessment can be added.
+
++ 529473_1: to be added, probably missing due to wrong point_code in admin table (529473_2) --> corrected in admin table
+
++ 379222_1: to be added, probably missing due to wrong point_code (379222) --> corrected in admin table
+
+Conclusion: all detected new assessments before 2025 can be added to the updated tables 
+
+### Link new assessments to measurements INBO
+
++ new assessments with a matching new measurement in INBOVEG based on assessment date and user_reference (db_ref)
+
+```{r}
+
+assessments_measured <- assessments_admin_inbo_new %>%
+    filter(lsvi_measurement) %>%
+    inner_join(visits_mhq_terr_new, by = c("db_ref", "year"), suffix = c("_admin", "_inboveg"))
+
+check_date <- assessments_measured %>%
+    filter(assessment_date_admin != assessment_date_inboveg)
+
+assessments_measured <- assessments_admin_inbo_new %>%
+    filter(lsvi_measurement) %>%
+    inner_join(visits_mhq_terr_new, by = c("db_ref", "assessment_date", "year"))
+```
+
++ new assessments but no matching measurement in INBOVEG based on assessment date and user_reference (db_ref) --> OK
+
+```{r}
+assessments_measured_notinboveg <- assessments_admin_inbo_new %>%
+    filter(lsvi_measurement) %>%
+    anti_join(visits_mhq_terr_wide, by = c("db_ref", "assessment_date")) 
+
+```
+
+```{r}
+assessments_measured_notinboveg %>%
+    select(point_code, db_ref, assessment_date, lsvi_measurement, type_observed) %>%
+    datatable(rownames = FALSE, filter = "top")
+```
+
++ new assessments that are not measured (and therefore no record in INBOVEG) --> OK
+
+```{r}
+assessments_not_measured <- assessments_admin_inbo_new %>%
+    filter(!lsvi_measurement)
+    
+#check if there is no inboveg record
+
+check <- assessments_not_measured %>%
+    semi_join(visits_mhq_terr_wide, by = c("db_ref", "assessment_date"))
+# ok: gaat om de originele locaties van verplaatste punten
+
+check_old <- assessments_not_measured %>%
+    filter(year < 2025)
+# ok
+```
+
++ new inboveg records with no assessments records in the admin table --> TO DO: add 1474526_2 in admin table
+
+```{r}
+
+assessments_add <- visits_mhq_terr_new %>%
+    anti_join(assessments_admin_inbo_new, by = c("db_ref", "assessment_date")) %>%
+    anti_join(assessments_admin_inbo, by = c("db_ref", "assessment_date")) %>%
+    #filter(!str_detect(db_ref, "bv")) %>%
+    filter(!str_detect(db_ref, "double|000000006")) %>%
+    filter(!str_detect(db_ref, "dummy")) %>%
+    filter(str_detect(survey, "N2000")) %>%
+    filter(!str_detect(db_ref, "iv"))
+
+```
+
+```{r}
+assessments_add %>%
+    datatable(filter = "top",
+              rownames = FALSE)
+```
+Interpretation: 
+
++   923346: assessment in 2025 is incorrect: ignore
+ 
++   1474526!!: 
+    +  add record in admin table for 2025 for 1474526_2
+
++ 2023 records for 627922 and 857298 are not correct: ignore. 
+
+
++ new inboveg records for existing records in the admin table --> TO DO add measurements in mhq_terr_measurements
+
+```{r}
+
+assessments_table_old <- assessments_table_old %>%
+    mutate(user_reference = str_sub(point_code, end = -3))
+
+measurements_add <- visits_mhq_terr_new %>%
+    anti_join(assessments_admin_inbo_new, by = c("db_ref", "assessment_date")) %>%
+    semi_join(assessments_table_old, by = c("user_reference", "assessment_date")) %>%
+    filter(!str_detect(db_ref, "bv")) %>%
+    filter(!str_detect(db_ref, "double")) %>%
+    filter(str_detect(survey, "N2000")) %>%
+    filter(!str_detect(db_ref, "iv"))
+#check
+```
+
+
+```{r}
+measurements_add %>%
+    datatable(rownames = FALSE,
+              filter = "top")
+```
+
+
+Interpretation:
+
++ 6986542_2, 6630337_2, 7678913_2: in lsvi_measurement = FALSE in admin table --> corrected 
+
++ 6986542_2, 6630337_2, 7678913_2, 6572681_2, 207406_2:
+    + measurement missing in mhq_terr_measurements
+    + all replacements where another type is measured than the target type (invalid measurements) 
+    + none of the sampling units are included in cycle 2
+
++ 4008897, 5295334, 606390:
+    + measurement missing in mhq_terr_measurements
+    + measurements in 2024
+
++ others
+
+```{r}
+assessments_admin_other <- assessments_admin_inbo_new %>%
+    anti_join(assessments_measured, by = c("db_ref", "assessment_date")) %>%
+    anti_join(assessments_not_measured, by = c("db_ref", "assessment_date")) %>%
+    anti_join(assessments_measured_notinboveg, by = c("db_ref", "assessment_date")) %>%
+    anti_join(assessments_add, by = c("db_ref", "assessment_date"))
+
+```
+
++ Let's check if the observed type in the admin table is missing. 
+
+```{r}
+check_type_observed <- assessments_measured %>%
+    filter(is.na(type_observed)) %>%
+    mutate(one_type = str_sub(square, 1, 3) == "100")
+
+check_one_type <- all(check_type_observed$one_type)
+
+
+```
+
+```{r}
+
+if (nrow(check_type_observed) > 0) {
+    
+  check_type_observed %>%
+    select(point_code, db_ref, assessment_date, lsvi_measurement, type_observed, square, circle) %>%
+    kable() %>%
+    kable_styling()  
+} else {
+    
+    cat("OK!")
+}
+
+```
+
+```{r}
+assessments_admin_inboveg <- assessments_measured %>%
+    bind_rows(assessments_not_measured) %>%
+    select(fieldwork_team, point_code, db_ref, reassessment_1, relocation, grts_relocation, assessment_date, inaccessible, lsvi_measurement, type_observed,
+           type_target_all, x_measured, y_measured, year, survey, recording_givid, user_reference, circle, square) %>%
+    mutate(point_code = str_trim(point_code))
+
+# To be changed in admin table
+
+assessments_admin_inboveg <- assessments_admin_inboveg %>%
+    mutate(point_code = ifelse(!str_detect(point_code, "_"), 
+                               str_c(point_code, "_1"),
+                                     point_code))
+```
+
+### Link assessments to refpoints
+
+Next we link the new assessments to the refpoints.
+
+```{r}
+
+refpoints_assessed_inbo_new <- mhq_terr_refpoints %>%
+    inner_join(assessments_admin_inboveg, by = "point_code") %>%
+    distinct() %>%
+    mutate(distance = round(sqrt((x_measured - x)^2 + (y_measured - y)^2), 3))
+
+check_missing_refpoint <- assessments_admin_inboveg %>%
+    anti_join(refpoints_assessed_inbo_new, by = "point_code")
+
+check_double_su <- refpoints_assessed_inbo_new %>%
+    group_by(point_code, type_target_all, assessment_date) %>%
+    mutate(n_pointcode = n()) %>%
+    ungroup() %>%
+    filter(n_pointcode > 1)
+
+```
+
++ check if refpoints occur in sampling plan cycle 2
+
+```{r}
+# ADD this code to design repo
+
+grts_master <- read_GRTSmh()
+
+su_duinen_cyclus2 <- read.csv2("../../data/design_cycle2/mhq_terr_cyclus2_duinen_inbo_2023-05-11.csv")
+
+su_anb_cyclus2 <- read.csv2("../../data/design_cycle2/mhq_terr_cyclus2_anb.csv")
+
+su_inbo_cyclus2 <- read.csv2("../../data/design_cycle2/mhq_terr_cyclus2_inbo.csv")
+
+su_forest <- read.csv2("../../data/design_cycle1/mhq_forests_cycle1.csv") %>%
+    mutate(grts_ranking_draw = grts_ranking)
+
+sampling_plan_inbo_c2 <- su_duinen_cyclus2 %>%
+    bind_rows(su_inbo_cyclus2) %>%
+    separate_wider_delim(point_code, delim = "_", names = c("point_code_base", "point_code_suffix"), cols_remove = FALSE)
+
+sampling_plan_c2 <- su_duinen_cyclus2 %>%
+    bind_rows(su_inbo_cyclus2) %>%
+    bind_rows(su_anb_cyclus2) %>%
+    mutate(reassessment = type_meetpunt == "bestaand meetpunt",
+           oversampling_subtype = uitvoer_opname == "subtype aanwezig") %>%
+    select(panel, point_code, polygon_id, grts_ranking_draw, sac = sbz, main_type = hoofdtype, type = habitattype, phab, reassessment, date_assessment_c1 = datum_opname_cyclus1, oversampling_subtype, db_ref,  recording_givid, x, y)
+
+su_duinen_vervangpunten_cyclus2 <- read.csv2("../../data/design_cycle2/mhq_terr_vervangpunten_duinen_inbo_2023-05-11.csv")
+
+su_anb_cyclus2 <- read.csv2("../../data/design_cycle2/mhq_terr_vervangpunten_anb.csv")
+
+su_inbo_cyclus2 <- read.csv2("../../data/design_cycle2/mhq_terr_vervangpunten_inbo.csv")
+
+relocation_points <- su_duinen_vervangpunten_cyclus2 %>%
+    bind_rows(su_anb_cyclus2) %>%
+    bind_rows(su_inbo_cyclus2) %>%
+    select(point_code_relocation = point_code_vervang, polygon_id, rank_rel_buffer, rank_rel_polygon, x, y) %>%
+    st_as_sf(coords = c("x", "y"), crs = 31370, remove = FALSE)
+
+relocation_points <- relocation_points %>%
+    mutate(grts_ranking = (terra::extract(grts_master, relocation_points))$GRTSmaster_habitats) %>%
+    st_drop_geometry() %>%
+    select(point_code_relocation, polygon_id, grts_ranking, rank_rel_buffer, rank_rel_polygon, x, y) 
+
+```
+
+```{r}
+check_su2 <- refpoints_assessed_inbo_new %>%
+    separate_wider_delim(point_code, delim = "_", names = c("point_code_base", "point_code_suffix"), cols_remove = FALSE) %>%
+    filter(!point_code %in% sampling_plan_inbo_c2$point_code) %>%
+    mutate(check_point_code_base = point_code_base %in% sampling_plan_inbo_c2$point_code_base) %>%
+    left_join(sampling_plan_inbo_c2 %>%
+                  select(point_code_base, point_code_sp = point_code), by = "point_code_base")
+
+# ok: only assessments from cycle 1
+```
+
++ We check if metadata is missing
+
+```{r}
+check_metadata <- refpoints_assessed_inbo_new %>%
+    filter(lsvi_measurement) %>%
+    filter(is.na(reassessment_1) | is.na(relocation))
+
+# To be changed in admin table!
+refpoints_assessed_inbo_new <- refpoints_assessed_inbo_new %>%
+    mutate(relocation = ifelse(point_code == "326965_2", FALSE, relocation))
+```
+
+
++ Check if there are assessments with relocation = FALSE but where the measured location is > 1 meter away from the reference point
+
+```{r}
+
+check_coordinates <- refpoints_assessed_inbo_new %>%
+    filter(distance >= 1, !relocation)
+
+if (nrow(check_coordinates) > 0) {
+    
+    check_coordinates %>%
+    select(point_code, db_ref, assessment_date, type_observed, x, y, x_measured, y_measured, distance, relocation, reassessment_1) %>%
+    datatable(rownames = FALSE, filter = "top")
+
+check_coordinates %>%
+    write_csv2("../../output/check_coördinaten.csv")
+    
+} else {
+    
+    cat("OK!")
+    
+}
+
+```
+
+## Assessments ANB
+
+### Assessments in Fieldmap
+
+```{r}
+
+#waarom deze stap?
+mhq_terr_assessments <- mhq_terr_assessments %>%
+    mutate(db_ref = str_sub(point_code, end = -3))
+
+coordinates_anb <- coordinates_anb %>%
+    mutate(plot_id = as.character(plot_id))  
+
+assessments_admin_anb_new <- assessments_admin_anb %>%
+    mutate(db_ref = plot_id) %>%
+    filter(type_target_all != "91E0_sf",
+           is.na(remark) | remark != "opname door INBO ikv verdroging") %>%
+    rename(assessment_date = date_assessment) %>%
+    anti_join(mhq_terr_assessments, by = c("db_ref", "assessment_date")) 
+```
+
++ assessments in the second monitoring cycle: point_code
+
+```{r}
+coordinates_anb_c2 <- coordinates_anb %>%
+    filter(mon_cycle == 2) %>%
+    select(point_code, x_measured, y_measured, mon_cycle, relocation = verlegd, grts_relocation = nr_vervangplot)
+
+check_unique <- coordinates_anb_c2 %>%
+    group_by(point_code) %>%
+    filter(n() > 1)
+# OK
+
+assessments_anb_c2 <- assessments_admin_anb_new %>%
+    filter(mon_cycle == 2) %>%
+    rename(point_code = sampling_unit_code) %>%
+    filter(remark != "opname door INBO ikv verdroging" | is.na(remark)) %>%
+    left_join(coordinates_anb_c2, by = c("point_code", "mon_cycle"))
+    
+refpoints_assessed_anb_c2 <- mhq_terr_refpoints %>%
+    inner_join(assessments_anb_c2, by = "point_code") %>%
+    mutate(distance = round(sqrt((x_measured - x)^2 + (y_measured - y)^2), 3)) %>%
+    mutate(relocation = ifelse(is.na(relocation) & distance < 1, FALSE, relocation))
+
+check_missing_refpoint <- assessments_anb_c2 %>%
+    anti_join(refpoints_assessed_anb_c2, by = "point_code")
+#OK
+```
+
+## Combine
+
+We combine the new assessments of ANB and INBO and do some quality checks.
+
+```{r}
+
+refpoints_assessed_all <- refpoints_assessed_inbo_new %>%
+    mutate(not_measurable = NA,
+           assessment_source = "field assessment") %>%
+    bind_rows(refpoints_assessed_anb_c2 %>%
+                   mutate(fieldwork_team = "anb",
+                          survey = "anb_c2")) %>%
+    select(survey, fieldwork_team, point_code, is_centroid, grts_ranking, type_target_all, type_observed, x, y, db_ref, assessment_source, assessment_date, inaccessible, not_measurable, lsvi_measurement, relocation, grts_relocation, x_measured, y_measured, user_reference, recording_givid, distance, remark) %>%
+    arrange(grts_ranking) %>%
+    mutate(type_target_all = ifelse(type_target_all == "2190", "2190_overig", type_target_all))
+```
+
++ Is the subtype of the observed habitat type defined? If the observed subtype is not defined, we assume that the subtype corresponds with the target subtype.
+
+```{r}
+
+types <- read_types()
+
+has_subtypes <- types %>%
+    group_by(main_type) %>%
+    summarise(has_subtype = n() > 1 ) %>%
+    ungroup() %>%
+    filter(has_subtype) %>%
+    filter(main_type != "9120") %>%
+    filter(!str_detect(main_type, "rbb"))
+
+check_subtype <-  refpoints_assessed_all %>%
+    filter(type_observed %in% has_subtypes$main_type)
+
+if (nrow(check_subtype) > 0) {
+    
+    add_subtype_observed <- refpoints_assessed_all %>%
+    filter(type_observed %in% has_subtypes$main_type) %>%
+    separate(type_target_all, into = c("type_target_1", "type_target_2"), sep = ";", remove = FALSE) %>%
+    mutate(type_observed = ifelse(str_sub(type_target_1, 1, 4) == type_observed, type_target_1,
+                                  ifelse(str_sub(type_target_2, 1, 4) == type_observed & !is.na(type_target_2), type_target_2, type_observed))) %>%
+    select(-type_target_1, -type_target_2)
+
+refpoints_assessed_all <- refpoints_assessed_all %>%
+    anti_join(add_subtype_observed, by = c("point_code", "assessment_date")) %>%
+    bind_rows(add_subtype_observed)
+
+} else {
+    
+    cat("OK: all subtypes are defined")
+}
+
+```
++ Check if the status of the assessment is defined, this is the case when we either have a value for `assessment_source`, `inaccessible` or `not_measurable`
+
+```{r}
+# status of each survey event defined?
+check_status <- refpoints_assessed_all %>%
+    filter(is.na(assessment_source) & is.na(inaccessible) & is.na(not_measurable))
+
+if (nrow(check_status) > 1) {
+    
+    cat("CHeck following records")
+    
+    check_status %>%
+        datatable(rownames = FALSE)
+    
+} else {
+    
+    cat("OK: status is defined for all records")
+    
+}
+
+```
+
++ Check if sampling units are assessed by both ANB and INBO. If this is the case we select the assessment with a measurement.
+
+```{r}
+check_unique_point_code <- refpoints_assessed_all %>%
+    mutate(year = year(assessment_date)) %>%
+    group_by(point_code, year) %>%
+    filter(n() > 1)
+
+if (nrow(check_unique_point_code) > 1) {
+    
+    check_unique_point_code %>%
+        datatable(rownames = FALSE)
+    
+    refpoints_assessed_all <- refpoints_assessed_all %>%
+    mutate(year = year(assessment_date)) %>%
+    group_by(point_code, year) %>%
+    filter(n() == 1 | (n() > 1 & lsvi_measurement)) %>%
+    ungroup()
+    
+} else {
+    
+    cat("OK: no sampling units are assessed both by ANB and INBO")
+    
+}
+
+```
+
+# Create new reference points for relocated population units
+
+When a sampling unit is relocated, we have to define a new reference point (`point_code`).
+Later we will check if the relocation is performed according to the protocol.
+
+First we check the distance between the sample unit reference point and the measured coordinates.
+When indicated that the assessment was not relocated, this distance should be smaller than 1 m (we allow a 1 meter location error). 
+
+```{r}
+check_no_replacement <- refpoints_assessed_all %>%
+    filter(!relocation) %>%
+    filter(distance > 1)
+```
+
+```{r}
+refpoints_assessed_all %>%
+    filter(lsvi_measurement) %>%
+    ggplot(aes(x = distance)) +
+    geom_histogram() +
+    facet_wrap(~str_c("relocation = ",relocation), scales = "free", ) +
+    labs(x = "Aantal meetpunten")
+
+```
+
+Next we determine the `grts_ranking` of the new location and the distance to the nearest grid cell centre.
+This distance should be smaller than 1 m.
+
+```{r}
+
+distance_from_centroidgrid <- function(min_x, min_y, measured_x, measured_y, resolution = 32, threshold = 1) {
+    
+    difference_x <- (measured_x - min_x) %% resolution
+    shortest_distance_x <- min(difference_x, resolution - difference_x)
+    difference_y <- (measured_y - min_y) %% resolution
+    shortest_distance_y <- min(difference_y, resolution - difference_y)
+    distance_from_grid <- sqrt( shortest_distance_x ^ 2 + shortest_distance_y ^ 2)
+    
+    return(distance_from_grid)
+}
+
+min_x <- (mhq_terr_refpoints %>%
+    filter(is_centroid) %>%
+    filter(x == min(x)))$x
+
+min_y <- (mhq_terr_refpoints %>%
+    filter(is_centroid) %>%
+    filter(y == min(y)))$y
+
+new_reference_points <- refpoints_assessed_all %>%
+    filter(distance >= 1) %>%
+    filter(lsvi_measurement) %>%
+    group_by(point_code) %>%
+    mutate(ranking_code = str_sub(point_code, end = -3),
+           x_orig = x,
+           y_orig = y,
+           x = x_measured,
+           y = y_measured,
+           distance_centroid = distance_from_centroidgrid(min_x = min_x,
+                              min_y = min_y,
+                              measured_x = x_measured,
+                              measured_y = y_measured),
+           is_centroid = distance_centroid < 1,
+           legacy_site = FALSE) %>%
+    ungroup() %>%
+    st_as_sf(coords = c("x", "y"), crs = 31370)
+
+new_reference_points <- new_reference_points %>%
+    mutate(grts_ranking = (terra::extract(grts_master,new_reference_points))$GRTSmaster_habitats) %>%
+    st_drop_geometry() 
+```
+
+```{r}
+check_relocation <- new_reference_points %>%
+    filter(distance_centroid > 1)
+
+if (nrow(check_relocation) > 0) {
+    
+    cat("Check relocations below")
+    
+    datatable(check_relocation,
+              rownames = FALSE)
+} else {
+    
+    cat("OK: all relocations are within a distance of 1 m from a grid cell centroid")
+}
+```
+
+Finally we define a new point code for the relocated sampling unit as follows:
+
++ the point_code prefix (= `grts_ranking_draw`) of the original point_code is kept
++ a new point_code suffix is created by augmenting the maximum suffix value (for the point_code prefix) by one
+
+We also check if the new point_code does not already exist.
+
+```{r}
+
+max_n <- mhq_terr_refpoints %>%
+    select(point_code) %>%
+    separate(col = point_code, into = c("left_part", "right_part"), sep = "_", remove = FALSE) %>%
+    mutate(right_part = as.numeric(right_part)) %>%
+    group_by(left_part) %>%
+    mutate(max_n_point_code = max(right_part)) %>%
+    ungroup() %>%
+    select(point_code, max_n_point_code) %>%
+    unique()
+
+new_reference_points <- new_reference_points %>%
+    left_join(max_n, by = "point_code") %>%
+    mutate(x = x_measured,
+           y = y_measured) %>%
+    group_by(ranking_code) %>%
+    mutate(n = n(),
+           rank = rank(x),
+           add = rank(x) + max_n_point_code,
+           point_code_old = point_code,
+          point_code = str_c(ranking_code, "_", add)
+        ) %>%
+    ungroup()
+
+# check ik new reference points already exist
+check <- new_reference_points %>%
+    semi_join(mhq_terr_refpoints, by = "point_code")
+
+original_reference_points <- refpoints_assessed_all %>%
+    semi_join(new_reference_points, by = c("point_code" = "point_code_old", "assessment_date")) %>%
+    mutate(lsvi_measurement = FALSE,
+           type_observed = "gdh", #geen doelhabitat
+           distance = 0,
+           x_measured = NA,
+           y_measured = NA,
+           user_reference = NA,
+           recording_givid = NA,
+           relocation = FALSE) %>%
+    left_join(select(new_reference_points, point_code = point_code_old, relocated_to = point_code),
+              by = "point_code")
+
+check <- original_reference_points %>%
+    group_by(point_code) %>%
+    filter(n() > 1)
+
+refpoints_assessed_all <- refpoints_assessed_all %>%
+    anti_join(original_reference_points, by = c("point_code", "assessment_date")) %>%
+    bind_rows(original_reference_points) %>%
+    bind_rows(new_reference_points)
+
+check_unique_point_code <- refpoints_assessed_all %>%
+    group_by(point_code, assessment_date) %>%
+    filter(n() > 1)
+
+check_replaced <- refpoints_assessed_all %>%
+    filter(relocation) %>%
+    filter(str_detect(point_code, "_1"))
+
+```
