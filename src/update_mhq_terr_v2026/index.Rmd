@@ -1,7 +1,8 @@
 ---
 title: "Update mhq terrestrial habitats assessments and measurements"
-subtitle: "fieldwork 2025"
+subtitle: "Fieldwork 2025"
 date: "`r lubridate::now()`"
+author: Toon Westra
 site: bookdown::bookdown_site
 output:
   bookdown::html_document2:
@@ -38,7 +39,8 @@ conflicted::conflicts_prefer(dplyr::filter)
 
 opts_chunk$set(
   warning = FALSE,
-  cache = TRUE,
+  message = FALSE,
+  cache = FALSE,
   echo = TRUE,
   dpi = 300
 )

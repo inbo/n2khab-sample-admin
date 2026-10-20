@@ -1,0 +1,139 @@
+# Progress monitoring cycle2
+
+We want to track the progress of monitoring cycle 2 of MHQ for the terrestrial habitat types. 
+
+To do this we use we compare (1) the original sample for MHQ cycle 2 (`mhq_terr_sample_c2`) with
+(2) the standardized tables of the assessments and measurements.
+
+The assessments table also contains assessment for monitoring cycle 1. 
+We can identify the assessments for monitoring cycle 2, based on the start year of monitoring cycle 2.
+The start year is different per type, and is documented in the table `mhq_terr_moncycle.csv`.
+See table below.
+
+```{r, message = FALSE}
+path <- fileman_up("n2khab-mhq-design")
+
+mhq_terr_sample <- read_vc("mhq_terr_sample_c2",
+                           file.path(path, "mhq_terr_cycle2/output")) %>%
+    mutate(main_type = as.character(main_type))
+
+mhq_terr_relocations <- read_vc("mhq_terr_relocations_c2",
+                           file.path(path, "mhq_terr_cycle2/output"))
+
+mhq_terr_moncycle <- read_csv2(file.path(path, "overzicht_mhq/data/mhq_terr_moncycle.csv"),
+                               col_types =  "ciii")
+```
+
+```{r}
+
+path_mhq_terr <- "../../data/mhq_terr/v2026"
+
+mhq_terr_assessments <- read_vc("mhq_terr_assessments", 
+                                root = path_mhq_terr)
+
+mhq_terr_refpoints <- read_vc("mhq_terr_refpoints", 
+                                root = path_mhq_terr) 
+    
+mhq_terr_measurements <- read_vc("mhq_terr_measurements", 
+                                root = path_mhq_terr)
+
+val <- read_vc("mhq_terr_measurements_validation", 
+                                root = "../../data/mhq_terr/")
+
+```
+
+```{r}
+check_coords_sample <- mhq_terr_sample %>%
+    select(point_code, type, reassessment, x, y) %>%
+    left_join(mhq_terr_refpoints %>%
+                  select(point_code, x_ref = x, y_ref = y, grts_ranking_refpoint = grts_ranking),
+              by = "point_code") %>%
+    mutate(distance = sqrt((x - x_ref) ^ 2 + (y - y_ref) ^ 2) %>%
+               round(2)) %>%
+    filter(distance > 1) %>%
+    st_as_sf(coords = c("x", "y"), crs = 31370, remove = FALSE)
+
+grts_master <- read_GRTSmh()
+
+check_coords_sample <- check_coords_sample %>%
+    mutate(grts_check = (terra::extract(grts_master,check_coords_sample))$GRTSmaster_habitats)
+```
+
+```{r}
+mhq_terr_moncycle %>%
+    datatable(rownames = FALSE,
+              filter = "top")
+```
+
+We also have to take the relocations into account. 
+We have to link the measurements in the relocated sampling units with the original sampling unit in mhq_terr_sample_c2.
+This can be done with the function `detect_relocations`.
+
+```{r}
+
+detect_relocations <- function(assessments = mhq_terr_assessments, refpoints = mhq_terr_refpoints){
+    
+    assessments_relocation <- assessments %>%
+        separate_wider_delim(point_code, delim = "_", names = c("point_code_base", "point_code_suffix"), cols_remove = FALSE) %>%
+        group_by(point_code_base, assessment_date) %>%
+        filter(any(change_location)) %>%
+        ungroup() %>%
+        mutate(point_code_type = ifelse(change_location, "relocation", "orig")) %>%
+        group_by(assessment_date, point_code_base, point_code, point_code_type, assessment_source, is_present) %>%
+        summarise(type = str_c(type, collapse = "; ")) %>%
+        ungroup() %>%
+        pivot_wider(values_from = c(point_code, type, is_present), names_from = point_code_type) %>%
+        select(assessment_date, point_code = point_code_orig, point_code_relocation, type = type_relocation, is_present = is_present_relocation, assessment_source) %>%
+        left_join(mhq_terr_refpoints %>%
+                      select(point_code, x, y),
+                  by = "point_code") %>%
+        left_join(mhq_terr_refpoints %>%
+                      select(point_code_relocation = point_code, x_relocation = x, y_relocation = y),
+                  by = "point_code_relocation") %>%
+        mutate(distances_relocation = sqrt((x_relocation - x) ^ 2 + (y_relocation - y) ^ 2)) %>%
+        select(-x, -y, -x_relocation, -y_relocation)
+    
+    return(assessments_relocation)
+
+}
+
+```
+
+```{r}
+
+relocations <- detect_relocations()
+
+start_c2 <- mhq_terr_moncycle %>%
+    filter(mon_cycle == 2) %>%
+    select(main_type, mon_cycle, year_start)
+
+assessments_c2 <- mhq_terr_assessments %>%
+    anti_join(relocations, by = c("point_code", "assessment_date")) %>%
+    bind_rows(relocations %>%
+                  mutate(change_location = TRUE)) %>%
+    inner_join(mhq_terr_sample %>%
+                  select(point_code, type_target_c2 = type),
+              by = "point_code") %>%
+    mutate(main_type_target_c2 = str_sub(type_target_c2, 1, 4)) %>%
+    left_join(start_c2, by = c("main_type_target_c2" = "main_type")) %>%
+    filter(year(assessment_date) >= year_start) %>%
+    mutate(point_code_measured = ifelse(is.na(point_code_relocation), point_code, point_code_relocation))
+
+measurements_c2 <- mhq_terr_measurements %>%
+    semi_join(assessments_c2, by = c("point_code", "measurement_date" = "assessment_date"))
+
+nrow(assessments_su_orig) == nrow(mhq_terr_assessments)
+ 
+check <- mhq_terr_assessments %>%
+    anti_join(assessments_su_orig, by = c("point_code", "assessment_date"))
+ 
+
+
+progress_c2 <- mhq_terr_sample %>%
+    rename(type_target = type, main_type_target = main_type) %>%
+    left_join(assessments_su_orig, by = "point_code") %>%
+    filter(year(assessment_date) >= year_start | is.na(assessment_date)) #opname 2de cyclus of nog niet opgemeten
+
+nrow(progress_c2) == nrow(mhq_terr_sample)
+```
+

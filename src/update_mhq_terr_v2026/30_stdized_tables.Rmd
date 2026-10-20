@@ -1,0 +1,415 @@
+# Standardise tables
+
+## Reference points
+
+terr_refpoints (git2rdata object): defines the reference point for the terrestrial population units and grts-ranking for this refpoint
+
++ point_code: the id of the reference point
++ is_centroid: is the reference point located in the center of a grts-master grid cell
++ grts_ranking
++ x: x-coordinate (crs = 31370)
++ y: y-coordinate (crs = 31370)
+
+```{r}
+mhq_terr_refpoints_new <- refpoints_assessed_all %>%
+    anti_join(mhq_terr_refpoints, by = "point_code") %>%
+    select(point_code, is_centroid, grts_ranking, x, y)
+
+check_unique <- mhq_terr_refpoints_new %>%
+    group_by(point_code) %>%
+    filter(n() > 1) %>%
+    ungroup()
+
+mhq_terr_refpoints_update <- mhq_terr_refpoints %>%
+    bind_rows(mhq_terr_refpoints_new)
+```
+
+We add the newly created reference points to version 'rapportage2025' of `mhq_terr_refpoints`
+
+We check the values for `grts_ranking` and `is_centroid`.
+`is_centroid` = TRUE when it the reference point is within 1 m of the grid center.
+
+```{r}
+
+distance_from_centroidgrid <- function(min_x, min_y, measured_x, measured_y, resolution = 32) {
+    
+    difference_x <- (measured_x - min_x) %% resolution
+    shortest_distance_x <- min(difference_x, resolution - difference_x)
+    difference_y <- (measured_y - min_y) %% resolution
+    shortest_distance_y <- min(difference_y, resolution - difference_y)
+    distance_from_grid <- sqrt( shortest_distance_x ^ 2 + shortest_distance_y ^ 2)
+    
+    return(distance_from_grid)
+}
+
+min_x <- (mhq_terr_refpoints_update %>%
+    filter(is_centroid) %>%
+    filter(x == min(x)))$x
+
+min_y <- (mhq_terr_refpoints_update %>%
+    filter(is_centroid) %>%
+    filter(y == min(y)))$y
+
+check_refpoint <- mhq_terr_refpoints_update %>%
+    group_by(point_code) %>%
+    mutate(distance_centroid = distance_from_centroidgrid(min_x = min_x,
+                              min_y = min_y,
+                              measured_x = x,
+                              measured_y = y) %>%
+               round(2)) %>%
+    ungroup() %>%
+    mutate(is_centroid_check = distance_centroid < 1)
+
+check_refpoint <- check_refpoint %>%
+    st_as_sf(coords = c("x", "y"), crs = 31370, remove = FALSE)
+
+check_refpoint <- check_refpoint %>%
+    mutate(grts_check = (terra::extract(grts_master,check_refpoint))$GRTSmaster_habitats) %>%
+    st_drop_geometry() %>%
+    mutate(in_c2 = point_code %in% mhq_terr_sample$point_code) %>%
+    left_join(mhq_terr_assessments %>%
+                  select(point_code, assessment_date, type, is_present, change_location),
+              by = "point_code") %>%
+    mutate(is_centroid_error = is_centroid != is_centroid_check,
+           grts_error = grts_ranking != grts_check) %>%
+    filter(grts_error | is_centroid_error)
+
+```
+
+Several errors occur.
+We can distinguish different cases.
+
++ Case 1: 
+    + the reference point is between 1 m and 1.5 m from the grid center and is_centroid is wrongly considered as TRUE
+    + the deviation from the grid center is more likely a measurement error than an intended relocation
+    + therefore we do not change the point_code (as we do with relocations), we just change is_centroid to FALSE
+
+
+```{r}
+# case 10840262_1 
+
+case_1 <- check_refpoint %>%
+    filter(is_centroid & is_centroid_error & distance_centroid < 1.5)
+
+case_1 %>%
+    select(point_code, grts_ranking, distance_centroid, is_centroid, is_centroid_check, grts_check, assessment_date, change_location) %>%
+    datatable(rownames = FALSE)
+
+```
+
+```{r}
+case_1_corrected <- case_1 %>%
+    mutate(is_centroid = FALSE) %>%
+    select(point_code, is_centroid, grts_ranking, x, y) 
+
+check_refpoint <- check_refpoint %>%
+    anti_join(case_1_corrected, by = "point_code")
+```
+
++ Case 2: 
+    + grts_ranking incorrect and is_centroid = FALSE
+    + 1266865_1 and 175921_1 are legacy sites, measured at a distance < 1 m from original location, but measurement in other grid cell: we change grts_ranking in mhq_terr_refpoints
+    + 1676465_1 is a legacy site, but never assessed, 1676465_2 is the refpoint in the center of the grid_cell (selected as a sampling unit in 2021), 1676465_2 was assessed in 2021 and relocated to 1676465_3; the assessment for 1676465_2 is wrongly assigned to 1676465_1.
+
+```{r}
+case_2 <- check_refpoint %>%
+    filter(!is_centroid & grts_error)
+
+case_2 %>%
+    select(point_code, x, y, grts_ranking, distance_centroid, is_centroid, grts_check, assessment_date, type, is_present, change_location) %>%
+    datatable(rownames = FALSE)
+
+```
+
+```{r}
+#175921_1
+x_orig <- 33357.68986
+y_orig <- 204023.6939
+x_measured <- 33356.79
+y_measured <- 204023.43
+distance <- sqrt( (x_measured - x_orig) ^ 2 + (y_measured - y_orig) ^ 2)
+
+#1266865_1
+x_orig <- 23278.22986
+y_orig <- 198161.9839
+x_measured <- 23277.34
+y_measured <- 198161.87
+distance <- sqrt( (x_measured - x_orig) ^ 2 + (y_measured - y_orig) ^ 2)
+
+#1676465_1
+```
+
+```{r}
+# change grts_ranking
+
+case_2_corrected <- case_2 %>%
+    mutate(grts_ranking = grts_check) %>%
+    select(point_code, is_centroid, grts_ranking, x, y) 
+
+# change assessments
+
+mhq_terr_assessments <- mhq_terr_assessments %>%
+    mutate(point_code = ifelse(point_code == "1676465_1", "1676465_2", point_code))
+
+check_refpoint <- check_refpoint %>%
+    anti_join(case_2_corrected, by = "point_code")
+```
+
+```{r}
+case_3 <- check_refpoint %>%
+    filter(!is_centroid & is_centroid_error)
+
+case_3 %>%
+    select(point_code, x, y, grts_ranking, distance_centroid, is_centroid, grts_check, assessment_date, type, is_present, change_location) %>%
+    datatable(rownames = FALSE)
+    
+```
+
+
+
+```{r}
+# reset 301846_1
+mhq_terr_refpoints_update
+
+# 175921_1
+
+x <- 33357.69
+y <- 204023.69
+
+give_ranking_xy <- function(x, y, grts_master = grts_master, crs = 31370) {
+    
+    point <- data.frame(x = x,
+                        y = y) %>%
+    st_as_sf(coords = c("x", "y"), crs = crs)
+    
+    ranking <- (terra::extract(grts_master, point))$GRTSmaster_habitats
+    
+}
+
+give_ranking_coords <- function(data, coords, grts_master = grts_master, crs = 31370) {
+    
+    points <- data %>%
+        st_as_sf(coords = coords, crs = crs, remove = FALSE)
+    
+    points <- points %>%
+        mutate(grts_ranking = (terra::extract(grts_master, points))$GRTSmaster_habitats) %>%
+        st_drop_geometry()
+    
+    return(points)
+}
+
+coord_temp <- data.frame(point_code = "175921_1",
+                         x_orig = c(33357.68),
+                         y_orig = c(204023.6)) %>%
+    give_ranking_coords(coords = c("x_orig", "y_orig"), grts_master = grts_master) %>%
+    left_join(mhq_terr_refpoints %>%
+                  select(point_code, x, y),
+              by = "point_code") %>%
+    mutate(dist = sqrt( (x - x_orig) ^ 2 + (y - y_orig) ^ 2))
+```
+
+
+```{r}
+mhq_terr_refpoints_new %>%
+    slice_head(n = 10) %>%
+    kable() %>%
+    kable_styling()
+```
+
+```{r}
+mhq_terr_refpoints_update %>%
+    unique() %>%
+    write_vc(root = "../../data/mhq_terr/v2026", 
+             file = "mhq_terr_refpoints",
+             sorting = "point_code",
+             digits = 20,
+             strict = FALSE)
+```
+
+
+
+## Assessments
+
+terr_assessments contains the assessment for the monitoring habitat quality programme
+
++ assessment_date: date of the assessment
+    + If the target type was not observed, the assessment year was not recorded. In this case we take the median of the
+    years in which the assessments took place.
++ point_code: the id of the point_code
++ type: the evaluated type
++ is_present:
+    + TRUE if the evaluated type was observed
+    + FALSE if the evaluated type was not observed
+    + NA if no assessment could be performed (inaccessible) or if the type’s presence is unknown
++ no_habitat:
+    + TRUE if no habitat type was observed,  altough a regional import biotope (rib) type might be present (the presence of rib types was not evaluated)
+    + FALSE when any type is present,
+    + NA when the evaluated type is absent or unknown and it is not known if any other type is present (in case the point is inaccessible)
++ assessment_source: field assessment or orthophoto
++ inaccessible: long term or short term
++ not_measurable: long term or short term
++ change_location: has the population unit been replaced
+
+```{r}
+types <- read_types()
+
+#unique(refpoints_assessed_all$type_observed)
+
+terr_assessments_new <- refpoints_assessed_all %>%
+    mutate(is_present = ifelse(!is.na(type_observed), type_observed %in% types$type,
+                               ifelse(!is.na(inaccessible) | !is.na(not_measurable), NA, 
+                                      FALSE)
+                              ),
+           no_habitat = ifelse(type_observed %in% c("gh"), TRUE, 
+                               ifelse(type_observed %in% types$type, FALSE, NA)),
+           type = ifelse(is_present & !is.na(is_present), type_observed, type_target_all),
+           change_location = relocation
+           ) %>%
+    select(assessment_date, point_code, type, is_present, no_habitat, assessment_source, inaccessible, not_measurable, change_location) %>%
+    separate_rows(type, sep = ";") %>%
+    mutate(type = factor(str_trim(type), levels = levels(types$type))) %>%
+    arrange(assessment_date)
+
+check_unique <- terr_assessments_new %>%
+    group_by(assessment_date, point_code, type) %>%
+    filter(n() > 1) %>%
+    ungroup()
+
+check_status <- terr_assessments_new %>%
+    filter(is.na(is_present) & (is.na(inaccessible) & is.na(not_measurable)))
+
+check_refpoint <- terr_assessments_new %>%
+    anti_join(mhq_terr_refpoints_update, by = "point_code")
+
+check_new <- mhq_terr_assessments %>%
+    inner_join(terr_assessments_new, by = c("point_code", "assessment_date"))
+
+mhq_terr_assessments_update <- mhq_terr_assessments %>%
+    bind_rows(terr_assessments_new) %>%
+    arrange(assessment_date) %>%
+    select(-db_ref)
+
+check_unique <- mhq_terr_assessments_update %>%
+    group_by(assessment_date, point_code, type) %>%
+    filter(n() > 1) %>%
+    ungroup()
+
+check_status <- mhq_terr_assessments_update %>%
+    filter(is.na(is_present) & (is.na(inaccessible) & is.na(not_measurable)))
+#onbekend habitattype
+
+# voor sommige verplaatsingen is de assessment van het originele punt op een andere datum dan die van de verplaatsing --> corrigeren
+check_relocation_date <- mhq_terr_assessments_update %>%
+    mutate(assessment_year = year(assessment_date)) %>%
+    separate_wider_delim(point_code, delim = "_", names = c("point_code_base", "point_code_suffix"), cols_remove = FALSE) %>%
+    group_by(point_code_base, type, assessment_year) %>%
+    filter(any(change_location)) %>%
+    filter(n_distinct(assessment_date) > 1) %>%
+    mutate(n_su = n()) %>%
+    ungroup() 
+
+nrow_check <- nrow(mhq_terr_assessments_update)
+
+correct_date_relocation <- check_relocation_date %>%
+    group_by(point_code_base, type, assessment_year) %>%
+    mutate(assessment_date = max(assessment_date)) %>%
+    ungroup() %>%
+    select(colnames(mhq_terr_assessments_update))
+
+mhq_terr_assessments_update <- mhq_terr_assessments_update %>%
+    anti_join(check_relocation_date, by = c("point_code", "assessment_date", "type")) %>%
+    bind_rows(correct_date_relocation) 
+
+mhq_terr_assessments_update <- mhq_terr_assessments_update %>%
+    mutate(assessment_date = if_else(point_code == "332786_1" & assessment_date == "2017-01-01", as.Date("2017-07-27"), assessment_date),
+           assessment_date = if_else(point_code == "1887022_1" & assessment_date == "2018-01-01", as.Date("2018-06-13"), assessment_date),
+           assessment_date = if_else(point_code == "8_1" & assessment_date == "2019-01-01", as.Date("2019-10-16"), assessment_date))
+
+nrow(mhq_terr_assessments_update) == nrow_check
+
+mhq_terr_assessments_update <- mhq_terr_assessments_update %>%
+    mutate(change_location = ifelse(point_code == "37_1" & assessment_date == "2023-08-16", FALSE, change_location), # foutief in admin tabel --> aangeapst
+           change_location = ifelse(point_code == "301846_1" & assessment_date == "2022-06-01", FALSE, change_location)) # er is maar één vervangpunten in polygoon
+```
+
+```{r}
+mhq_terr_assessments_update %>%
+    arrange(desc(assessment_date)) |> 
+    slice_head(n = 10) %>%
+    kable() %>%
+    kable_styling()
+```
+
+```{r}
+mhq_terr_assessments_update %>%
+    write_vc(root = "../../data/mhq_terr/v2026", 
+             file = "mhq_terr_assessments",
+             sorting = c("assessment_date", "point_code", "type"),
+             digits = 20,
+             strict = FALSE)
+```
+
+## Measurements
+
+mhq_terr_measurements: table with information on measurements
+
++ measurement_date
++ point_code: the id of the watersurface according to the data source watersurfaces_hab and/or watersurfaces
++ user_reference: reference to record in INBOVEG database
++ recording_givid
++ type: the observed type
+
+```{r}
+terr_measurements_new <- refpoints_assessed_all %>%
+    filter(lsvi_measurement) %>%
+    select(fieldwork_team, point_code, type = type_observed, measurement_date = assessment_date, db_ref, survey, user_reference, recording_givid) %>%
+    mutate(type = factor(type, levels = c(levels(types$type), "gdh", "gh", "onbekend"))) %>%
+    arrange(measurement_date)
+
+check <- terr_measurements_new %>%
+    group_by(point_code, measurement_date) %>%
+    filter(n() > 1)
+
+check_new <- mhq_terr_measurements %>%
+    semi_join(terr_measurements_new, by = c("point_code", "measurement_date"))
+
+mhq_terr_measurements_update <- mhq_terr_measurements %>%
+    mutate(type = factor(type, levels = c(levels(types$type), "gdh", "gh", "onbekend"))) %>%
+    bind_rows(terr_measurements_new) %>%
+    select(fieldwork_team, point_code, type, measurement_date, db_ref, user_reference, recording_givid)
+```
+
+
+```{r}
+mhq_terr_measurements_update %>%
+    arrange(desc(measurement_date)) |> 
+    slice_head(n = 10) %>%
+    kable() %>%
+    kable_styling()
+```
+
+## Check match mhq_terr_measurements and mhq_terr_assessment 
+
+```{r}
+
+#all measurements in assessments?
+
+check <- mhq_terr_measurements_update %>%
+    anti_join(mhq_terr_assessments_update, by = c("point_code", "measurement_date" = "assessment_date"))
+#ok
+
+check_assess_measured <- mhq_terr_assessments_update %>%
+    semi_join(mhq_terr_measurements_update, by = c("point_code", "assessment_date" = "measurement_date"))
+
+nrow(check_assess_measured) == nrow(mhq_terr_measurements_update)
+```
+
+```{r}
+mhq_terr_measurements_update %>%
+    write_vc(root = "../../data/mhq_terr/v2026", 
+             file = "mhq_terr_measurements",
+             digits = 20,
+             sorting = c("measurement_date", "point_code"))
+```
+
+

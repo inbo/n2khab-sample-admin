@@ -2,7 +2,7 @@
 
 ## Visualise assessments
 
-```{r}
+```{r, out.width="100%", out.height= "400px"}
 
 new_assessments_sf <- refpoints_assessed_all %>%
     arrange(assessment_date) %>%
@@ -27,133 +27,186 @@ filter_checkbox("status", "Status meetpunt", sd, ~status)
 
 sd %>%
     leaflet() %>%
-    addTiles() %>%
+    addProviderTiles(providers$Esri.WorldImagery) %>%
     addCircleMarkers(color = ~pal(status), popup = ~str_c(point_code, ": ", type_target_all, assessment_date)) %>%
     addLegend(pal = pal, values = ~status)
 
 datatable(sd, 
           rownames = FALSE,
-          filter = "top"
-          )
+          filter = "top",
+          options = list(
+              columnDefs = list(list(visible = FALSE, targets = c(5)))
+          ))
 ```
 
-## Observed habitat type
+## Check if field protocol is followed
 
-+ Does the observed habitat type correspond with the target habitat type?
+The MHQ field protocol has following rules:
+
++ when a sampling unit is being reassessed (i.e. it was measured in cycle 1):
+    + always do a measurement even if the observed type is different than the target type, unless the land cover has clearly changed
+    + do not relocate sampling unit 
++ when a new sampling unit is assessed (i.e. it was not measured in cycle 1): 
+    + when a sampling unit was selected for the main type: the observed main type should match with target main type, if not relocate sampling unit within habitat polygon by selecting the lowest ranked relocation point that contains the target main type.
+    + when a sampling unit was selected specificly for for subtype: the observed subtype should match the target subtype, if not relocate sampling unit within habitat polygon by selecting the lowest ranked relocation point that contains the target subtype.
 
 ```{r}
 
-max_ranking_sample <- sampling_plan_c2 %>%
+max_ranking_sample <- mhq_terr_sample %>%
     group_by(type, sac) %>%
     summarise(max_ranking = max(grts_ranking_draw)) %>%
     ungroup() %>%
     rename(type_observed = type)
 
-measured_check <- refpoints_assessed_all %>%
-    filter(lsvi_measurement) %>%
+assessments_validation <- refpoints_assessed_all %>% 
     mutate(point_code_old = ifelse(is.na(point_code_old), point_code, point_code_old)) %>%
-    select(point_code, point_code_old, assessment_date, type_target_all, type_observed, remark) %>%
-    filter(type_observed != type_target_all) %>%
-    left_join(sampling_plan_c2 %>%
+    left_join(mhq_terr_sample %>%
                   select(point_code_old = point_code, main_type, reassessment, oversampling_subtype, sac, grts_ranking_draw),
               by = "point_code_old") %>%
-    mutate(valid_measurement = ifelse(reassessment, TRUE,
-                               ifelse(oversampling_subtype, type_observed == type_target_all,
-                                      str_sub(type_observed, 1, 4) == main_type))) %>%
-    left_join(max_ranking_sample, by = c("sac", "type_observed"))
+    mutate(type_match = type_target_all == type_observed,
+           main_type_match = str_sub(type_target_all, 1, 4) == str_sub(type_observed, 1, 4),
+           type_match = ifelse(type_observed == "onbekend", NA, type_match),
+           main_type_match = ifelse(type_observed == "onbekend", NA, main_type_match),
+           valid_type = ifelse(oversampling_subtype, type_match, main_type_match),
+           status = ifelse(lsvi_measurement, "lsvi measurement",
+                           ifelse(!is.na(inaccessible), str_c("inaccessible: ", inaccessible),
+                                  ifelse(!is.na(not_measurable), str_c("not_measurable: ", not_measurable), "no lsvi measurement")))) %>%
+    left_join(max_ranking_sample, by = c("sac", "type_observed")) %>%
+    mutate(valid_sampling_unit = grts_ranking_draw < max_ranking)
 ```
 
-The field protocol has following rules:
 
-+ sampling unit is being reassessed (i.e. was measured in cycle 1): always do a measurement even if the observed type is different than the target type, unless the land cover has clearly changed, do not relocate sampling unit 
-+ new sampling unit
-    + sampling unit was selected for main type: observed main type should match with target main type, if not relocate sampling unit within habitat polygon
-    + oversampling for subtype: observed subtype should match target subtype, if not relocate sampling unit within habitat polygon
+### Reassessed sampling units
 
-Following measurements are not according to these rules:
+When sampling are being reassessed, we expect to observe the same type as observed in cycle 1.
+However we also do a lsvi-measurement when the observed type does not match the target type.
+The idea is to keep these sampling units in the sample frame as the change in habitat type might be caused by a temporal disturbance (for example drought), which causes that certain key species are absent.
+Only when the land cover or land use clearly changed, the sampling unit will not be measured.
+This should be interpreted by a habitat expert. 
 
 ```{r}
-measured_check %>%
-    filter(!valid_measurement) %>%
-    select(-point_code, -main_type, -sac, -grts_ranking_draw, -max_ranking) %>%
+reassessment_check <- assessments_validation %>%
+    filter(reassessment) %>%
+    select(point_code, oversampling_subtype, assessment_date, status, lsvi_measurement, type_target_all, type_observed, valid_type, distance, remark)
+```
+
+The following figure gives an overview of the reassessed sampling units.
+
+```{r}
+reassessment_check %>%
+    ggplot(aes(x = valid_type, fill = status)) +
+    geom_bar() +
+    geom_text(
+        stat = "count",
+        aes(label = after_stat(count)),
+        position = position_stack(vjust = 0.5),
+        color = "black",
+        size = 5
+        ) +
+    labs(y = "Number of sampling units", x = "Observed type = Target type")
+    
+```
+
+Below an overview of all assessments where no measurement is performed.
+We expect a measurement for the sampling units that are accessible and measurable.
+To be checked by habitat expert.
+
+```{r}
+reassessment_check %>%
+    filter(status == "no lsvi measurement") %>%
+    select(point_code, assessment_date, status, type_target_all, type_observed, remark) %>%
+    datatable(rownames = FALSE,
+              filter = "top")
+    
+```
+Below an overview of all assessments where a measurement is performed even tough the observed type is different than the target type.
+Do we keep these sampling units?.
+To be checked by habitat expert.
+
+```{r}
+reassessment_check %>%
+    filter(lsvi_measurement) %>%
+    filter(!valid_type) %>%
+    select(point_code, oversampling_subtype, assessment_date, status, type_target_all, type_observed, remark) %>%
+    datatable(rownames = FALSE,
+              filter = "top")
+    
+```
+
+
+### New sampling units
+
+#### Observed type
+
+For following measurements the observed type does not correspond with the target type.
+We would expect a relocation of the sampling unit, unless none of the relocation points contain the target type.
+Base on the remark, this seems to be the case for `255454_1`.
+The other records have to be checked.
+
+```{r}
+assessments_validation %>%
+    filter(lsvi_measurement) %>% 
+    filter(!reassessment) %>% 
+    filter(!valid_type) %>%
+    select(point_code, oversampling_subtype, assessment_date, type_target_all, type_observed, relocation, remark) %>%
     datatable(rownames = FALSE)
 ```
 
-+ For 251358_1 we assume that the type_observed corresponds with the target type -> valid measurement
+Let's check if the sampling unit is valid based on `grts_ranking_draw`.
+This is the case when `grts_ranking_draw` is smaller than the maximum `grts_ranking_draw`in the sample for the observed type.
+In other words, this sampling unit will be selected if the unit is added to the sample frame of the observed type.
+
 
 ```{r}
-refpoints_assessed_all <- refpoints_assessed_all %>%
-    mutate(type_observed = ifelse(point_code == "251358_1", "4010", type_observed))
-```
-
-+ For 255454_1 the observed type (4030) is different than the target type (4010) and this also is the case for all available relocation points (see remark).
-This might also be the case for 29302_1 and 166102_1.
-Let's check if the sampling unit is valid based on `grts_ranking_draw`
-
-```{r}
-measured_check %>%
-    filter(!valid_measurement) %>%
+assessments_validation %>%
+    filter(lsvi_measurement) %>% 
+    filter(!reassessment) %>% 
+    filter(!valid_type) %>%
     select(point_code_old, type_target_all, type_observed, grts_ranking_draw, max_ranking) %>%
-    mutate(valid_sampling_unit = grts_ranking_draw < max_ranking) %>%
     datatable(rownames = FALSE)
 ```
 
-## Relocations
+#### Relocations
 
-In case of a relocation we check if a valid relocation point is selected and if the relative ranking of the relocation point recorded by the field worker (rank_rel_field) is correct.
+In case of a relocation we check if a valid relocation point is selected and if the relative ranking of the relocation point recorded by the field worker (`rank_rel_field`) is correct.
 
 ```{r}
-relocation_check <- refpoints_assessed_all %>%
+relocation_check <- assessments_validation %>%
     filter(relocation, distance > 0) %>% # distance = 0 --> original not measured location
-    select(point_code_old, assessment_date, lsvi_measurement, type_target_all, type_observed, grts_ranking, grts_relocation, distance, is_centroid, x_measured, y_measured) %>%
-    left_join(relocation_points %>%
+    left_join(mhq_terr_relocations %>%
                   rename(point_code_old = point_code_relocation),
-              by = c("point_code_old", "grts_ranking"))
+              by = c("point_code_old", "grts_ranking")) %>%
+     select(point_code_old, oversampling_subtype, assessment_date, lsvi_measurement, type_target_all, type_observed, grts_ranking, rank_rel_field = grts_relocation, rank_rel = rank_rel_buffer, distance, is_centroid, x_measured, y_measured)
 ```
 
 In the table below we show all relocations.
 
 ```{r}
 relocation_check %>%
-    select(point_code_old, assessment_date, type_target_all, type_observed, distance, is_centroid, rank_rel_field = grts_relocation, rank_rel = rank_rel_buffer) %>%
+    select(point_code_old, oversampling_subtype, assessment_date, type_target_all, type_observed, distance, is_centroid, rank_rel_field, rank_rel) %>%
     datatable(rownames = FALSE,
               filter = "top")
 ```
+
 ```{r}
+relocation_check <- relocation_check %>%
+    mutate(valid_relocation = !is.na(rank_rel) &
+                              is_centroid &
+                              rank_rel_field == rank_rel)
+
 relocation_not_valid <- relocation_check %>%
-    filter(is.na(rank_rel_buffer))
-
-if (nrow(relocation_not_valid) == 0) {
-    
-    cat("For all relocations valid relocation points are selected!")
-} else {
-    
-    cat("Following relocations are not valid. \n")
-    
-    datatable(relocation_not_valid) 
-    
-}
-
+    filter(!valid_relocation)
 ```
 
-```{r}
-relocation_check_admin <- relocation_check %>%
-    filter(rank_rel_buffer != grts_relocation)
+`r if (nrow(relocation_not_valid) == 0) {"For all relocations valid relocation points are selected!"} else {"Check following relocations"}`
 
-if (nrow(relocation_check_admin) == 0) {
-    
-    cat("For all relocations the relative rank recorded in the field matches the relative rank of the measured sampling unit!")
-} else {
-    
-    cat("For following relocations the relative rank recorded in the field does not match the relative rank of the measured sampling unit. \n")
-    
-    relocation_check_admin %>%
-        select(point_code_old, assessment_date, type_observed, distance, rank_rel_field = grts_relocation, rank_rel = rank_rel_buffer) %>%
-        datatable(rownames = FALSE,
+```{r, eval = nrow(relocation_not_valid) > 0}
+
+relocation_not_valid %>%
+    select(point_code_old, oversampling_subtype, assessment_date, type_target_all, type_observed, distance, is_centroid, rank_rel_field, rank_rel) %>%
+    datatable(rownames = FALSE,
               filter = "top")
     
-}
-
 ```
 
 ```{r, eval = FALSE}
@@ -161,14 +214,14 @@ if (nrow(relocation_check_admin) == 0) {
 habmap_stdized <- read_habitatmap_stdized(file = file.path(fileman_up("n2khab_data"), "/20_processed/_versions/habitatmap_stdized/habitatmap_stdized_2020_v1/habitatmap_stdized.gpkg"),
                                           version = "habitatmap_stdized_2020_v1") 
 
-refpoint_select <- "9170737_1"
+refpoint_select <- "301846_1"
 
 su_select <- refpoints_assessed_all %>%
     filter(point_code == refpoint_select) %>%
     st_as_sf(coords = c("x", "y"), crs = 31370) %>%
     st_transform(4326)
 
-polygon_id_select <- sampling_plan_c2 %>%
+polygon_id_select <- mhq_terr_sample %>%
     filter(point_code == refpoint_select)
 
 polygon_select <- habmap_stdized$habitatmap_polygons %>%
@@ -194,77 +247,3 @@ su_select %>%
     addCircleMarkers(data = relocation_points_show, color = "yellow", radius = 1, label = ~rank_rel_buffer,
                      labelOptions = labelOptions(noHide = TRUE))
 ```
-
-
-## Reassessments
-
-In case sampling units that have been measured in cycle 1 are being reassessed, we expect to observe the same type as observed in cycle 1.
-If not, an lsvi-measurement is performed even tough the observed type does not match the target type.
-The idea is to keep these sampling units in the sample frame as the change in habitat type might be caused by a temporal disturbance (for example drought), which causes that certain key species are absent.
-However when land cover or land use clearly changed, the sampling unit will not bet kept.
-This should be interpreted by a habitat expert. 
-
-```{r}
-reassessment_check <- refpoints_assessed_all %>%
-    left_join(sampling_plan_c2 %>%
-                  select(point_code, main_type, reassessment, oversampling_subtype, sac, grts_ranking_draw),
-              by = "point_code") %>%
-    mutate(type_match = type_target_all == type_observed,
-           main_type_match = str_sub(type_target_all, 1, 4) == str_sub(type_observed, 1, 4),
-           status = ifelse(lsvi_measurement, "lsvi measurement",
-                           ifelse(!is.na(inaccessible), str_c("inaccessible: ", inaccessible),
-                                  ifelse(!is.na(not_measurable), str_c("not_measurable: ", not_measurable), "no lsvi measurement")))) %>%
-    filter(reassessment) %>%
-    select(point_code, assessment_date, status, lsvi_measurement, type_target_all, type_observed, type_match, distance, remark)
-```
-
-
-```{r}
-reassessment_check %>%
-    ggplot(aes(x = type_match, fill = status)) +
-    geom_bar()
-    
-```
-
-Below an overview of all assessments where no measurement is performed.
-We expect a measurement for the sampling units that are accessible and measurable.
-To be checked by habitat expert.
-
-```{r}
-reassessment_check %>%
-    filter(!lsvi_measurement) %>%
-    datatable(rownames = FALSE,
-              filter = "top")
-    
-```
-Below an overview of all assessments where a measurement is performed even tough the observed type is different than the target type.
-Do we keep these sampling units?.
-To be checked by habitat expert.
-
-```{r}
-reassessment_check %>%
-    filter(lsvi_measurement) %>%
-    filter(!type_match) %>%
-    select(point_code, assessment_date, status, type_target_all, type_observed, type_match) %>%
-    datatable(rownames = FALSE,
-              filter = "top")
-    
-```
-
-## New sampling units
-
-```{r}
-new_su_check <- refpoints_assessed_all %>%
-    left_join(sampling_plan_c2 %>%
-                  select(point_code, main_type, reassessment, oversampling_subtype, sac, grts_ranking_draw),
-              by = "point_code") %>%
-    mutate(type_match = type_target_all == type_observed,
-           main_type_match = str_sub(type_target_all, 1, 4) == str_sub(type_observed, 1, 4),
-           status = ifelse(lsvi_measurement, "lsvi measurement",
-                           ifelse(!is.na(inaccessible), str_c("inaccessible: ", inaccessible),
-                                  ifelse(!is.na(not_measurable), str_c("not_measurable: ", not_measurable), "no lsvi measurement")))) %>%
-    filter(!reassessment) %>%
-    filter(is.na(relocated_to)) %>%
-    select(point_code, assessment_date, status, lsvi_measurement, relocation, reassessment, oversampling_subtype, type_target_all, type_observed, type_match, distance, remark)
-```
-
