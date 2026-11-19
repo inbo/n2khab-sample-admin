@@ -34,6 +34,7 @@ library(crosstalk)
 library(DT)
 library(units)
 library(INBOtheme)
+library(terra)
 
 conflicted::conflicts_prefer(dplyr::filter)
 

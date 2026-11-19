@@ -1,33 +1,176 @@
 # Validation
 
+```{r, message = FALSE}
+path <- fileman_up("n2khab-mhq-design")
+
+mhq_terr_sample <- read_vc("mhq_terr_sample_c2",
+                           file.path(path, "mhq_terr_cycle2/output")) %>%
+    mutate(main_type = as.character(main_type),
+           date_assessment_c1 = as.Date(date_assessment_c1),
+           mon_ccyle = 2)
+
+mhq_terr_relocations <- read_vc("mhq_terr_relocations_c2",
+                           file.path(path, "mhq_terr_cycle2/output"))
+
+mhq_terr_moncycle <- read_csv2(file.path(path, "overzicht_mhq/data/mhq_terr_moncycle.csv"),
+                               col_types =  "ciii")
+```
+
+```{r}
+
+path_mhq_terr <- "../../data/mhq_terr/v2026"
+
+mhq_terr_assessments <- read_vc("mhq_terr_assessments", 
+                                root = path_mhq_terr)
+
+mhq_terr_refpoints <- read_vc("mhq_terr_refpoints", 
+                                root = path_mhq_terr) 
+    
+mhq_terr_measurements <- read_vc("mhq_terr_measurements", 
+                                root = path_mhq_terr)
+
+
+check <- mhq_terr_measurements %>%
+    anti_join(mhq_terr_assessments, by = "point_code")
+```
+
+```{r}
+detect_relocations <- function(assessments = mhq_terr_assessments, refpoints = mhq_terr_refpoints){
+    
+    assessments_relocation <- assessments %>%
+        separate_wider_delim(point_code, delim = "_", names = c("point_code_base", "point_code_suffix"), cols_remove = FALSE) %>%
+        group_by(point_code_base, assessment_date) %>%
+        filter(any(change_location)) %>%
+        ungroup() %>%
+        mutate(point_code_type = ifelse(change_location, "relocation", "orig")) %>%
+        group_by(assessment_date, point_code_base, point_code, point_code_type, assessment_source, is_present) %>%
+        summarise(type = str_c(type, collapse = "; ")) %>%
+        ungroup() %>%
+        pivot_wider(values_from = c(point_code, type, is_present), names_from = point_code_type) %>%
+        select(assessment_date, point_code = point_code_orig, point_code_relocation, type = type_relocation, is_present = is_present_relocation, assessment_source) %>%
+        left_join(mhq_terr_refpoints %>%
+                      select(point_code, x, y),
+                  by = "point_code") %>%
+        left_join(mhq_terr_refpoints %>%
+                      select(point_code_relocation = point_code, x_relocation = x, y_relocation = y),
+                  by = "point_code_relocation") %>%
+        mutate(distances_relocation = sqrt((x_relocation - x) ^ 2 + (y_relocation - y) ^ 2)) %>%
+        select(-x, -y, -x_relocation, -y_relocation)
+    
+    return(assessments_relocation)
+
+}
+
+get_relocations <- function(assessments) {
+    
+    result <- assessments %>%
+        separate_wider_delim(cols = point_code, 
+                              delim = "_", names = c("point_code_base", "point_code_suffix"), cols_remove = FALSE) %>% 
+        group_by(point_code_base, assessment_date) %>%
+        mutate(relocation = any(change_location)) %>%
+        ungroup() %>%
+        filter(relocation) %>%
+        distinct(point_code_base, point_code, assessment_date, change_location, relocation) %>%
+        mutate(change_location = ifelse(change_location, "point_code_relocation", "point_code_orig")) %>%
+        pivot_wider(names_from = change_location, values_from = point_code) %>%
+        select(point_code_orig, point_code_relocation, assessment_date)
+    
+    return(result)
+    
+}
+        
+
+mhq_status <- function(mhq_terr_refpoints,
+                       mhq_terr_assessments,
+                       mhq_terr_measurements,
+                       mhq_terr_moncycle,
+                       mhq_terr_sample,
+                       select_mon_cycle = 2) {
+    
+    start_c2 <- mhq_terr_moncycle %>%
+        filter(mon_cycle == 2) %>%
+        select(main_type, year_start_c2 = year_start)
+    
+    mhq_terr_sample_wide <- mhq_terr_sample %>%
+        group_by(point_code, sac, grts_ranking_draw, reassessment, oversampling_subtype) %>%
+        arrange(type) %>%
+        summarise(type_target_all = str_c(type, collapse = "; ")) %>%
+        ungroup()
+    
+    relocations <- get_relocations(mhq_terr_assessments)
+    
+    mhq_terr_status <- mhq_terr_assessments  %>%
+        left_join(mhq_terr_measurements %>%
+                      rename(assessment_date = measurement_date) %>%
+                      select(point_code, assessment_date, fieldwork_team, db_ref),
+                  by = c("point_code", "assessment_date")) %>%
+        left_join(mhq_terr_refpoints, by = "point_code") %>%
+        mutate(measured = !is.na(db_ref),
+               main_type = str_sub(type, 1, 4)) %>%
+        left_join(start_c2, by = "main_type") %>%
+        mutate(mon_cycle = ifelse(year(assessment_date) < year_start_c2, 1, 2)) %>%
+        filter(mon_cycle == select_mon_cycle) %>%
+        left_join(relocations %>%
+                      rename(point_code = point_code_relocation),
+                  by = c("point_code", "assessment_date")) %>%
+        mutate(point_code_orig = ifelse(is.na(point_code_orig), point_code, point_code_orig)) %>%
+        left_join(mhq_terr_sample_wide %>%
+                      rename(point_code_orig = point_code),
+                  by = c("point_code_orig")
+                  ) %>%
+        mutate(status = ifelse(!is.na(inaccessible), str_c("Inaccesible: ", inaccessible),
+                           ifelse(!is.na(not_measurable), str_c("Not measurable: ", not_measurable),
+                                  ifelse(!measured, "Not measured",
+                                         ifelse(change_location, "Measured with relocation", "Measured without relocation"))))) %>%
+        select(mon_cycle, point_code, point_code_orig, grts_ranking_draw, grts_ranking, type_target_all, reassessment, oversampling_subtype, assessment_date, type_observed = type, is_present, no_habitat, inaccessible, not_measurable, measured, change_location, status, x, y)
+    
+    # remove is_present = FALSE for type_observed different than target_type
+    not_relevant <- mhq_terr_status %>%
+        group_by(point_code, assessment_date) %>%
+        filter(n() > 1) %>%
+        ungroup() %>%
+        mutate(remove = type_observed != type_target_all) %>%
+        select(point_code, assessment_date, type_target_all, type_observed, inaccessible, not_measurable, status, remove) %>%
+        filter(remove)
+    
+    mhq_terr_status <- mhq_terr_status %>%
+        anti_join(not_relevant, by = c("point_code", "assessment_date", "type_observed"))
+    
+    return(mhq_terr_status)
+
+}
+```
+
+
+
 ## Visualise assessments
 
 ```{r, out.width="100%", out.height= "400px"}
 
-new_assessments_sf <- refpoints_assessed_all %>%
-    arrange(assessment_date) %>%
-    mutate(grts_relocation = ifelse(is.na(grts_relocation), FALSE, grts_relocation)) %>%
+mhq_status_c2 <- mhq_status(mhq_terr_refpoints,
+                       mhq_terr_assessments,
+                       mhq_terr_measurements,
+                       mhq_terr_moncycle,
+                       mhq_terr_sample,
+                       select_mon_cycle = 2)
+
+mhq_status_c2_sf <- mhq_status_c2 %>%
+    select(point_code, type_target_all, assessment_date, type_observed, is_present, no_habitat, status, x, y) %>%
     st_as_sf(coords = c("x", "y"), crs = 31370) %>%
-    mutate(status = ifelse(!is.na(inaccessible), str_c("Inaccesible: ", inaccessible),
-                           ifelse(!is.na(not_measurable), str_c("Not measurable: ", not_measurable),
-                                  ifelse(!lsvi_measurement, "Not measured",
-                                         ifelse(grts_relocation, "Measured with relocation", "Measured without relocation")))),
-           status = factor(status)) %>%
-    select(assessment_date, point_code, type_target_all, type_observed, status) %>%
     st_transform(crs = 4326)
 
 pal <- colorFactor(
-  palette = c("red", "orange", "darkgreen", "yellow", "black", "blue"),
-  domain = new_assessments_sf$status
+  palette = c("red", "orange", "darkgreen", "yellow", "black","grey", "blue"),
+  domain = mhq_status_c2_sf$status
 )
 
-sd <- SharedData$new(new_assessments_sf)
+sd <- SharedData$new(mhq_status_c2_sf)
 
 filter_checkbox("status", "Status meetpunt", sd, ~status)
 
 sd %>%
     leaflet() %>%
-    addProviderTiles(providers$Esri.WorldImagery) %>%
+    addTiles() %>%
     addCircleMarkers(color = ~pal(status), popup = ~str_c(point_code, ": ", type_target_all, assessment_date)) %>%
     addLegend(pal = pal, values = ~status)
 

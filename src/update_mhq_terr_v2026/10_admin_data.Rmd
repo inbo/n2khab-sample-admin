@@ -256,7 +256,7 @@ assessments_admin_anb <- read_vc(root = path, file = "assessments")
 
 type_observed <- read_vc(root = path, file = "type_observed") 
 
-coordinates_anb <- read_vc(root = path, file = "coordinates")  
+coordinates_anb <- read_vc(root = path, file = "coordinates")
 
 ```
 
@@ -642,7 +642,10 @@ check_cycle <- assessments_admin_anb %>%
 ```
 
 The new assessments are shown in the table below.
-The table also contains information on the presence of species cover records (square plot) and vegetation structure records (circle plot) in the database.  
+The table also contains information on the presence of species cover records (square plot) and vegetation structure records (circle plot) in the database.
+
+We have several assessments for type 6510 in the year 2021 (monitoring cycle 1), which have not been included yet in the standardized tables.
+The other assessments are for monitoring cycle 2.
 
 ```{r}
 assessments_admin_anb_new %>%
@@ -657,27 +660,48 @@ assessments_admin_anb_new %>%
 We link the new assessments to the reference points of the sampling units, to compare the assessed coordinates and the coordinates of the reference points.
 
 ```{r}
-coordinates_anb_c2 <- coordinates_anb %>%
-    filter(mon_cycle == 2) %>%
+coordinates_anb <- coordinates_anb %>%
+    mutate(point_code = ifelse(is.na(point_code), str_c(plot_id, "_1"), point_code)) %>%
     select(point_code, x_measured, y_measured, mon_cycle, relocation = verlegd, grts_relocation = nr_vervangplot)
 
-check_unique <- coordinates_anb_c2 %>%
-    group_by(point_code) %>%
+check_unique <- coordinates_anb %>%
+    group_by(point_code, mon_cycle) %>%
     filter(n() > 1)
 # OK
+
+assessments_anb_c1 <- assessments_admin_anb_new %>%
+    filter(mon_cycle == 1) %>%
+    mutate(point_code = str_c(plot_id, "_1")) %>%
+    filter(remark != "opname door INBO ikv verdroging" | is.na(remark)) %>%
+    left_join(coordinates_anb, by = c("point_code", "mon_cycle"))
+
+refpoints_assessed_anb_c1 <- mhq_terr_refpoints %>%
+    inner_join(assessments_anb_c1, by = "point_code") %>%
+    mutate(distance = round(sqrt((x_measured - x)^2 + (y_measured - y)^2), 3))
 
 assessments_anb_c2 <- assessments_admin_anb_new %>%
     filter(mon_cycle == 2) %>%
     rename(point_code = sampling_unit_code) %>%
     filter(remark != "opname door INBO ikv verdroging" | is.na(remark)) %>%
-    left_join(coordinates_anb_c2, by = c("point_code", "mon_cycle"))
+    left_join(coordinates_anb, by = c("point_code", "mon_cycle"))
     
 refpoints_assessed_anb_c2 <- mhq_terr_refpoints %>%
     inner_join(assessments_anb_c2, by = "point_code") %>%
     mutate(distance = round(sqrt((x_measured - x)^2 + (y_measured - y)^2), 3))
 
+refpoints_assessed_anb <- refpoints_assessed_anb_c2 %>%
+    mutate(fieldwork_team = "anb",
+           survey = "anb_c2") %>%
+    bind_rows(refpoints_assessed_anb_c1 %>%
+                  mutate(fieldwork_team = "anb",
+                         survey = "anb_c1"))
+
 check_missing_refpoint <- assessments_anb_c2 %>%
     anti_join(refpoints_assessed_anb_c2, by = "point_code")
+#OK
+
+check_missing_refpoint <- assessments_anb_c1 %>%
+    anti_join(refpoints_assessed_anb_c1, by = "point_code")
 #OK
 ```
 
@@ -701,12 +725,12 @@ check_su2 %>%
 
 
 + n the Fieldmap database the column `verlegd` indicates if a sampling unit was relocated.
-We check if this column is filled in for all measured sampling units.
+We check if this column is filled in for all measured sampling units (only for monitoring cycle 2).
 
 We rename `verlegd` as `relocation`.
 
 ```{r}
-check_metadata <- refpoints_assessed_anb_c2 %>%
+check_metadata <- refpoints_assessed_anb %>%
     filter(lsvi_measurement) %>%
     filter(is.na(relocation))
 ```
@@ -718,8 +742,11 @@ check_metadata %>%
     select(point_code, assessment_date, lsvi_measurement, relocation, distance) %>%
     datatable(rownames = FALSE)
 
-refpoints_assessed_anb_c2 <- refpoints_assessed_anb_c2 %>%
-    mutate(relocation = ifelse(is.na(relocation) & (distance < 1), FALSE, relocation))
+refpoints_assessed_anb <- refpoints_assessed_anb %>%
+    mutate(relocation = ifelse(is.na(relocation),
+                               distance > 1 & !is.na(distance),
+                               relocation)
+           )
 ```
 
 + Check if there are assessments with relocation = FALSE but where the measured location is > 1 meter away from the reference point
@@ -749,9 +776,7 @@ We combine the new assessments of ANB and INBO and do some quality checks.
 refpoints_assessed_all <- refpoints_assessed_inbo_new %>%
     mutate(not_measurable = NA,
            assessment_source = "field assessment") %>%
-    bind_rows(refpoints_assessed_anb_c2 %>%
-                   mutate(fieldwork_team = "anb",
-                          survey = "anb_c2")) %>%
+    bind_rows(refpoints_assessed_anb) %>%
     select(survey, fieldwork_team, point_code, is_centroid, grts_ranking, type_target_all, type_observed, targethabitat, x, y, db_ref, assessment_source, assessment_date, inaccessible, not_measurable, lsvi_measurement, relocation, grts_relocation, x_measured, y_measured, user_reference, recording_givid, distance, remark) %>%
     arrange(grts_ranking) %>%
     mutate(type_target_all = ifelse(type_target_all == "2190", "2190_overig", type_target_all))
@@ -807,12 +832,6 @@ Next we make following adjustments:
 The modifications are shown in the table below.
 
 ```{r}
-
-table_type <- data.frame(type_old = c("6 : (half) natuurlijke graslanden",
-                                      "9 : bossen", "geen doelhabitat (meer)",
-                                      "geen habitat (akker, houtkant, tuin,...)",
-                                      "infrastructuur"),
-                         type_new = c("6xxx", "91xx", "gdh", "gh", "gh"))
 
 refpoints_assessed_all_type <- refpoints_assessed_all %>%
     rename(type_old = type_observed) %>%
@@ -1009,6 +1028,7 @@ We also check if the new point_code does not already exist.
 ```{r}
 
 max_n <- mhq_terr_refpoints %>%
+    filter(!point_code %in% c("116518_2", "313990_2", "146486_2")) %>% #relocations already added in cycle 1
     select(point_code) %>%
     separate(col = point_code, into = c("left_part", "right_part"), sep = "_", remove = FALSE) %>%
     mutate(right_part = as.numeric(right_part)) %>%

@@ -15,7 +15,8 @@ path <- fileman_up("n2khab-mhq-design")
 
 mhq_terr_sample <- read_vc("mhq_terr_sample_c2",
                            file.path(path, "mhq_terr_cycle2/output")) %>%
-    mutate(main_type = as.character(main_type))
+    mutate(main_type = as.character(main_type),
+           date_assessment_c1 = as.Date(date_assessment_c1))
 
 mhq_terr_relocations <- read_vc("mhq_terr_relocations_c2",
                            file.path(path, "mhq_terr_cycle2/output"))
@@ -42,9 +43,19 @@ val <- read_vc("mhq_terr_measurements_validation",
 
 ```
 
+
+```{r}
+mhq_terr_moncycle %>%
+    datatable(rownames = FALSE,
+              filter = "top")
+```
+
+## Check mhq_terr_sample
+
+First we check of the coordinates of the sampling units in mhq_terr_sample correspond with those in mhq_terr_refpoints.
+
 ```{r}
 check_coords_sample <- mhq_terr_sample %>%
-    select(point_code, type, reassessment, x, y) %>%
     left_join(mhq_terr_refpoints %>%
                   select(point_code, x_ref = x, y_ref = y, grts_ranking_refpoint = grts_ranking),
               by = "point_code") %>%
@@ -56,14 +67,173 @@ check_coords_sample <- mhq_terr_sample %>%
 grts_master <- read_GRTSmh()
 
 check_coords_sample <- check_coords_sample %>%
-    mutate(grts_check = (terra::extract(grts_master,check_coords_sample))$GRTSmaster_habitats)
+    mutate(grts_check = (terra::extract(grts_master,check_coords_sample))$GRTSmaster_habitats) %>%
+    st_drop_geometry()
 ```
 
+In the table below the coordinates in mhq_terr_refpoint (x_ref, y_ref) are different.
+
 ```{r}
-mhq_terr_moncycle %>%
+check_coords_sample  %>%
+    select(point_code, type, reassessment, x, y, x_ref, y_ref, grts_ranking_refpoint, distance, grts_check) %>%
     datatable(rownames = FALSE,
               filter = "top")
 ```
+
+Interpretation: 
+
++ 435377_2 coordinates are incorrect in mhq_terr_sample, should be 435377_1
++ 528582_1 should be 528582_2 in mhq_terr_sample
++ 2358709_1 in mhq_terr_refpoints is the legacy site bd_10 (but never assessed for mhq), in mhq_terr_sample it corresponds with the grid centroid --> let 's change mhq_terr_refpoints
++ 3741830_2 should be corrected in mhq_terr_sample
++ 3740849_2: ask Patrik: are the coordinates in INBOVEG correct (the RTK ones)?
+
+```{r}
+mhq_terr_sample_corrected <- check_coords_sample %>%
+    mutate(point_code = ifelse(point_code == "435377_2", "435377_1", point_code),
+           point_code = ifelse(point_code == "528582_1", "528582_2", point_code),
+           x = ifelse(point_code == "3741830_2", x_ref , x),
+           y = ifelse(point_code == "3741830_2", y_ref , y)) %>%
+    select(colnames(mhq_terr_sample))
+
+mhq_terr_sample_update <- mhq_terr_sample %>%
+    anti_join(check_coords_sample, by = c("point_code", "type")) %>%
+    bind_rows(mhq_terr_sample_corrected)
+
+check <- nrow(mhq_terr_sample_update) == nrow(mhq_terr_sample)
+
+# mhq_terr_refpoints aanpassen
+
+coords_2358709_1 <- check_coords_sample %>%
+    filter(point_code == "2358709_1")
+
+mhq_terr_refpoints <- mhq_terr_refpoints %>%
+    mutate(x = ifelse(point_code == "2358709_1", coords_2358709_1$x, x),
+           y = ifelse(point_code == "2358709_1", coords_2358709_1$y, y),
+           grts_ranking = ifelse(point_code == "2358709_1", coords_2358709_1$grts_check, grts_ranking))
+
+mhq_terr_refpoints %>%
+    write_vc(root = "../../data/mhq_terr/v2026", 
+             file = "mhq_terr_refpoints",
+             sorting = "point_code",
+             digits = 20,
+             strict = FALSE)
+```
+
+We also check if date_assessment_c1 in mhq_terr_sample corresponds with an actual measurement in mhq_terr_measurements.
+This is not the case for following records:
+
+```{r}
+measurements_c1 <- mhq_terr_measurements %>%
+    select(point_code, measurement_date, type, user_reference, fieldwork_team) %>%
+    left_join(val %>%
+                  select(point_code, valid_sampling_unit, valid_refpoint),
+              by = "point_code")
+
+check_reassessments <- mhq_terr_sample_update %>%
+    filter(reassessment) %>%
+    left_join(measurements_c1, by = c("point_code", "type", "date_assessment_c1" = "measurement_date")) %>%
+    left_join(mhq_terr_assessments %>%
+                  select(point_code, assessment_date, type_observed = type, is_present),
+              by = c("point_code", "date_assessment_c1" = "assessment_date")) %>%
+    filter(is.na(fieldwork_team)) %>%
+    group_by(point_code) %>%
+    filter(!(n() > 1 & type != type_observed)) %>%
+    ungroup()
+```
+
+```{r}
+check_reassessments %>%
+    select(panel, point_code, type,  date_assessment_c1, type_observed, is_present) %>%
+    datatable(rownames = FALSE, 
+              filter = "top")
+```
++ Case 1: wrong date in mhq_terr_sample --> change date in mhq_terr_sample
+
+```{r}
+
+case_1 <- check_reassessments %>%
+    filter(is.na(type_observed)) %>%
+    left_join(measurements_c1, by = c("point_code", "type")) 
+
+case_1 %>%
+    select(panel, point_code, type,  date_assessment_c1, measurement_date) %>%
+    datatable(rownames = FALSE, 
+              filter = "top")
+
+case_1_corrected <- case_1 %>%
+    mutate(date_assessment_c1 = measurement_date) %>%
+    select(colnames(mhq_terr_sample))
+```
++ Case 2:
+    + sampling units that were assessed but where type is not present
+    + the sampling units were relocated (point_code measured)
+    + most of the relocations are not valid --> remove from mhq_terr_sample when not yet assessed in cycle2
+
+```{r}
+
+measurements_c1 <- measurements_c1 %>%
+    separate_wider_delim(cols = point_code,
+                        delim = "_",
+                        names = c("prefix", "suffix"),
+                        cols_remove = FALSE)
+
+case_2 <- check_reassessments %>%
+    filter(type_observed == type, !is_present) %>%
+    separate_wider_delim(cols = point_code,
+                         delim = "_",
+                         names = c("prefix", "suffix"),
+                         cols_remove = FALSE) %>%
+    select(-valid_sampling_unit, -valid_refpoint) %>%
+    left_join(measurements_c1 %>%
+                  select(point_code_measured = point_code, prefix, type, date_assessment_c1 = measurement_date, valid_sampling_unit, valid_refpoint),
+              by = c("prefix", "type", "date_assessment_c1")
+            )
+
+case_2 %>%
+    select(point_code, date_assessment_c1, type, is_present, point_code_measured, valid_sampling_unit, valid_refpoint) %>%
+    datatable(rownames = FALSE,
+              filter = "top")
+```
+
+```{r}
+case_2_remove <- case_2 %>%
+    filter(!valid_sampling_unit)
+
+mhq_terr_sample_remove <- mhq_terr_sample %>%
+    semi_join(case_2_remove, by = "point_code")
+
+case_2_corrected <- case_2 %>%
+    filter(valid_sampling_unit | is.na(valid_sampling_unit)) %>%
+    mutate(point_code = point_code_measured) %>%
+    select(-x, -y) %>%
+    left_join(mhq_terr_refpoints %>%
+                  select(point_code, x, y),
+              by = "point_code") %>%
+    select(colnames(mhq_terr_sample))
+```
+
++ case 3: type observed in assessment is different from type
+    + 3069105_1: is OK (2190_overig and is_present = FALSE does not conflict with type = 2190_mp)
+    + 4346754_1: 6510_hu instead of 6510_huk, no oversampling needed for 6510 --> remove sampling unit
+
+```{r}
+case_3 <- check_reassessments %>%
+    anti_join(case_1, by = "point_code") %>%
+    anti_join(case_2, by = "point_code")
+
+case_3 %>%
+    select(point_code, date_assessment_c1, oversampling_subtype, type, type_observed, is_present) %>%
+    datatable(rownames = FALSE,
+              filter = "top")
+```
+```{r}
+case_3_remove <- case_3 %>%
+    filter(point_code == "4346754_1")
+```
+
+
+## Check Relocation
 
 We also have to take the relocations into account. 
 We have to link the measurements in the relocated sampling units with the original sampling unit in mhq_terr_sample_c2.
@@ -71,31 +241,7 @@ This can be done with the function `detect_relocations`.
 
 ```{r}
 
-detect_relocations <- function(assessments = mhq_terr_assessments, refpoints = mhq_terr_refpoints){
-    
-    assessments_relocation <- assessments %>%
-        separate_wider_delim(point_code, delim = "_", names = c("point_code_base", "point_code_suffix"), cols_remove = FALSE) %>%
-        group_by(point_code_base, assessment_date) %>%
-        filter(any(change_location)) %>%
-        ungroup() %>%
-        mutate(point_code_type = ifelse(change_location, "relocation", "orig")) %>%
-        group_by(assessment_date, point_code_base, point_code, point_code_type, assessment_source, is_present) %>%
-        summarise(type = str_c(type, collapse = "; ")) %>%
-        ungroup() %>%
-        pivot_wider(values_from = c(point_code, type, is_present), names_from = point_code_type) %>%
-        select(assessment_date, point_code = point_code_orig, point_code_relocation, type = type_relocation, is_present = is_present_relocation, assessment_source) %>%
-        left_join(mhq_terr_refpoints %>%
-                      select(point_code, x, y),
-                  by = "point_code") %>%
-        left_join(mhq_terr_refpoints %>%
-                      select(point_code_relocation = point_code, x_relocation = x, y_relocation = y),
-                  by = "point_code_relocation") %>%
-        mutate(distances_relocation = sqrt((x_relocation - x) ^ 2 + (y_relocation - y) ^ 2)) %>%
-        select(-x, -y, -x_relocation, -y_relocation)
-    
-    return(assessments_relocation)
 
-}
 
 ```
 

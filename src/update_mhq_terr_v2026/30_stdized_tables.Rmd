@@ -84,7 +84,6 @@ We can distinguish different cases.
     + the deviation from the grid center is more likely a measurement error than an intended relocation
     + therefore we do not change the point_code (as we do with relocations), we just change is_centroid to FALSE
 
-
 ```{r}
 # case 10840262_1 
 
@@ -102,7 +101,7 @@ case_1_corrected <- case_1 %>%
     mutate(is_centroid = FALSE) %>%
     select(point_code, is_centroid, grts_ranking, x, y) 
 
-check_refpoint <- check_refpoint %>%
+check_refpoint_remaining <- check_refpoint %>%
     anti_join(case_1_corrected, by = "point_code")
 ```
 
@@ -112,7 +111,7 @@ check_refpoint <- check_refpoint %>%
     + 1676465_1 is a legacy site, but never assessed, 1676465_2 is the refpoint in the center of the grid_cell (selected as a sampling unit in 2021), 1676465_2 was assessed in 2021 and relocated to 1676465_3; the assessment for 1676465_2 is wrongly assigned to 1676465_1.
 
 ```{r}
-case_2 <- check_refpoint %>%
+case_2 <- check_refpoint_remaining %>%
     filter(!is_centroid & grts_error)
 
 case_2 %>%
@@ -151,30 +150,260 @@ case_2_corrected <- case_2 %>%
 mhq_terr_assessments <- mhq_terr_assessments %>%
     mutate(point_code = ifelse(point_code == "1676465_1", "1676465_2", point_code))
 
-check_refpoint <- check_refpoint %>%
+check_refpoint_remaining <- check_refpoint_remaining %>%
     anti_join(case_2_corrected, by = "point_code")
 ```
 
++ Case 3: 
+    + is_centroid wrongly set to FALSE
+    + sampling units have been assessed
+
 ```{r}
-case_3 <- check_refpoint %>%
-    filter(!is_centroid & is_centroid_error)
+case_3 <- check_refpoint_remaining %>%
+    filter(!is_centroid & is_centroid_error,
+           !is.na(assessment_date))
 
 case_3 %>%
-    select(point_code, x, y, grts_ranking, distance_centroid, is_centroid, grts_check, assessment_date, type, is_present, change_location) %>%
+    select(point_code, x, y, grts_ranking, distance_centroid, is_centroid, in_c2, assessment_date, type, is_present, change_location) %>%
     datatable(rownames = FALSE)
     
 ```
 
++ 1442745: no coordinates in database (missing), we assume the assessment took place in the original location
+    + delete 1442745_2
+    + assign assessment and measurement to 1442745_1
+
++ 2320246_2: coordinates are wrong: change to x = 207065.1 y = 204741.2 
+
++ 7678913_2: coordinates are wrong: change to x = 72976.34, y = 205528.45
+
+```{r}
+case_3_corrected <- case_3 %>%
+    filter(point_code != "1442745_2") %>%
+    mutate(x = ifelse(point_code == "2320246_2", 207065.1,
+                      ifelse(point_code == "7678913_2", 72976.34, x)),
+          y = ifelse(point_code == "2320246_2", 204741.2,
+                      ifelse(point_code == "7678913_2", 205528.45, y))) %>%
+    select(point_code, is_centroid, grts_ranking, x, y)
+
+mhq_terr_assessments <- mhq_terr_assessments %>%
+    filter(point_code != "1442745_2")
+
+mhq_terr_measurements <- mhq_terr_measurements %>%
+    filter(point_code != "1442745_2")
+
+check_refpoint_remaining <- check_refpoint_remaining %>%
+    anti_join(case_3, by = "point_code")
+```
+
++ Case 4: 
+    + is_centroid wrongly set to FALSE
+    + sampling units have never been assessed
+
+```{r}
+case_4 <- check_refpoint_remaining %>%
+    filter(!is_centroid & is_centroid_error,
+           is.na(assessment_date))
+
+case_4 %>%
+    select(point_code, x, y, grts_ranking, distance_centroid, is_centroid, in_c2, assessment_date,) %>%
+    datatable(rownames = FALSE)
+```
++ 231702_2: it seems to be the original location of 231702_1 (distance 1.07 m); probably not an intended relocation. Remove this point_code.
++ 398529_4: same location as 398529_1, assessments in 398529_2 (inbo) and 398529_3 (anb). Remove this point_code.
++ 589698_2: same location as 589698_1, assessments in 589698_3 (inbo) and 589698_4 (anb). Remove this point_code.
++ 8294569_1 is a legacy site that by accident is near the centroid of a grts grid cell: change is_centroid to TRUE 
+
+```{r}
+
+case_4_corrected <- case_4 %>%
+    filter(!point_code %in% c("231702_2", "398529_4", "589698_2")) %>%
+    mutate(is_centroid = ifelse(point_code == "8294569_1", TRUE, is_centroid)) %>%
+    select(point_code, is_centroid, grts_ranking, x, y)
+
+check_refpoint_remaining <- check_refpoint_remaining %>%
+    anti_join(case_4, by = "point_code")
+```
+
++ Case 5: 
+    + is_centroid wrongly set to TRUE
+    + reference_points ending on _1
+    + these are relocated points, but no (full) measurement and therefore no new reference point was created
+        + when is_present = TRUE: restore original coordinates and create _2 reference point
+
+```{r}
+case_5 <- check_refpoint_remaining %>%
+    filter(is_centroid & is_centroid_error,
+           !grts_error,
+           str_detect(point_code, "_1")) %>%
+    left_join(assessments_admin_anb %>%
+                  mutate(grts_ranking = as.numeric(plot_id)) %>%
+                  select(grts_ranking, type_target_all, lsvi_measurement),
+              by = "grts_ranking")
+
+case_5 %>%
+    select(point_code, x, y, distance_centroid, type, is_present, type_target_all, lsvi_measurement, assessment_date) %>%
+    datatable(rownames = FALSE) 
+```
+
+```{r}
+# where do I find the original coordinates?
+
+su_forest <- read_csv2("../../data/design_cycle1/sampling_units_prioritair_foresthab_anb_versie2021-02-08_dektopcheck.csv")
+
+su_forest <- su_forest %>%
+    select(point_code, x_orig = x, y_orig = y)
+
+case_5_coords_orig <- case_5 %>%
+    left_join(su_forest, by = "point_code") %>%
+    mutate(x_orig = ifelse(point_code == "83318_1", 210717.592, x_orig),
+           y_orig = ifelse(point_code == "83318_1", 215886.114, y_orig),
+           x_orig = ifelse(point_code == "53126_1", 177661.591973, x_orig),
+           y_orig = ifelse(point_code == "53126_1", 179662.113583, y_orig),
+           check_dist = sqrt((x - x_orig) ^ 2 + (y - y_orig) ^ 2) - distance_centroid) 
+
+new_point_codes <- case_5_coords_orig %>%
+    mutate(point_code = str_c(grts_ranking, "_2")) %>%
+    select(point_code, is_centroid = is_centroid_check, grts_ranking, x, y)
+
+#do they already exist
+check <- mhq_terr_refpoints %>%
+    semi_join(new_point_codes, by = "point_code")
+
+case_5_corrected <- case_5_coords_orig %>%
+    select(point_code, is_centroid, grts_ranking, x = x_orig, y = y_orig) %>%
+    bind_rows(new_point_codes) %>%
+    arrange(point_code)
+
+assessments_2 <- case_5 %>%
+    mutate(point_code = str_c(grts_ranking, "_2"),
+           change_location = TRUE,
+           no_habitat = ifelse(is_present, FALSE, NA),
+           assessment_source = "field assessment") %>%
+    select(point_code, assessment_date, type, is_present, no_habitat, assessment_source, change_location)
+
+assessments_1 <- case_5 %>%
+    mutate(change_location = FALSE,
+           no_habitat = NA,
+           is_present = FALSE,
+           assessment_source = "field assessment") %>%
+    select(point_code, assessment_date, type = type_target_all, is_present, no_habitat, assessment_source, change_location)
+
+assessments_1_2 <- assessments_1 %>%
+    bind_rows(assessments_2) %>%
+    arrange(point_code)
+
+mhq_terr_assessments <- mhq_terr_assessments %>%
+    anti_join(assessments_1_2, by = "point_code") %>%
+    bind_rows(assessments_1_2)
+
+check_refpoint_remaining <- check_refpoint_remaining %>%
+    anti_join(case_5, by = "point_code")
+```
+
++ case 6: remaining errors
+    + su 169137 was measured twice for 2160, both times a relocation was done: to _2 and _3. Relocation to _3 is 2 meters away from centroid. Set is_centroid to FALSE.
+    + su 435377 relocation for 2180 to _3. Set is_centroid to FALSE.
+    + su 218162_1: relocation of about 43km! Coordinates are wrong and probably belong to 1971474_1 (for whih coordinates are missing). Let's take the original coordinates. Remove the sampling units for cycle 2.
+    + su 301846_1: types absent, change location to only relocation point where type is also absent, coordinates belong to relocation point. Restore coordinates of _1. Add an assessment for _2.
+
+```{r}
+check_refpoint_remaining  %>%
+    select(point_code, type, assessment_date, grts_ranking, x, y, distance_centroid, grts_error, is_centroid_error, in_c2 ,change_location) %>%
+    datatable(rownames = FALSE) 
+```
+
+```{r}
+
+give_xy_ranking <- function(ranking, grts_master = grts_master) {
+    
+    point <- ifel(grts_master %in% ranking, grts_master, NA) %>%
+          as.points(values = TRUE, na.rm = TRUE) %>%
+          st_as_sf()
+    
+    result <- st_coordinates(point)
+    
+    return(result)
+}
+
+calc_distance_to_origin <- function(ranking, p_code, reference_points = mhq_terr_refpoints, grts = grts_master) {
+    
+    coords_origin <- give_xy_ranking(ranking = ranking, grts_master = grts)
+    
+    point <- mhq_terr_refpoints %>%
+        filter(point_code %in% p_code) %>%
+        mutate(distance_to_origin = sqrt((x - coords_origin[, "X"]) ^ 2 + (y - coords_origin[, "Y"]) ^ 2))
+    
+    return(point)
+    
+}
+
+check_218162 <- calc_distance_to_origin(ranking = 218162, p_code = "218162_1", reference_points = mhq_terr_refpoints, grts = grts_master)
+check_301846 <- calc_distance_to_origin(ranking = 301846, p_code = "301846_1", reference_points = mhq_terr_refpoints, grts = grts_master)
+
+coords_301846_orig <- give_xy_ranking(ranking = 301846, grts_master)
+coords_218162_orig <- give_xy_ranking(ranking = 218162, grts_master)
+
+new_point_code <- check_refpoint_remaining %>%
+    filter(point_code == "301846_1") %>%
+    mutate(point_code = "301846_2") %>%
+    select(point_code, is_centroid = is_centroid_check, grts_ranking = grts_check, x, y)
+
+case_6_corrected <- check_refpoint_remaining %>%
+    mutate(is_centroid = ifelse(point_code %in% c("169137_3", "435377_3"), FALSE, is_centroid),
+           x = ifelse(point_code == "218162_1", coords_218162_orig[, "X"], x),
+           y = ifelse(point_code == "218162_1", coords_218162_orig[, "Y"], y),
+           x = ifelse(point_code == "301846_1", coords_301846_orig[, "X"], x),
+           y = ifelse(point_code == "301846_1", coords_301846_orig[, "Y"], y)) %>%
+    select(point_code, is_centroid, grts_ranking, x, y) %>% 
+    bind_rows(new_point_code)
+
+new_assessment <- mhq_terr_assessments %>%
+    filter(point_code == "301846_1") %>%
+    mutate(point_code = "301846_2")
+   
+mhq_terr_assessments <- mhq_terr_assessments %>%
+    mutate(change_location = ifelse(point_code == "301846_1", FALSE, change_location)) %>%
+    bind_rows(new_assessment)
+```
+
+```{r}
+refpoints_corrected <- case_1_corrected %>%
+    bind_rows(case_2_corrected) %>%
+    bind_rows(case_3_corrected) %>%
+    bind_rows(case_4_corrected) %>%
+    bind_rows(case_5_corrected) %>%
+    bind_rows(case_6_corrected)
+
+#double_check
+doublcheck_refpoint <- refpoints_corrected %>%
+    group_by(point_code) %>%
+    mutate(distance_centroid = distance_from_centroidgrid(min_x = min_x,
+                              min_y = min_y,
+                              measured_x = x,
+                              measured_y = y) %>%
+               round(2)) %>%
+    ungroup() %>%
+    mutate(is_centroid_check = (distance_centroid < 1) == is_centroid)
+
+doublcheck_refpoint <- refpoints_corrected %>%
+    st_as_sf(coords = c("x", "y"), crs = 31370, remove = FALSE)
+
+doublcheck_refpoint <- doublcheck_refpoint %>%
+    mutate(grts_check = (terra::extract(grts_master,doublcheck_refpoint))$GRTSmaster_habitats) %>%
+    st_drop_geometry() %>%
+    mutate(is_grts_correct = grts_check == grts_ranking)
+
+mhq_terr_refpoints_update <- mhq_terr_refpoints_update %>%
+    anti_join(check_refpoint, by = "point_code") %>%
+    bind_rows(refpoints_corrected)
+
+```
+
 
 
 ```{r}
-# reset 301846_1
-mhq_terr_refpoints_update
 
-# 175921_1
-
-x <- 33357.69
-y <- 204023.69
 
 give_ranking_xy <- function(x, y, grts_master = grts_master, crs = 31370) {
     
@@ -198,14 +427,7 @@ give_ranking_coords <- function(data, coords, grts_master = grts_master, crs = 3
     return(points)
 }
 
-coord_temp <- data.frame(point_code = "175921_1",
-                         x_orig = c(33357.68),
-                         y_orig = c(204023.6)) %>%
-    give_ranking_coords(coords = c("x_orig", "y_orig"), grts_master = grts_master) %>%
-    left_join(mhq_terr_refpoints %>%
-                  select(point_code, x, y),
-              by = "point_code") %>%
-    mutate(dist = sqrt( (x - x_orig) ^ 2 + (y - y_orig) ^ 2))
+
 ```
 
 
@@ -225,8 +447,6 @@ mhq_terr_refpoints_update %>%
              digits = 20,
              strict = FALSE)
 ```
-
-
 
 ## Assessments
 
@@ -328,8 +548,8 @@ mhq_terr_assessments_update <- mhq_terr_assessments_update %>%
 nrow(mhq_terr_assessments_update) == nrow_check
 
 mhq_terr_assessments_update <- mhq_terr_assessments_update %>%
-    mutate(change_location = ifelse(point_code == "37_1" & assessment_date == "2023-08-16", FALSE, change_location), # foutief in admin tabel --> aangeapst
-           change_location = ifelse(point_code == "301846_1" & assessment_date == "2022-06-01", FALSE, change_location)) # er is maar één vervangpunten in polygoon
+    mutate(change_location = ifelse(point_code == "37_1" & assessment_date == "2023-08-16", FALSE, change_location)) # foutief in admin tabel --> aangeapst
+
 ```
 
 ```{r}
@@ -354,7 +574,7 @@ mhq_terr_assessments_update %>%
 mhq_terr_measurements: table with information on measurements
 
 + measurement_date
-+ point_code: the id of the watersurface according to the data source watersurfaces_hab and/or watersurfaces
++ point_code
 + user_reference: reference to record in INBOVEG database
 + recording_givid
 + type: the observed type
